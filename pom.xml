@@ -15,7 +15,7 @@
     <version>0.0.1-SNAPSHOT</version>
 
 
-    <name>demo</name>
+    <name>com.trevor</name>
     <description>Demo project for Spring Boot</description>
 
     <properties>
@@ -27,6 +27,9 @@
         <module>commom</module>
         <module>auth</module>
         <module>general</module>
+        <module>gateway</module>
+        <module>message</module>
+        <module>play</module>
     </modules>
 
     <dependencies>

@@ -23,9 +23,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.trevor.commom</groupId>
-            <artifactId>commom</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <groupId>${project.parent.groupId}.commom</groupId>
+            <artifactId>${project.parent.artifactId}-commom</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>

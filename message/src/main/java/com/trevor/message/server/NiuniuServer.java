@@ -6,7 +6,6 @@ import com.trevor.commom.util.JsonUtil;
 import com.trevor.commom.util.ObjectUtil;
 import com.trevor.commom.util.TokenUtil;
 import com.trevor.message.bo.Constant;
-import com.trevor.message.bo.ReturnMessage;
 import com.trevor.message.bo.SocketResult;
 import com.trevor.message.decoder.MessageDecoder;
 import com.trevor.message.encoder.MessageEncoder;
@@ -71,15 +70,9 @@ public class NiuniuServer extends BaseServer {
 
     }
 
-
-    public void sendMessage(Session session, ReturnMessage returnMessage) {
-
-    }
-
     public void sendMessage(Session session, SocketResult pack) {
         BoundListOperations<String, String> messageChannel = redisTemplate.boundListOps(Constant.CACHE_SOCKET_MESSAGES + userId);
         messageChannel.rightPush(JsonUtil.toJsonString(pack));
-
     }
 
     /**

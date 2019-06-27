@@ -5,9 +5,12 @@ import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
 import com.trevor.commom.bo.WebKeys;
 import com.trevor.commom.domain.User;
+import com.trevor.commom.service.UserService;
 import com.trevor.commom.util.TokenUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.ComponentScan;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -15,7 +18,11 @@ import java.util.Map;
 import java.util.Objects;
 
 @Slf4j
+@ComponentScan
 public class AccessFilter extends ZuulFilter {
+
+    @Resource
+    private UserService userService;
 
     private static final String REDIRECT = "www.knave.top/wechat/";
 
