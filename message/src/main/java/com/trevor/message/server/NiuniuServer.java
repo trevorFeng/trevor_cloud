@@ -32,88 +32,91 @@ import java.util.Objects;
  **/
 @ServerEndpoint(
         value = "/niuniu/{roomId}",
-        encoders= {MessageEncoder.class},
+        encoders = {MessageEncoder.class},
         decoders = {MessageDecoder.class}
-        )
+)
 @Component
 @Slf4j
-public class NiuniuServer extends BaseServer{
+public class NiuniuServer extends BaseServer {
 
-        private Session session;
+    private Session session;
 
-        private Long userId;
+    private Long userId;
 
-        /**
-         * 连接建立成功调用的方法
-         * @param session
-         */
-        @OnOpen
-        public void onOpen(Session session ,@PathParam("roomId") Long roomId){
-                List<String> params = session.getRequestParameterMap().get(WebKeys.TOKEN);
-                if (ObjectUtil.isEmpty(params)) {
-                        sendMessage(session ,new SocketResult(400));
-                        close(session);
-                        return;
-                }
-                String token = session.getRequestParameterMap().get(WebKeys.TOKEN).get(0);
-                User user = checkToken(token);
-                if (ObjectUtil.isEmpty(user)) {
-                        sendMessage(session ,new SocketResult(404));
-                        close(session);
-                        return;
-                }
-                this.userId = user.getId();
-                session.setMaxIdleTimeout(1000 * 60 * 45);
-                this.session = session;
-                redisTemplate.delete(Constant.CACHE_SOCKET_MESSAGES + userId);
-
-
+    /**
+     * 连接建立成功调用的方法
+     *
+     * @param session
+     */
+    @OnOpen
+    public void onOpen(Session session, @PathParam("roomId") Long roomId) {
+        List<String> params = session.getRequestParameterMap().get(WebKeys.TOKEN);
+        if (ObjectUtil.isEmpty(params)) {
+            sendMessage(session, new SocketResult(400));
+            close(session);
+            return;
         }
-
-
-        public void sendMessage(Session session , ReturnMessage returnMessage){
-
+        String token = session.getRequestParameterMap().get(WebKeys.TOKEN).get(0);
+        User user = checkToken(token);
+        if (ObjectUtil.isEmpty(user)) {
+            sendMessage(session, new SocketResult(404));
+            close(session);
+            return;
         }
+        this.userId = user.getId();
+        session.setMaxIdleTimeout(1000 * 60 * 45);
+        this.session = session;
+        redisTemplate.delete(Constant.CACHE_SOCKET_MESSAGES + userId);
 
-        public void sendMessage(Session session , SocketResult pack){
-                BoundListOperations<String, String> messageChannel = redisTemplate.boundListOps(Constant.CACHE_SOCKET_MESSAGES + userId);
-                messageChannel.rightPush(JsonUtil.toJsonString(pack));
 
+    }
+
+
+    public void sendMessage(Session session, ReturnMessage returnMessage) {
+
+    }
+
+    public void sendMessage(Session session, SocketResult pack) {
+        BoundListOperations<String, String> messageChannel = redisTemplate.boundListOps(Constant.CACHE_SOCKET_MESSAGES + userId);
+        messageChannel.rightPush(JsonUtil.toJsonString(pack));
+
+    }
+
+    /**
+     * 关闭连接
+     *
+     * @param session
+     */
+    private void close(Session session) {
+        if (session != null && session.isOpen()) {
+            try {
+                session.close();
+            } catch (IOException e) {
+                log.error("close", e.getMessage(), e);
+            }
         }
+    }
 
-        /**
-         * 关闭连接
-         * @param session
-         */
-        private void close(Session session){
-                if (session != null && session.isOpen()) {
-                        try {
-                                session.close();
-                        } catch (IOException e) {
-                                log.error("close" ,e.getMessage() ,e);
-                        }
-                }
+
+    /**
+     * token合法性检查
+     *
+     * @param token
+     * @throws IOException
+     */
+    private User checkToken(String token) {
+        Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
+        String openid = (String) claims.get(WebKeys.OPEN_ID);
+        String hash = (String) claims.get("hash");
+        Long timestamp = (Long) claims.get("timestamp");
+        if (openid == null || hash == null || timestamp == null) {
+            return null;
         }
-
-
-        /**
-         * token合法性检查
-         * @param token
-         * @throws IOException
-         */
-        private User checkToken(String token){
-                Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
-                String openid = (String) claims.get(WebKeys.OPEN_ID);
-                String hash = (String) claims.get("hash");
-                Long timestamp = (Long) claims.get("timestamp");
-                if (openid == null || hash == null || timestamp == null) {
-                        return null;
-                }
-                User user = userService.findUserByOpenid(openid);
-                if(user == null || !Objects.equals(user.getHash() ,hash)){
-                        return null;
-                }
-                return user;
+        User user = userService.findUserByOpenid(openid);
+        if (user == null || !Objects.equals(user.getHash(), hash)) {
+            return null;
         }
+        return user;
+    }
 
 }

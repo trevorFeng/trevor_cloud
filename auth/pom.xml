@@ -2,15 +2,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.1.6.RELEASE</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <groupId>com.trevor</groupId>
+        <artifactId>trevor-cloud</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
+
     <groupId>com.trevor.auth</groupId>
-    <artifactId>auth</artifactId>
+    <artifactId>trevor-cloud-auth</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+
     <name>auth</name>
     <description>Demo project for Spring Boot</description>
 
@@ -19,16 +21,35 @@
     </properties>
 
     <dependencies>
+
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>2.6.1</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>2.6.1</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>${project.parent.groupId}.commom</groupId>
+            <artifactId>${project.parent.artifactId}-commom</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
