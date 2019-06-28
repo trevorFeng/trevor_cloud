@@ -1,12 +1,11 @@
 package com.trevor.message.server;
 
+import com.trevor.commom.bo.RedisConstant;
+import com.trevor.commom.bo.SocketResult;
 import com.trevor.commom.bo.WebKeys;
-import com.trevor.commom.domain.User;
+import com.trevor.commom.domain.mysql.User;
 import com.trevor.commom.util.JsonUtil;
 import com.trevor.commom.util.ObjectUtil;
-import com.trevor.commom.util.TokenUtil;
-import com.trevor.message.bo.Constant;
-import com.trevor.message.bo.SocketResult;
 import com.trevor.message.decoder.MessageDecoder;
 import com.trevor.message.encoder.MessageEncoder;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +20,6 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 
 /**
@@ -40,9 +37,11 @@ import java.util.Objects;
 @Slf4j
 public class NiuniuServer extends BaseServer {
 
-    private Session session;
+    public Session session;
 
-    private Long userId;
+    public String userId;
+
+    public String roomId;
 
     /**
      * 连接建立成功调用的方法
@@ -50,25 +49,26 @@ public class NiuniuServer extends BaseServer {
      * @param session
      */
     @OnOpen
-    public void onOpen(Session session, @PathParam("roomId") Long roomId) {
+    public void onOpen(Session session, @PathParam("roomId") String roomId) {
         List<String> params = session.getRequestParameterMap().get(WebKeys.TOKEN);
         if (ObjectUtil.isEmpty(params)) {
-            sendMessage(session, new SocketResult(400));
+            sendMessage(new SocketResult(400));
             close(session);
             return;
         }
         String token = session.getRequestParameterMap().get(WebKeys.TOKEN).get(0);
-        User user = checkToken(token);
+        User user = userService.getUserByToken(token);
         if (ObjectUtil.isEmpty(user)) {
-            sendMessage(session, new SocketResult(404));
+            sendMessage(new SocketResult(404));
             close(session);
             return;
         }
-        this.userId = user.getId();
+        this.roomId = roomId;
+        this.userId = String.valueOf(user.getId());
+        roomService.join(roomId ,this);
         session.setMaxIdleTimeout(1000 * 60 * 45);
         this.session = session;
-        redisTemplate.delete(Constant.CACHE_SOCKET_MESSAGES + userId);
-
+        redisTemplate.delete(RedisConstant.CACHE_SOCKET_MESSAGES + userId);
 
     }
 
@@ -76,7 +76,7 @@ public class NiuniuServer extends BaseServer {
      * 接受用户消息
      */
     @OnMessage
-    public void onMessage(Long userId){
+    public void onMessage(String userId){
 
     }
 
@@ -85,7 +85,11 @@ public class NiuniuServer extends BaseServer {
      */
     @OnClose
     public void onClose(){
+        if (!ObjectUtil.isEmpty(userId)) {
+            roomService.leave(roomId ,this);
+            SocketResult res = new SocketResult(1001);
 
+        }
     }
 
     /**
@@ -95,8 +99,8 @@ public class NiuniuServer extends BaseServer {
 
     }
 
-    public void sendMessage(Session session, SocketResult pack) {
-        BoundListOperations<String, String> messageChannel = redisTemplate.boundListOps(Constant.CACHE_SOCKET_MESSAGES + userId);
+    public void sendMessage(SocketResult pack) {
+        BoundListOperations<String, String> messageChannel = redisTemplate.boundListOps(RedisConstant.CACHE_SOCKET_MESSAGES + userId);
         messageChannel.rightPush(JsonUtil.toJsonString(pack));
     }
 
@@ -105,7 +109,7 @@ public class NiuniuServer extends BaseServer {
      *
      * @param session
      */
-    private void close(Session session) {
+    public void close(Session session) {
         if (session != null && session.isOpen()) {
             try {
                 session.close();
@@ -116,25 +120,6 @@ public class NiuniuServer extends BaseServer {
     }
 
 
-    /**
-     * token合法性检查
-     *
-     * @param token
-     * @throws IOException
-     */
-    private User checkToken(String token) {
-        Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
-        String openid = (String) claims.get(WebKeys.OPEN_ID);
-        String hash = (String) claims.get("hash");
-        Long timestamp = (Long) claims.get("timestamp");
-        if (openid == null || hash == null || timestamp == null) {
-            return null;
-        }
-        User user = userService.findUserByOpenid(openid);
-        if (user == null || !Objects.equals(user.getHash(), hash)) {
-            return null;
-        }
-        return user;
-    }
+
 
 }

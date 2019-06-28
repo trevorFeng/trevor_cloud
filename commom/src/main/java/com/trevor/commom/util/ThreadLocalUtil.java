@@ -1,7 +1,7 @@
 package com.trevor.commom.util;
 
 
-import com.trevor.commom.domain.User;
+import com.trevor.commom.domain.mysql.User;
 
 /**
  * @Auther: trevor

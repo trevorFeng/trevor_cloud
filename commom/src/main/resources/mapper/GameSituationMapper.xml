@@ -6,6 +6,6 @@
         INSERT INTO
         `game_situation` (room_record_id ,game_num ,game_situation)
         VALUES
-        (#{gameSituation.roomRecordId},#{gameSituation.gameNum},#{gameSituation.gameSituation})
+        (#{gameResult.roomRecordId},#{gameResult.gameNum},#{gameResult.gameResult})
     </insert>
 </mapper>

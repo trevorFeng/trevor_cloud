@@ -4,7 +4,7 @@ package com.trevor.auth.controller;
 import com.trevor.commom.bo.JsonEntity;
 import com.trevor.commom.bo.LoginUser;
 import com.trevor.commom.bo.ResponseHelper;
-import com.trevor.commom.domain.User;
+import com.trevor.commom.domain.mysql.User;
 import com.trevor.commom.enums.MessageCodeEnum;
 import com.trevor.commom.service.PersonalCardService;
 import com.trevor.commom.service.UserService;

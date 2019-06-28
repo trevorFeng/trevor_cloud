@@ -1,6 +1,7 @@
 package com.trevor.message.server;
 
 import com.trevor.commom.service.UserService;
+import com.trevor.message.service.RoomService;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,8 @@ public class BaseServer {
 
     protected static UserService userService;
 
+    protected static RoomService roomService;
+
     @Resource
     public void setStringRedisTemplate(StringRedisTemplate redisTemplate){
         BaseServer.redisTemplate = redisTemplate;
@@ -25,6 +28,11 @@ public class BaseServer {
     @Resource
     public void setUserService(UserService userService){
         BaseServer.userService = userService;
+    }
+
+    @Resource
+    public void setRoomService(RoomService roomService){
+        BaseServer.roomService = roomService;
     }
 
 }

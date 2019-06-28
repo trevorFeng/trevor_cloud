@@ -1,13 +1,17 @@
 package com.trevor.commom.service;
 
 import com.trevor.commom.bo.Authentication;
-import com.trevor.commom.dao.UserMapper;
-import com.trevor.commom.domain.User;
+import com.trevor.commom.bo.WebKeys;
+import com.trevor.commom.dao.mysql.UserMapper;
+import com.trevor.commom.domain.mysql.User;
+import com.trevor.commom.util.TokenUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -15,6 +19,27 @@ public class UserService{
 
     @Resource
     private UserMapper userMapper;
+
+    /**
+     * token合法性检查
+     *
+     * @param token
+     * @throws IOException
+     */
+    public User getUserByToken(String token) {
+        Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
+        String openid = (String) claims.get(WebKeys.OPEN_ID);
+        String hash = (String) claims.get("hash");
+        Long timestamp = (Long) claims.get("timestamp");
+        if (openid == null || hash == null || timestamp == null) {
+            return null;
+        }
+        User user = findUserByOpenid(openid);
+        if (user == null || !Objects.equals(user.getHash(), hash)) {
+            return null;
+        }
+        return user;
+    }
 
     /**
      * 查询玩家是否开启好友管理功能,1为是，0为否

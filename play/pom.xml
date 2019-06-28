@@ -22,6 +22,18 @@
 
     <dependencies>
 
+
+        <dependency>
+            <groupId>${project.parent.groupId}.commom</groupId>
+            <artifactId>commom</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <!-- websocket模块 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

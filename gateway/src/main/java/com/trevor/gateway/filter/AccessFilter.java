@@ -4,7 +4,7 @@ import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
 import com.trevor.commom.bo.WebKeys;
-import com.trevor.commom.domain.User;
+import com.trevor.commom.domain.mysql.User;
 import com.trevor.commom.service.UserService;
 import com.trevor.commom.util.TokenUtil;
 import lombok.extern.slf4j.Slf4j;

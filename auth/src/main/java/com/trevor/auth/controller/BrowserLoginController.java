@@ -5,7 +5,7 @@ import com.trevor.auth.bo.PhoneCode;
 import com.trevor.auth.service.BrowserLoginService;
 import com.trevor.commom.bo.JsonEntity;
 import com.trevor.commom.bo.ResponseHelper;
-import com.trevor.commom.domain.User;
+import com.trevor.commom.domain.mysql.User;
 import com.trevor.commom.enums.MessageCodeEnum;
 import com.trevor.commom.util.TokenUtil;
 import io.swagger.annotations.Api;
