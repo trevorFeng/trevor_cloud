@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.BoundListOperations;
 import org.springframework.stereotype.Component;
 
+import javax.websocket.OnClose;
+import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
@@ -67,6 +69,29 @@ public class NiuniuServer extends BaseServer {
         this.session = session;
         redisTemplate.delete(Constant.CACHE_SOCKET_MESSAGES + userId);
 
+
+    }
+
+    /**
+     * 接受用户消息
+     */
+    @OnMessage
+    public void onMessage(Long userId){
+
+    }
+
+    /**
+     * 关闭连接调用的方法
+     */
+    @OnClose
+    public void onClose(){
+
+    }
+
+    /**
+     * 发生错误时调用的方法
+     */
+    public void onError(){
 
     }
 

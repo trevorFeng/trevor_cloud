@@ -36,4 +36,8 @@ public class RoomService {
     public void broadcast(Long roomId , SocketResult res){
 
     }
+
+    public void leave(Long roomId ,SocketResult socketResult){
+
+    }
 }

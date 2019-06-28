@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>com.trevor.play</groupId>
-    <artifactId>trevor-cloud-play</artifactId>
+    <artifactId>play</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <name>play</name>
