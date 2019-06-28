@@ -16,6 +16,13 @@ import java.util.Set;
 @ApiModel
 public class NiuniuRoomParam {
 
+    private String id;
+
+    /**
+     * 房间id
+     */
+    private Long roomId;
+
     /**
      * 1为13人牛牛，2为10人牛牛，3为6人牛牛
      */

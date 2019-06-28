@@ -1,6 +1,5 @@
 package com.trevor.commom.dao.mysql;
 
-import com.trevor.commom.domain.mongo.GameResult;
 import org.apache.ibatis.annotations.Param;
 
 /**

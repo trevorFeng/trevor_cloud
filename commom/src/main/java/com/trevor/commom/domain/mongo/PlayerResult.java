@@ -1,6 +1,7 @@
 package com.trevor.commom.domain.mongo;
 
 import lombok.Data;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
@@ -11,12 +12,26 @@ import java.util.List;
  * @create: 2019-05-12 20:02
  **/
 @Data
+@Document(collection = "player_result")
 public class PlayerResult {
+
+
+    private String id;
 
     /**
      * 用户id
      */
     private Integer userId;
+
+    /**
+     * 开房的id
+     */
+    private Long roomId;
+
+    /**
+     * 第几局
+     */
+    private Integer gameNum;
 
     /**
      * 本局得分情况
@@ -47,4 +62,7 @@ public class PlayerResult {
      * 倍数
      */
     private Integer beiShu;
+
+
+    private Long entryTime;
 }

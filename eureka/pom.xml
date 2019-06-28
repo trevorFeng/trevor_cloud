@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>com.trevor.eureka</groupId>
-    <artifactId>trevor-cloud-eureka</artifactId>
+    <artifactId>eureka</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <dependencies>

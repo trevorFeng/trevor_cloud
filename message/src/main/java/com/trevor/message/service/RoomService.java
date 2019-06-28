@@ -2,7 +2,6 @@ package com.trevor.message.service;
 
 import com.trevor.commom.bo.SocketResult;
 import com.trevor.message.bo.Player;
-import com.trevor.message.bo.SocketResult;
 import com.trevor.message.server.NiuniuServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
