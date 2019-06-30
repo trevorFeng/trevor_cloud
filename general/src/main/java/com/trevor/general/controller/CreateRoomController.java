@@ -1,10 +1,10 @@
 package com.trevor.general.controller;
 
-import com.trevor.bo.JsonEntity;
-import com.trevor.domain.User;
-import com.trevor.service.createRoom.CreateRoomService;
-import com.trevor.service.createRoom.bo.NiuniuRoomParameter;
-import com.trevor.util.ThreadLocalUtil;
+import com.trevor.commom.bo.JsonEntity;
+import com.trevor.commom.domain.mongo.NiuniuRoomParam;
+import com.trevor.commom.domain.mysql.User;
+import com.trevor.commom.util.ThreadLocalUtil;
+import com.trevor.general.service.CreateRoomService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
@@ -30,14 +30,14 @@ public class CreateRoomController {
 
     /**
      * 创建一个房间
-     * @param niuniuRoomParameter 房间参数
+     * @param niuniuRoomParam 房间参数
      * @return 房间的唯一id
      */
     @ApiOperation("创建一个房间")
     @RequestMapping(value = "/api/room/create/niuniu", method = {RequestMethod.PUT}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public JsonEntity<Long> createRoom(@RequestBody @Validated NiuniuRoomParameter niuniuRoomParameter){
+    public JsonEntity<Long> createRoom(@RequestBody @Validated NiuniuRoomParam niuniuRoomParam){
         User user = ThreadLocalUtil.getInstance().getUserInfo();
-        JsonEntity<Long> jsonEntity = createRoomService.createRoom(niuniuRoomParameter ,user);
+        JsonEntity<Long> jsonEntity = createRoomService.createRoom(niuniuRoomParam ,user);
         ThreadLocalUtil.getInstance().remove();
         return jsonEntity;
     }

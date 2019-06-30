@@ -63,6 +63,7 @@ public class NiuniuRoomParam {
      * 2---允许观战
      * 3---癞子牛牛
      * 4---允许搓牌
+     *
      */
     @ApiModelProperty("可添加1-4的值，")
     private Set<Integer> special;

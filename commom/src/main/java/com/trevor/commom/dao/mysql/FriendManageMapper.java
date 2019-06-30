@@ -1,6 +1,6 @@
 package com.trevor.commom.dao.mysql;
 
-import com.trevor.domain.FriendsManage;
+import com.trevor.commom.domain.mysql.FriendsManage;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 

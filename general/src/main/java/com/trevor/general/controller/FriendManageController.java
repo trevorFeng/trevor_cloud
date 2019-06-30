@@ -1,12 +1,12 @@
 package com.trevor.general.controller;
 
-import com.trevor.bo.FriendInfo;
-import com.trevor.bo.JsonEntity;
-import com.trevor.bo.ResponseHelper;
-import com.trevor.domain.User;
-import com.trevor.enums.MessageCodeEnum;
-import com.trevor.service.friendManager.FriendManagerService;
-import com.trevor.util.ThreadLocalUtil;
+import com.trevor.commom.bo.FriendInfo;
+import com.trevor.commom.bo.JsonEntity;
+import com.trevor.commom.bo.ResponseHelper;
+import com.trevor.commom.domain.mysql.User;
+import com.trevor.commom.enums.MessageCodeEnum;
+import com.trevor.commom.util.ThreadLocalUtil;
+import com.trevor.general.service.FriendManagerService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;

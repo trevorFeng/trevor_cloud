@@ -1,7 +1,6 @@
 package com.trevor.message.service;
 
 import com.trevor.commom.bo.RedisConstant;
-import com.trevor.commom.bo.RedisKey;
 import com.trevor.commom.bo.SocketResult;
 import com.trevor.commom.enums.GameStatusEnum;
 import com.trevor.message.server.NiuniuServer;
@@ -28,7 +27,7 @@ public class PlayService {
      */
     public void dealReadyMessage(String roomId , NiuniuServer socket){
         BoundHashOperations<String, String, String> ops = redisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
-        String gameStatus = ops.get(RedisKey.GAME_STATUS);
+        String gameStatus = ops.get(RedisConstant.GAME_STATUS);
         if (!Objects.equals(gameStatus , GameStatusEnum.BEFORE_FAPAI_4.getCode().toString())) {
             socket.sendMessage(new SocketResult(-501));
             return;

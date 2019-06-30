@@ -1,15 +1,15 @@
-package com.trevor.general.controller;
+package com.trevor.auth.controller;
 
 
-import com.trevor.bo.JsonEntity;
-import com.trevor.bo.ResponseHelper;
-import com.trevor.domain.User;
-import com.trevor.enums.MessageCodeEnum;
-import com.trevor.service.BrowserLogin.BrowserLoginService;
-import com.trevor.service.bindingPhone.BindingPhoneService;
-import com.trevor.util.SessionUtil;
-import com.trevor.util.ThreadLocalUtil;
-import com.trevor.web.controller.login.bo.PhoneCode;
+import com.trevor.auth.SessionUtil;
+import com.trevor.auth.bo.PhoneCode;
+import com.trevor.auth.service.BindingPhoneService;
+import com.trevor.auth.service.BrowserLoginService;
+import com.trevor.commom.bo.JsonEntity;
+import com.trevor.commom.bo.ResponseHelper;
+import com.trevor.commom.domain.mysql.User;
+import com.trevor.commom.enums.MessageCodeEnum;
+import com.trevor.commom.util.ThreadLocalUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;

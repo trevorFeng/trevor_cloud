@@ -1,7 +1,5 @@
 package com.trevor.commom.domain.mysql;
 
-import com.alibaba.fastjson.JSON;
-import com.trevor.service.createRoom.bo.NiuniuRoomParameter;
 import lombok.Data;
 
 /**
@@ -28,7 +26,7 @@ public class Room {
     private Long roomAuth;
 
     /**
-     * 房间状态，0-已过期（半小时之内没人打牌）,1为可用
+     * 是否激活,0为未激活,1为激活，2为房间使用完成后关闭，3为房间未使用关闭
      */
     private Integer state;
 
@@ -37,21 +35,28 @@ public class Room {
      */
     private Integer roomType;
 
+
     /**
-     * 房间属性配置，为json字符串
+     * 进行到了多少句
      */
-    private String roomConfig;
+    private Integer runingNum;
+
+    /**
+     * 总局数
+     */
+    private Integer totalNum;
+
 
     /**
      * 生成一个房间的基本信息
      * @param roomType
      * @return
      */
-    public void generateRoomRecordBase(Integer roomType , NiuniuRoomParameter niuniuRoomParameter ,Long roomAuth ,Long currentTime){
+    public void generateRoomBase(Integer roomType ,Long roomAuth ,Long currentTime){
         this.setRoomType(roomType);
         this.setRoomAuth(roomAuth);
         this.setGetRoomTime(currentTime);
-        this.setRoomConfig(JSON.toJSONString(niuniuRoomParameter));
+        this.state = 0;
     }
 
 }

@@ -13,6 +13,8 @@ import java.util.List;
 @Repository
 public interface RoomMapper {
 
+    List<Room> findStatus_0();
+
     /**
      * 根据主键查询一条记录
      * @param id

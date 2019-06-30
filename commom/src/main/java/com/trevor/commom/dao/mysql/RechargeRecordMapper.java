@@ -1,7 +1,7 @@
 package com.trevor.commom.dao.mysql;
 
 
-import com.trevor.domain.RechargeRecord;
+import com.trevor.commom.domain.mysql.RechargeRecord;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
