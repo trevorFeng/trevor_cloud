@@ -1,9 +1,12 @@
 package com.trevor.message.service;
 
+import com.trevor.commom.bo.RedisConstant;
 import com.trevor.commom.bo.SocketResult;
 import com.trevor.message.bo.Player;
 import com.trevor.message.server.NiuniuServer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.BoundListOperations;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
@@ -26,12 +29,14 @@ public class RoomService {
     @Resource(name = "executor")
     private Executor executor;
 
+    @Resource
+    private static StringRedisTemplate redisTemplate;
+
     @PreDestroy
     public void destory(){
         Iterator<NiuniuServer> iterator = sockets.values().iterator();
         while (iterator.hasNext()) {
             NiuniuServer niuniuServer = iterator.next();
-            //niuniuServer.f
         }
     }
 
@@ -42,7 +47,17 @@ public class RoomService {
      */
     public void broadcast(String roomId , SocketResult res){
         executor.execute(() -> {
-            leave(roomId ,new NiuniuServer());
+            List<String> playerIds = getRoomPlayers(roomId);
+            for (String playId : playerIds) {
+                NiuniuServer socket = sockets.get(playId);
+                if (socket != null && socket.session != null && socket.session.isOpen()) {
+                    socket.sendMessage(res);
+                }else {
+                    if (socket != null) {
+                        leave(roomId ,socket);
+                    }
+                }
+            }
         });
     }
 
@@ -76,17 +91,38 @@ public class RoomService {
         sockets.put(niuniuServer.userId ,niuniuServer);
     }
 
+    /**
+     * 添加玩家
+     * @param roomId
+     * @param userId
+     */
     public void addRoomPlayer(String roomId ,String userId) {
-        Player player = new Player();
-        //player.set
+        BoundListOperations<String, String> ops = redisTemplate.boundListOps(RedisConstant.ROOM_PLAYER + roomId);
+        ops.rightPush(userId);
     }
 
+    /**
+     * 减少玩家
+     * @param roomId
+     * @param userId
+     */
     public void subRoomPlayer(String roomId ,String userId){
-
+        //移除玩家id
+        BoundListOperations<String, String> ops = redisTemplate.boundListOps(RedisConstant.ROOM_PLAYER + roomId);
+        //移除指定个数的值
+        ops.remove(1 ,userId);
+        //删除消息通道
+        redisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
     }
 
-    public List<Player> getRoomPlayers(String roomId){
-
-        return null;
+    /**
+     * 得到玩家集合
+     * @param roomId
+     * @return
+     */
+    public List<String> getRoomPlayers(String roomId){
+        BoundListOperations<String, String> ops = redisTemplate.boundListOps(RedisConstant.ROOM_PLAYER);
+        List<String> range = ops.range(0, -1);
+        return range;
     }
 }

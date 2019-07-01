@@ -99,9 +99,21 @@ public class NiuniuServer extends BaseServer {
 
     }
 
+    /**
+     * 向客户端发消息
+     * @param pack
+     */
     public void sendMessage(SocketResult pack) {
-        BoundListOperations<String, String> messageChannel = redisTemplate.boundListOps(RedisConstant.CACHE_SOCKET_MESSAGES + userId);
+        BoundListOperations<String, String> messageChannel = redisTemplate.boundListOps(RedisConstant.MESSAGES_QUEUE + userId);
         messageChannel.rightPush(JsonUtil.toJsonString(pack));
+    }
+
+    /**
+     * 向客户端刷消息
+     */
+    public void flusd(){
+        BoundListOperations<String ,String> ops = redisTemplate.boundListOps(RedisConstant.MESSAGES_QUEUE);
+        if ()
     }
 
     /**

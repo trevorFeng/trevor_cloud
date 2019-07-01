@@ -1,10 +1,12 @@
 package com.trevor.general.service;
 
+import com.alibaba.fastjson.JSON;
 import com.trevor.commom.bo.JsonEntity;
 import com.trevor.commom.bo.RedisConstant;
 import com.trevor.commom.bo.ResponseHelper;
+import com.trevor.commom.dao.mongo.NiuniuRoomParamMapper;
+import com.trevor.commom.dao.mongo.PlayerResultMapper;
 import com.trevor.commom.dao.mysql.CardConsumRecordMapper;
-import com.trevor.commom.dao.mysql.NiuniuMapper;
 import com.trevor.commom.dao.mysql.PersonalCardMapper;
 import com.trevor.commom.dao.mysql.RoomMapper;
 import com.trevor.commom.domain.mongo.NiuniuRoomParam;
@@ -39,9 +41,11 @@ public class CreateRoomService{
     private CardConsumRecordMapper cardConsumRecordMapper;
 
     @Resource
-    private static StringRedisTemplate redisTemplate;
+    private StringRedisTemplate redisTemplate;
 
-    private NiuniuMapper
+    @Resource
+    private NiuniuRoomParamMapper niuniuRoomParamMapper;
+
 
     /**
      * 创建一个房间,返回主键,将房间放入Map中
@@ -73,9 +77,16 @@ public class CreateRoomService{
 
         //插入mongoDB
 
-
         //存入redis
         BoundHashOperations<String, String, String> ops = redisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + room.getId());
+        ops.put(RedisConstant.ROOM_TYPE ,String.valueOf(niuniuRoomParam.getRoomType()));
+        ops.put(RedisConstant.ROB_ZHUANG_TYPE ,String.valueOf(niuniuRoomParam.getRobZhuangType()));
+        ops.put(RedisConstant.BASE_POINT ,String.valueOf(niuniuRoomParam.getBasePoint()));
+        ops.put(RedisConstant.RULE ,String.valueOf(niuniuRoomParam.getRule()));
+        ops.put(RedisConstant.XIAZHU ,String.valueOf(niuniuRoomParam.getXiazhu()));
+        ops.put(RedisConstant.SPECIAL , JSON.toJSONString(niuniuRoomParam.getSpecial()));
+        ops.put(RedisConstant.PAIXING ,JSON.toJSONString(niuniuRoomParam.getPaiXing()));
+
         ops.put(RedisConstant.GAME_STATUS ,"1");
         ops.put(RedisConstant.RUNING_NUM ,"0");
         if (Objects.equals(consumCardNum ,ConsumCardEnum.GAME_NUM_12_CARD_3.getConsumCardNum())) {

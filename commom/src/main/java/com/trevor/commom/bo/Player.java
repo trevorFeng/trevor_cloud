@@ -1,6 +1,8 @@
-package com.trevor.message.bo;
+package com.trevor.commom.bo;
 
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author trevor
@@ -24,4 +26,7 @@ public class Player {
      * 吃瓜群众，全程不能参与打牌
      */
     private Boolean isChiGuaPeople;
+
+    private Integer score;
+
 }

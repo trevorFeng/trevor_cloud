@@ -2,10 +2,13 @@ package com.trevor.play.service;
 
 import com.trevor.commom.bo.RedisConstant;
 import com.trevor.commom.bo.RoomPoke;
+import com.trevor.commom.bo.SocketResult;
 import com.trevor.commom.domain.mongo.NiuniuRoomParam;
 import com.trevor.commom.domain.mysql.Room;
+import com.trevor.commom.enums.GameStatusEnum;
 import com.trevor.commom.service.RoomParamService;
 import com.trevor.commom.service.RoomService;
+import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.BoundListOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -33,9 +36,14 @@ public class NiuniuPlayService {
 
     public void play(String roomIdStr){
         Long roomId = Long.valueOf(roomIdStr);
-        Room room = roomService.findOneById(roomId);
-        NiuniuRoomParam niuniuParamByRoomId = roomParamService.findNiuniuParamByRoomId(roomId);
+        BoundHashOperations<String, String, String> roomBaseInfoOps = redisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomIdStr);
+        BoundListOperations<String, String> roomPlayerOps = redisTemplate.boundListOps(RedisConstant.ROOM_PLAYER + roomIdStr);
+        String runingNum = roomBaseInfoOps.get(RedisConstant.RUNING_NUM);
+        String totalNum = roomBaseInfoOps.get(RedisConstant.TOTAL_NUM);
 
+        //准备的倒计时
+        roomBaseInfoOps.put(RedisConstant.GAME_STATUS , GameStatusEnum.BEFORE_FAPAI_4.getCode());
+        SocketResult socketResult = new SocketResult()
 
     }
 

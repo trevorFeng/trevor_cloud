@@ -3,6 +3,7 @@ package com.trevor.commom.domain.mongo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Set;
 
@@ -14,6 +15,7 @@ import java.util.Set;
  **/
 @Data
 @ApiModel
+@Document(collection = "niuniu_room_param")
 public class NiuniuRoomParam {
 
     private String id;

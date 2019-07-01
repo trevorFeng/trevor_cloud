@@ -7,6 +7,7 @@ package com.trevor.commom.bo;
 public class RedisConstant {
 
     /**-----------------------------------------------------------------  redis key  -------------------------------------------------------------**/
+
     public static final String MESSAGES_QUEUE = "MessageQueue_";
 
     public static final String ROOM_PLAYER = "roomPlayer_";
@@ -15,6 +16,20 @@ public class RedisConstant {
 
 
     /**-----------------------------------------------------------------  hash key  -------------------------------------------------------------**/
+
+    public final static String ROOM_TYPE = "roomType";
+
+    public final static String ROB_ZHUANG_TYPE = "robZhuangType";
+
+    public final static String BASE_POINT = "basePoint";
+
+    public final static String RULE = "rule";
+
+    public final static String XIAZHU = "xiazhu";
+
+    public final static String SPECIAL = "special";
+
+    public final static String PAIXING = "paiXing";
 
     public final static String GAME_STATUS = "gameStatus";
 

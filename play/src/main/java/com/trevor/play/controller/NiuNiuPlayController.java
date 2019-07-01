@@ -22,7 +22,7 @@ public class NiuNiuPlayController {
         executor.execute(() -> {
             niuniuPlayService.play(roomId);
         });
-        return ResponseHelper.createInstance(null , MessageCodeEnum.CODE_ERROR)
+        return ResponseHelper.createInstance(null , MessageCodeEnum.HANDLER_SUCCESS);
 
     }
 }
