@@ -8,6 +8,7 @@ import com.trevor.commom.domain.mysql.Room;
 import com.trevor.commom.enums.GameStatusEnum;
 import com.trevor.commom.service.RoomParamService;
 import com.trevor.commom.service.RoomService;
+import com.trevor.commom.util.JsonUtil;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.BoundListOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.websocket.Session;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -43,7 +45,14 @@ public class NiuniuPlayService {
 
         //准备的倒计时
         roomBaseInfoOps.put(RedisConstant.GAME_STATUS , GameStatusEnum.BEFORE_FAPAI_4.getCode());
-        SocketResult socketResult = new SocketResult()
+        for (int i = 5; i > 0 ; i--) {
+            SocketResult socketResult = new SocketResult(1001 ,i);
+            List<String> playerIds = roomPlayerOps.range(0, -1);
+            for (String playId : playerIds) {
+                redisTemplate.boundListOps(RedisConstant.MESSAGES_QUEUE + playId).rightPush(JsonUtil.toJsonString(socketResult));
+            }
+        }
+
 
     }
 

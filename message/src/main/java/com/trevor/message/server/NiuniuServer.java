@@ -12,10 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.BoundListOperations;
 import org.springframework.stereotype.Component;
 
-import javax.websocket.OnClose;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
-import javax.websocket.Session;
+import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
@@ -68,7 +65,7 @@ public class NiuniuServer extends BaseServer {
         roomService.join(roomId ,this);
         session.setMaxIdleTimeout(1000 * 60 * 45);
         this.session = session;
-        redisTemplate.delete(RedisConstant.CACHE_SOCKET_MESSAGES + userId);
+        redisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
 
     }
 
@@ -111,9 +108,35 @@ public class NiuniuServer extends BaseServer {
     /**
      * 向客户端刷消息
      */
-    public void flusd(){
-        BoundListOperations<String ,String> ops = redisTemplate.boundListOps(RedisConstant.MESSAGES_QUEUE);
-        if ()
+    public void flush(){
+        try {
+            BoundListOperations<String ,String> ops = redisTemplate.boundListOps(RedisConstant.MESSAGES_QUEUE + userId);
+            if (ops != null && ops.size() > 0) {
+                List<String> messages = ops.range(0, -1);
+                redisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
+
+                StringBuffer stringBuffer = new StringBuffer("{");
+                for (String mess : messages) {
+                    stringBuffer.append(mess).append(",");
+                }
+                stringBuffer.setLength(stringBuffer.length() - 1);
+                stringBuffer.append("}");
+                synchronized (session) {
+                    RemoteEndpoint.Async async = session.getAsyncRemote();
+                    if (session.isOpen()) {
+                        async.sendText(stringBuffer.toString());
+                    } else {
+                        close(session);
+                    }
+                }
+            }
+        }catch (Exception e) {
+            log.error(e.getMessage() ,e);
+        }
+
+
+
+
     }
 
     /**

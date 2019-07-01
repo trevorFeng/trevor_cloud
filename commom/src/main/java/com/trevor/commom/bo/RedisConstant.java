@@ -8,11 +8,20 @@ public class RedisConstant {
 
     /**-----------------------------------------------------------------  redis key  -------------------------------------------------------------**/
 
+    public static final String BASE_ROOM_INFO = "baseRoomInfo_";
+
     public static final String MESSAGES_QUEUE = "MessageQueue_";
 
     public static final String ROOM_PLAYER = "roomPlayer_";
 
-    public static final String BASE_ROOM_INFO = "baseRoomInfo_";
+    public static final String REAL_ROOM_PLAYER = "realRoomPlayer_";
+
+
+
+
+
+
+    public static final String READY = "ready_";
 
 
     /**-----------------------------------------------------------------  hash key  -------------------------------------------------------------**/
