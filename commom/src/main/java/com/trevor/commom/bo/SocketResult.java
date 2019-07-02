@@ -14,11 +14,13 @@ public class SocketResult {
      * 400--表示token错误
      * 404--根据token找不到user
      * 500--表示重复登陆了，需要下线一个客户端
-     * 501--表示不是真正的玩家准备
-     * 502--不在准备的时间内
+     * 501--不在准备的时间内
+     * 502--表示不是真正的玩家准备
      * ****************************1000-2000内发给所有人
      * 1000--新人加入，发给所有人，数据为新人的情况
-     * 1001--准备的倒计时,数据为数字
+     * 1001--玩家掉线的消息，数据为玩家id
+     * 1002--准备的倒计时,数据为数字
+     * 1003--某个玩家准备的消息，数据为玩家id
      * ****************************2000以上发给自己
      * 2002--房间内情况，发给新人，数据为其他人的得分，牌，是否抢庄等
      *
@@ -54,10 +56,6 @@ public class SocketResult {
      */
     private Integer countDown;
 
-    /**
-     * 准备
-     */
-    private Boolean ready;
 
     /**
      * 抢庄
@@ -89,6 +87,11 @@ public class SocketResult {
     public SocketResult(Integer head ,Integer countDown) {
         this.head = head;
         this.countDown = countDown;
+    }
+
+    public SocketResult(Integer head ,String userId) {
+        this.head = head;
+        this.userId = userId;
     }
 
 }

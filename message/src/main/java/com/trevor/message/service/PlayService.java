@@ -20,7 +20,10 @@ import java.util.Objects;
 public class PlayService {
 
     @Resource
-    private static StringRedisTemplate redisTemplate;
+    private  StringRedisTemplate redisTemplate;
+
+    @Resource
+    private RoomService roomService;
 
     /**
      * 处理准备的消息
@@ -28,18 +31,20 @@ public class PlayService {
      */
     public void dealReadyMessage(String roomId , NiuniuServer socket){
         BoundHashOperations<String, String, String> baseRoomInfoOps = redisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
-        BoundListOperations<String, String> playerUserIds = redisTemplate.boundListOps(RedisConstant.ROOM_PLAYER + roomId);
         BoundListOperations<String, String> realPlayerUserIds = redisTemplate.boundListOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
-        if (realPlayerUserIds == null || realPlayerUserIds.size() == 0) {
-
-        }
-        if (realPlayerUserIds.size() == 2)
+        //根据房间状态判断
         if (!Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_FAPAI_4.getCode())) {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
-        ops.put(RedisConstant.READY + socket.roomId ,socket.userId);
-        //给其他玩家发准备的消息
-
+        //准备的人是否是真正的玩家
+        if (!realPlayerUserIds.range(0 ,-1).contains(socket.userId)) {
+            socket.sendMessage(new SocketResult(-502));
+            return;
+        }
+        BoundListOperations<String, String> readyPlayerOps = redisTemplate.boundListOps(RedisConstant.READY_PLAYER + roomId);
+        readyPlayerOps.rightPush(socket.userId);
+        //广播准备的消息
+        roomService.broadcast(roomId ,new SocketResult(1003 ,socket.userId));
     }
 }

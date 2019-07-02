@@ -6,6 +6,7 @@ import com.trevor.commom.bo.WebKeys;
 import com.trevor.commom.domain.mysql.User;
 import com.trevor.commom.util.JsonUtil;
 import com.trevor.commom.util.ObjectUtil;
+import com.trevor.message.bo.SocketMessage;
 import com.trevor.message.decoder.MessageDecoder;
 import com.trevor.message.encoder.MessageEncoder;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -73,8 +75,10 @@ public class NiuniuServer extends BaseServer {
      * 接受用户消息
      */
     @OnMessage
-    public void onMessage(String userId){
-
+    public void onMessage(SocketMessage socketMessage){
+        if (Objects.equals(socketMessage.getMessageCode() ,1)) {
+            playService.dealReadyMessage(roomId ,this);
+        }
     }
 
     /**
@@ -84,16 +88,20 @@ public class NiuniuServer extends BaseServer {
     public void onClose(){
         if (!ObjectUtil.isEmpty(userId)) {
             roomService.leave(roomId ,this);
-            SocketResult res = new SocketResult(1001);
-
+            //如果是真正的玩家则广播消息
+            if (redisTemplate.boundListOps(RedisConstant.REAL_ROOM_PLAYER + roomId).range(0 ,-1).contains(userId)) {
+                SocketResult res = new SocketResult(1001 ,userId);
+                roomService.broadcast(roomId ,res);
+            }
         }
     }
 
     /**
      * 发生错误时调用的方法
      */
-    public void onError(){
-
+    @OnError
+    public void onError(Throwable t){
+        log.error(t.getMessage() ,t);
     }
 
     /**

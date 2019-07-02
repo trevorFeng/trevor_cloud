@@ -21,7 +21,7 @@ public class RedisConstant {
 
 
 
-    public static final String READY = "ready_";
+    public static final String READY_PLAYER = "readyPlayer_";
 
 
     /**-----------------------------------------------------------------  hash key  -------------------------------------------------------------**/

@@ -1,7 +1,7 @@
 package com.trevor.message.decoder;
 
 import com.alibaba.fastjson.JSON;
-import com.trevor.websocket.bo.ReceiveMessage;
+import com.trevor.message.bo.SocketMessage;
 
 import javax.websocket.EndpointConfig;
 
@@ -9,7 +9,7 @@ import javax.websocket.EndpointConfig;
  * @author trevor
  * @date 03/30/19 16:01
  */
-public class MessageDecoder implements javax.websocket.Decoder.Text<ReceiveMessage> {
+public class MessageDecoder implements javax.websocket.Decoder.Text<SocketMessage> {
 
     @Override
     public void init(EndpointConfig endpointConfig) {
@@ -22,9 +22,9 @@ public class MessageDecoder implements javax.websocket.Decoder.Text<ReceiveMessa
     }
 
     @Override
-    public ReceiveMessage decode(String str) {
+    public SocketMessage decode(String str) {
         String a = str;
-        return JSON.parseObject(str ,ReceiveMessage.class);
+        return JSON.parseObject(str ,SocketMessage.class);
     }
 
     @Override
