@@ -1,6 +1,7 @@
 package com.trevor.commom.bo;
 
-import javax.xml.crypto.Data;
+import lombok.Data;
+
 import java.util.List;
 import java.util.Map;
 
@@ -8,6 +9,7 @@ import java.util.Map;
  * @author trevor
  * @date 06/27/19 18:23
  */
+@Data
 public class SocketResult {
 
     /**
@@ -16,11 +18,17 @@ public class SocketResult {
      * 500--表示重复登陆了，需要下线一个客户端
      * 501--不在准备的时间内
      * 502--表示不是真正的玩家准备
+     * 503--表示没有准备的玩家发来了抢庄的消息
      * ****************************1000-2000内发给所有人
      * 1000--新人加入，发给所有人，数据为新人的情况
      * 1001--玩家掉线的消息，数据为玩家id
      * 1002--准备的倒计时,数据为数字
      * 1003--某个玩家准备的消息，数据为玩家id
+     * 1004--发牌的消息，userPokeMap为数据
+     * 1005--玩家下注倒计时
+     * 1006--选取庄家的消息,数据为庄家id
+     * 1007--闲家下注倒计时
+     * 1008--发一张牌
      * ****************************2000以上发给自己
      * 2002--房间内情况，发给新人，数据为其他人的得分，牌，是否抢庄等
      *
@@ -92,6 +100,11 @@ public class SocketResult {
     public SocketResult(Integer head ,String userId) {
         this.head = head;
         this.userId = userId;
+    }
+
+    public SocketResult(Integer head ,Map<String ,List<String>> userPokeMap) {
+        this.head = head;
+        this.userPokeMap = userPokeMap;
     }
 
 }

@@ -16,12 +16,13 @@ public class RedisConstant {
 
     public static final String REAL_ROOM_PLAYER = "realRoomPlayer_";
 
-
-
-
-
+    public static final String POKES = "pokes_";
 
     public static final String READY_PLAYER = "readyPlayer_";
+
+    public static final String QIANGZHAUNG = "qiangZhuang_";
+
+    public static final String ZHUANGJIA = "zhuangJia_";
 
 
     /**-----------------------------------------------------------------  hash key  -------------------------------------------------------------**/
