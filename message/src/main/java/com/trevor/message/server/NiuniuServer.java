@@ -79,7 +79,7 @@ public class NiuniuServer extends BaseServer {
         if (Objects.equals(socketMessage.getMessageCode() ,1)) {
             playService.dealReadyMessage(roomId ,this);
         }else if (Objects.equals(socketMessage.getMessageCode() ,2)) {
-            playService.dealQiangZhuangMessage(roomId ,this);
+            playService.dealQiangZhuangMessage(roomId ,this ,socketMessage);
         }
     }
 
