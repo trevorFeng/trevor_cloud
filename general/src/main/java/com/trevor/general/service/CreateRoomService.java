@@ -76,6 +76,7 @@ public class CreateRoomService{
         roomMapper.insertOne(room);
 
         //插入mongoDB
+        niuniuRoomParamMapper.
 
         //存入redis
         BoundHashOperations<String, String, String> ops = redisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + room.getId());

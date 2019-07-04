@@ -24,6 +24,12 @@ public class RedisConstant {
 
     public static final String ZHUANGJIA = "zhuangJia_";
 
+    public static final String XIANJIA_XIAZHU = "xianJiaXiaZhu_";
+
+    public static final String SCORE = "score_";
+
+    public static final String TOTAL_SCORE = "totalScore_";
+
 
     /**-----------------------------------------------------------------  hash key  -------------------------------------------------------------**/
 

@@ -181,25 +181,20 @@ public class NiuniuPlayService {
         broadcast(socketResult ,roomId);
     }
 
-    /**
-     * 计算/设置本局玩家的分数
-     * @param roomPoke
-     * @param userPokeList
-     */
-    private void setScore(RoomPoke roomPoke ,List<UserPoke> userPokeList ,NiuniuRoomParameter niuniuRoomParameter){
-        UserPoke zhuangJia = null;
-        for (UserPoke userPoke : userPokeList) {
-            if (userPoke.getIsQiangZhuang()) {
-                zhuangJia = userPoke;
-                break;
-            }
-        }
-        PaiXing zhuangJiaPaiXing = isNiuNiu(zhuangJia.getPokes() ,niuniuRoomParameter.getPaiXing() ,niuniuRoomParameter.getRule());
-        for (UserPoke userPoke : userPokeList) {
-            UserPoke xianJia = userPoke;
-            if (!xianJia.getIsQiangZhuang()) {
-                PaiXing xianJiaPaiXing = isNiuNiu(xianJia.getPokes() ,niuniuRoomParameter.getPaiXing() ,niuniuRoomParameter.getRule());
-                Integer score = zhuangJia.getQiangZhuangMultiple() * xianJia.getXianJiaMultiple() * niuniuRoomParameter.getBasePoint();
+
+    private void setScore(String roomId ,Set<Integer> paiXing ,Integer rule ,Integer basePoint){
+        String zhuangJiaUserId = redisTemplate.boundValueOps(RedisConstant.ZHUANGJIA + roomId).get();
+        BoundHashOperations<String, String, String> qiangZhuangOps = redisTemplate.boundHashOps(RedisConstant.QIANGZHAUNG + roomId);
+        BoundHashOperations<String, String, String> xianJiaXiaZhuOps = redisTemplate.boundHashOps(RedisConstant.XIANJIA_XIAZHU + roomId);
+        BoundHashOperations<String, String ,String> pokes = redisTemplate.boundHashOps(RedisConstant.POKES + roomId);
+        BoundHashOperations<String, String, String> scoreOps = redisTemplate.boundHashOps(RedisConstant.SCORE + roomId);
+        BoundHashOperations<String, String, String> totalScoreOps = redisTemplate.boundHashOps(RedisConstant.TOTAL_SCORE + roomId);
+        List<String> zhuangJiaPokes = JsonUtil.parse(pokes.get(zhuangJiaUserId) ,new ArrayList<String>());
+        PaiXing zhuangJiaPaiXing = isNiuNiu(zhuangJiaPokes , paiXing ,rule);
+        for (Map.Entry<String ,String> entry : pokes.entries().entrySet()) {
+            if (!Objects.equals(entry.getKey() ,zhuangJiaUserId)) {
+                PaiXing xianJiaPaiXing = isNiuNiu(JsonUtil.parse(entry.getValue() ,new ArrayList<String>()) ,paiXing ,rule);
+                Integer score = Integer.valueOf(qiangZhuangOps.get(zhuangJiaUserId)) * Integer.valueOf(xianJiaXiaZhuOps.get(entry.getKey())) * basePoint;
                 //庄家大于闲家
                 if (zhuangJiaPaiXing.getPaixing() > xianJiaPaiXing.getPaixing()) {
                     score = score * zhuangJiaPaiXing.getMultiple();
@@ -465,6 +460,53 @@ public class NiuniuPlayService {
         }else {
             return Integer.valueOf(pai);
         }
+    }
+
+    /**
+     * 比较两个同花牛大小
+     * @param zhuangJiaPokes
+     * @param xianJiaPokes
+     * @return zhuangJiaPokes > xianJiaPokes返回true
+     */
+    private Boolean niu_13_daXiao(List<String> zhuangJiaPokes ,List<String> xianJiaPokes){
+        if (Integer.valueOf(zhuangJiaPokes.get(0).substring(0,1)) > Integer.valueOf(xianJiaPokes.get(0).substring(0,1))) {
+            return true;
+        }else if (Objects.equals(Integer.valueOf(zhuangJiaPokes.get(0).substring(0,1)) ,Integer.valueOf(xianJiaPokes.get(0).substring(0,1))) ) {
+            Integer paiZhi = biPaiZhi(zhuangJiaPokes ,xianJiaPokes);
+            if (Objects.equals(paiZhi ,1)) {
+                return true;
+            }else {
+                return false;
+            }
+        }else {
+            return false;
+        }
+    }
+
+    /**
+     * 是否是炸弹牛 8倍
+     * @param pokes
+     * @param paiXingSet
+     * @return
+     */
+    private PaiXing isNiu_15(List<String> pokes , Set<Integer> paiXingSet){
+        PaiXing paiXing;
+        if (paiXingSet.contains(5)) {
+            int num = 0;
+            String pai = pokes.get(0).substring(1,2);
+            for (String str : pokes) {
+                if (Objects.equals(pai ,str.substring(1 ,2))) {
+                    num ++;
+                }
+            }
+            if (num == 0 || num == 4 || num == 1 || num == 5) {
+                paiXing = new PaiXing();
+                paiXing.setPaixing(NiuNiuPaiXingEnum.NIU_15.getPaiXingCode());
+                paiXing.setMultiple(8);
+                return paiXing;
+            }
+        }
+        return null;
     }
 
     /**
