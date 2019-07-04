@@ -191,26 +191,26 @@ public class NiuniuPlayService {
         BoundHashOperations<String, String, String> totalScoreOps = redisTemplate.boundHashOps(RedisConstant.TOTAL_SCORE + roomId);
         List<String> zhuangJiaPokes = JsonUtil.parse(pokes.get(zhuangJiaUserId) ,new ArrayList<String>());
         PaiXing zhuangJiaPaiXing = isNiuNiu(zhuangJiaPokes , paiXing ,rule);
+        Integer zhuangJiaScore = 0;
         for (Map.Entry<String ,String> entry : pokes.entries().entrySet()) {
             if (!Objects.equals(entry.getKey() ,zhuangJiaUserId)) {
-                PaiXing xianJiaPaiXing = isNiuNiu(JsonUtil.parse(entry.getValue() ,new ArrayList<String>()) ,paiXing ,rule);
+                List<String> xianJiaPokes = JsonUtil.parse(entry.getValue() ,new ArrayList<String>());
+                PaiXing xianJiaPaiXing = isNiuNiu(xianJiaPokes ,paiXing ,rule);
                 Integer score = Integer.valueOf(qiangZhuangOps.get(zhuangJiaUserId)) * Integer.valueOf(xianJiaXiaZhuOps.get(entry.getKey())) * basePoint;
                 //庄家大于闲家
                 if (zhuangJiaPaiXing.getPaixing() > xianJiaPaiXing.getPaixing()) {
                     score = score * zhuangJiaPaiXing.getMultiple();
-                    zhuangJia.setThisScore(score);
-                    xianJia.setThisScore(-score);
+                    zhuangJiaScore += score;
+                    scoreOps.put(entry.getKey() ,String.valueOf(-score));
                     //庄家小于闲家
                 }else if (zhuangJiaPaiXing.getPaixing() < xianJiaPaiXing.getPaixing()) {
                     score = score * xianJiaPaiXing.getMultiple();
-                    zhuangJia.setThisScore(-score);
-                    xianJia.setThisScore(score);
+                    zhuangJiaScore += score;
+                    scoreOps.put(entry.getKey() ,String.valueOf(-score));
                 }else{
-                    List<String> zhuangJiaPokes = zhuangJia.getPokes();
-                    List<String> xianJiaPokes = xianJia.getPokes();
                     boolean zhuangJiaDa = true;
                     //炸弹牛，比炸弹大小(已经设置不可能出现两个五小牛)
-                    if (Objects.equals(zhuangJiaPaiXing.getPaixing() ,NiuNiuPaiXingEnum.NIU_15.getPaiXingCode())){
+                    if (Objects.equals(zhuangJiaPaiXing ,NiuNiuPaiXingEnum.NIU_15.getPaiXingCode())){
                         if (!niu_15_daXiao(zhuangJiaPokes, xianJiaPokes)) {
                             zhuangJiaDa = false;
                         }
@@ -256,12 +256,12 @@ public class NiuniuPlayService {
                     }
                     if (zhuangJiaDa) {
                         score = score * zhuangJiaPaiXing.getMultiple();
-                        zhuangJia.setThisScore(score);
-                        xianJia.setThisScore(-score);
+                        zhuangJiaScore += score;
+                        scoreOps.put(entry.getKey() ,String.valueOf(-score));
                     }else {
                         score = score * xianJiaPaiXing.getMultiple();
-                        zhuangJia.setThisScore(-score);
-                        xianJia.setThisScore(score);
+                        zhuangJiaScore += score;
+                        scoreOps.put(entry.getKey() ,String.valueOf(-score));
                     }
                 }
 
