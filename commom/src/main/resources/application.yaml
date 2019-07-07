@@ -4,6 +4,13 @@ mybatis:
   config-location: classpath:/mybatis-config.xml
 
 spring:
+  data:
+    mongodb:
+      host: 192.168.3.1
+        database: comprehensiveAppraisal
+        port: 27017
+
+
   datasource:
     url: jdbc:mysql://120.79.184.105:3306/trevor?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true
     username: root

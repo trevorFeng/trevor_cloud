@@ -62,7 +62,16 @@ public class NiuniuPlayService {
         fapai_1(roomIdStr);
         //准备摊牌倒计时
         countDown(1009 ,GameStatusEnum.BEFORE_CALRESULT.getCode() ,roomIdStr);
+        //设置分数
+        Map<String ,Integer> scoreMap = new HashMap<>(2<<4);
+        setScore(roomIdStr ,JsonUtil.parse(roomBaseInfoOps.get(RedisConstant.PAIXING) ,new HashSet<>())
+                ,Integer.valueOf(roomBaseInfoOps.get(RedisConstant.RULE)) ,Integer.valueOf(roomBaseInfoOps.get(RedisConstant.BASE_POINT)) ,scoreMap);
+        // todo 保存结果
 
+
+        //给玩家发送分数
+        sendResultToUser(roomIdStr ,scoreMap);
+        continueOrStop(roomIdStr);
     }
 
     /**
@@ -181,8 +190,33 @@ public class NiuniuPlayService {
         broadcast(socketResult ,roomId);
     }
 
+    /**
+     * 給玩家返回結果
+     */
+    private void sendResultToUser(String roomId ,Map<String ,Integer> scoreMap){
+        SocketResult socketResult = new SocketResult(1012 ,scoreMap ,Boolean.TRUE);
+        broadcast(socketResult ,roomId);
+    }
 
-    private void setScore(String roomId ,Set<Integer> paiXing ,Integer rule ,Integer basePoint){
+    /**
+     * 继续开始或者停止
+     */
+    private void continueOrStop(String roomId){
+        BoundHashOperations<String, String, String> baseRoomInfoOps = redisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO);
+        String runingNum = baseRoomInfoOps.get(RedisConstant.RUNING_NUM);
+        String totalNum = baseRoomInfoOps.get(RedisConstant.TOTAL_NUM);
+        //结束
+        if (Objects.equals(Integer.valueOf(runingNum) ,Integer.valueOf(totalNum))) {
+
+        }else {
+            SocketResult socketResult = new SocketResult(1013 ,Boolean.TRUE);
+            broadcast(socketResult ,roomId);
+        }
+
+    }
+
+
+    private void setScore(String roomId ,Set<Integer> paiXing ,Integer rule ,Integer basePoint ,Map<String ,Integer> scoreMap){
         String zhuangJiaUserId = redisTemplate.boundValueOps(RedisConstant.ZHUANGJIA + roomId).get();
         BoundHashOperations<String, String, String> qiangZhuangOps = redisTemplate.boundHashOps(RedisConstant.QIANGZHAUNG + roomId);
         BoundHashOperations<String, String, String> xianJiaXiaZhuOps = redisTemplate.boundHashOps(RedisConstant.XIANJIA_XIAZHU + roomId);
@@ -202,11 +236,15 @@ public class NiuniuPlayService {
                     score = score * zhuangJiaPaiXing.getMultiple();
                     zhuangJiaScore += score;
                     scoreOps.put(entry.getKey() ,String.valueOf(-score));
+                    totalScoreOps.put(entry.getKey() ,String.valueOf(Integer.valueOf(totalScoreOps.get(entry.getKey())) - score));
+                    scoreMap.put(entry.getKey() ,-score);
                     //庄家小于闲家
                 }else if (zhuangJiaPaiXing.getPaixing() < xianJiaPaiXing.getPaixing()) {
                     score = score * xianJiaPaiXing.getMultiple();
-                    zhuangJiaScore += score;
+                    zhuangJiaScore -= score;
                     scoreOps.put(entry.getKey() ,String.valueOf(-score));
+                    totalScoreOps.put(entry.getKey() ,String.valueOf(Integer.valueOf(totalScoreOps.get(entry.getKey())) + score));
+                    scoreMap.put(entry.getKey() ,score);
                 }else{
                     boolean zhuangJiaDa = true;
                     //炸弹牛，比炸弹大小(已经设置不可能出现两个五小牛)
@@ -258,24 +296,22 @@ public class NiuniuPlayService {
                         score = score * zhuangJiaPaiXing.getMultiple();
                         zhuangJiaScore += score;
                         scoreOps.put(entry.getKey() ,String.valueOf(-score));
+                        scoreMap.put(entry.getKey() ,-score);
+                        totalScoreOps.put(entry.getKey() ,String.valueOf(Integer.valueOf(totalScoreOps.get(entry.getKey())) - score));
                     }else {
                         score = score * xianJiaPaiXing.getMultiple();
                         zhuangJiaScore += score;
-                        scoreOps.put(entry.getKey() ,String.valueOf(-score));
+                        scoreOps.put(entry.getKey() ,String.valueOf(score));
+                        totalScoreOps.put(entry.getKey() ,String.valueOf(Integer.valueOf(totalScoreOps.get(entry.getKey())) + score));
+                        scoreMap.put(entry.getKey() ,score);
                     }
                 }
 
             }
         }
-        //打完本局后计算各个玩家总分
-        List<UserScore> userScores = roomPoke.getUserScores();
-        for (UserScore userScore : userScores) {
-            userPokeList.forEach(u -> {
-                if (Objects.equals(userScore.getUserId() ,u.getUserId())) {
-                    userScore.setScore(userScore.getScore() + u.getThisScore());
-                }
-            });
-        }
+        scoreOps.put(zhuangJiaUserId ,String.valueOf(zhuangJiaScore));
+        scoreMap.put(zhuangJiaUserId ,zhuangJiaScore);
+        totalScoreOps.put(zhuangJiaUserId ,String.valueOf(Integer.valueOf(totalScoreOps.get(zhuangJiaUserId)) + zhuangJiaScore));
     }
 
     /**

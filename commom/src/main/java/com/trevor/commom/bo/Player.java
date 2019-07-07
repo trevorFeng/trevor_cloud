@@ -27,6 +27,9 @@ public class Player {
      */
     private Boolean isChiGuaPeople;
 
+    /**
+     * 总分
+     */
     private Integer score;
 
 }

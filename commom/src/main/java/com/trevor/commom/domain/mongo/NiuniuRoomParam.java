@@ -18,6 +18,7 @@ import java.util.Set;
 @Document(collection = "niuniu_room_param")
 public class NiuniuRoomParam {
 
+
     private String id;
 
     /**

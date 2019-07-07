@@ -5,7 +5,6 @@ import com.trevor.commom.bo.JsonEntity;
 import com.trevor.commom.bo.RedisConstant;
 import com.trevor.commom.bo.ResponseHelper;
 import com.trevor.commom.dao.mongo.NiuniuRoomParamMapper;
-import com.trevor.commom.dao.mongo.PlayerResultMapper;
 import com.trevor.commom.dao.mysql.CardConsumRecordMapper;
 import com.trevor.commom.dao.mysql.PersonalCardMapper;
 import com.trevor.commom.dao.mysql.RoomMapper;
@@ -76,7 +75,7 @@ public class CreateRoomService{
         roomMapper.insertOne(room);
 
         //插入mongoDB
-        niuniuRoomParamMapper.
+        niuniuRoomParamMapper.save(niuniuRoomParam);
 
         //存入redis
         BoundHashOperations<String, String, String> ops = redisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + room.getId());

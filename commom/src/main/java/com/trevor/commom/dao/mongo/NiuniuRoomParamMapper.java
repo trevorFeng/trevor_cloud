@@ -10,4 +10,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface NiuniuRoomParamMapper extends MongoRepository<NiuniuRoomParam,String> {
+
+    @Override
+    <S extends NiuniuRoomParam> S save(S s);
 }
