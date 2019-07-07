@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -47,7 +48,7 @@ public class Init implements ApplicationRunner {
         List<Room> rooms = roomMapper.findStatus_0();
         List<Long> roomIds = rooms.stream().map(room -> room.getId()).collect(Collectors.toList());
         List<NiuniuRoomParam> niuniuParams = niuniuRoomParamMapper.findByRoomIds(roomIds);
-
+        Map<Long, Integer> collect = rooms.stream().collect(Collectors.toMap(Room::getId, Room::getTotalNum));
 
         for (NiuniuRoomParam niuniuRoomParam : niuniuParams) {
             BoundHashOperations<String, String, String> ops = redisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + niuniuRoomParam.getRoomId());
@@ -61,7 +62,7 @@ public class Init implements ApplicationRunner {
 
             ops.put(RedisConstant.GAME_STATUS ,"1");
             ops.put(RedisConstant.RUNING_NUM ,"0");
-            //ops.put(RedisConstant.TOTAL_NUM ,totalNum.toString());
+            ops.put(RedisConstant.TOTAL_NUM ,collect.get(niuniuRoomParam.getRoomId()).toString());
         }
     }
 
