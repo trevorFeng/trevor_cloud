@@ -13,6 +13,10 @@ import java.util.List;
 @Repository
 public interface RoomMapper {
 
+    /**
+     * 查询状态为0的room
+     * @return
+     */
     List<Room> findStatus_0();
 
     /**

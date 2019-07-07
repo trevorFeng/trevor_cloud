@@ -18,7 +18,7 @@ public class Room {
     /**
      * 开房时间
      */
-    private Long getRoomTime;
+    private Long entryTime;
 
     /**
      * 开房人的id（用户id）
@@ -28,7 +28,7 @@ public class Room {
     /**
      * 是否激活,0为未激活,1为激活，2为房间使用完成后关闭，3为房间未使用关闭
      */
-    private Integer state;
+    private Integer status;
 
     /**
      * 房间类型 1为13人牛牛，2为10人牛牛，3为6人牛牛 ，4为金花
@@ -52,11 +52,13 @@ public class Room {
      * @param roomType
      * @return
      */
-    public void generateRoomBase(Integer roomType ,Long roomAuth ,Long currentTime){
+    public void generateRoomBase(Integer roomType ,Long roomAuth ,Long currentTime ,Integer totalNum){
         this.setRoomType(roomType);
         this.setRoomAuth(roomAuth);
-        this.setGetRoomTime(currentTime);
-        this.state = 0;
+        this.setEntryTime(currentTime);
+        this.runingNum = 0;
+        this.totalNum = totalNum;
+        this.status = 0;
     }
 
 }

@@ -69,9 +69,15 @@ public class CreateRoomService{
             }
         }
         //生成房间，将房间信息存入数据库
+        Integer totalNum = 0;
+        if (Objects.equals(consumCardNum ,ConsumCardEnum.GAME_NUM_12_CARD_3.getConsumCardNum())) {
+            totalNum = 12;
+        }else {
+            totalNum = 24;
+        }
         Long currentTime = System.currentTimeMillis();
         Room room = new Room();
-        room.generateRoomBase(niuniuRoomParam.getRoomType() ,user.getId() ,currentTime);
+        room.generateRoomBase(niuniuRoomParam.getRoomType() ,user.getId() ,currentTime ,totalNum);
         roomMapper.insertOne(room);
 
         //插入mongoDB
@@ -89,11 +95,7 @@ public class CreateRoomService{
 
         ops.put(RedisConstant.GAME_STATUS ,"1");
         ops.put(RedisConstant.RUNING_NUM ,"0");
-        if (Objects.equals(consumCardNum ,ConsumCardEnum.GAME_NUM_12_CARD_3.getConsumCardNum())) {
-            ops.put(RedisConstant.TOTAL_NUM ,"12");
-        }else {
-            ops.put(RedisConstant.TOTAL_NUM ,"24");
-        }
+        ops.put(RedisConstant.TOTAL_NUM ,totalNum.toString());
 
         //生成房卡消费记录
         CardConsumRecord cardConsumRecord = new CardConsumRecord();
