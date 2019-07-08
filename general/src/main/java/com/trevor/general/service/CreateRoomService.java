@@ -119,7 +119,6 @@ public class CreateRoomService{
         }
         Integer basePoint = niuniuRoomParameter.getBasePoint();
 
-
     }
 
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.trevor.dao.CardConsumRecordMapper">
+<mapper namespace="com.trevor.commom.dao.mysql.CardConsumRecordMapper">
 
     <insert id="insertOne">
         insert into card_consum_record
@@ -9,6 +9,7 @@
         room_auth=#{cardConsumRecord.roomAuth},
         consum_num=#{cardConsumRecord.consumNum}
     </insert>
+
     <delete id="deleteByRoomRecordIds">
         delete
         from

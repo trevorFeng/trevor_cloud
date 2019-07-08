@@ -1,4 +1,4 @@
-package com.trevor.auth;
+package com.trevor.auth.util;
 
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;

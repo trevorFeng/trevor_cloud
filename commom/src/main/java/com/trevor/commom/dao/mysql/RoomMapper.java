@@ -19,6 +19,15 @@ public interface RoomMapper {
      */
     List<Room> findStatus_0();
 
+
+    /**
+     * 查询状态为0的room
+     * @return
+     */
+    List<Long> findByEntryTimeAndStatus_0(Long entryTime);
+
+    void updateStatus_3(List<Long> roomIds);
+
     /**
      * 根据主键查询一条记录
      * @param id
@@ -47,11 +56,7 @@ public interface RoomMapper {
      */
     List<Long> findByGetRoomTimeAndState_1(@Param("time") Long time);
 
-    /**
-     * 关闭房间，将房间状态置位0（已过期）
-     * @param ids
-     */
-    void updateState_0(@Param("ids") List<Long> ids);
+
 
     /**
      * 根据ids查询房间，只包含

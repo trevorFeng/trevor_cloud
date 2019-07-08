@@ -1,6 +1,6 @@
 package com.trevor.auth.controller;
 
-import com.trevor.auth.SessionUtil;
+import com.trevor.auth.util.SessionUtil;
 import com.trevor.auth.bo.PhoneCode;
 import com.trevor.auth.service.BrowserLoginService;
 import com.trevor.commom.bo.JsonEntity;

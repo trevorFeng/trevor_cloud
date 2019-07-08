@@ -19,7 +19,7 @@ public class CardConsumRecord {
     /**
      * 开房id
      */
-    private Long roomRecordId;
+    private Long roomId;
 
     /**
      * 开房人的id（用户id）
@@ -38,7 +38,7 @@ public class CardConsumRecord {
      * @param consumNum
      */
     public void generateCardConsumRecordBase(Long roomRecordId , Long roomAuth ,Integer consumNum){
-        this.setRoomRecordId(roomRecordId);
+        this.setRoomId(roomRecordId);
         this.setRoomAuth(roomAuth);
         this.setConsumNum(consumNum);
     }

@@ -1,7 +1,7 @@
 package com.trevor.commom.util;
 
 import com.alibaba.fastjson.JSON;
-import com.trevor.bo.WebKeys;
+import com.trevor.commom.bo.WebKeys;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.FormBody;
 

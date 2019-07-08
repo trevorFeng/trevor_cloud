@@ -1,0 +1,11 @@
+server:
+  port: 9002
+
+spring:
+  application:
+    name: service-auth
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:9000/eureka/

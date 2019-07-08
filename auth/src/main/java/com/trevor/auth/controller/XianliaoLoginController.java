@@ -2,7 +2,7 @@ package com.trevor.auth.controller;
 
 
 
-import com.trevor.auth.SessionUtil;
+import com.trevor.auth.util.SessionUtil;
 import com.trevor.auth.service.XianliaoService;
 import com.trevor.commom.bo.JsonEntity;
 import com.trevor.commom.bo.ResponseHelper;

@@ -1,0 +1,17 @@
+server:
+  port: 9000
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    #registerWithEureka，说明了不需要想eureka注册eureka，就是不注册自己
+    registerWithEureka: false
+    #fetchRegistry：说明自己是注册服务
+    fetchRegistry: false
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+spring:
+  application:
+    name: service-eureka
+

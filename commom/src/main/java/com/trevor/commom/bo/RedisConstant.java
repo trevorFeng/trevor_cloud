@@ -13,6 +13,8 @@ public class RedisConstant {
      */
     public static final String BASE_ROOM_INFO = "baseRoomInfo_";
 
+    public static final String ROOM_USE = "roomUser_";
+
     /**
      * 玩家的消息队列
      */

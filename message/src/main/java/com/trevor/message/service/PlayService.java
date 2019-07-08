@@ -4,7 +4,7 @@ import com.trevor.commom.bo.RedisConstant;
 import com.trevor.commom.bo.SocketResult;
 import com.trevor.commom.enums.GameStatusEnum;
 import com.trevor.message.bo.SocketMessage;
-import com.trevor.message.server.NiuniuServer;
+import com.trevor.message.socket.NiuniuServer;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.BoundListOperations;
 import org.springframework.data.redis.core.BoundValueOperations;

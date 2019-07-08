@@ -9,6 +9,7 @@ import com.trevor.commom.service.UserService;
 import com.trevor.commom.util.TokenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -18,11 +19,10 @@ import java.util.Map;
 import java.util.Objects;
 
 @Slf4j
-@ComponentScan
+@Component
 public class AccessFilter extends ZuulFilter {
 
-    @Resource
-    private UserService userService;
+
 
     private static final String REDIRECT = "www.knave.top/wechat/";
 
@@ -54,7 +54,17 @@ public class AccessFilter extends ZuulFilter {
      */
     @Override
     public boolean shouldFilter() {
-        return true;
+        RequestContext requestContext = RequestContext.getCurrentContext();
+        HttpServletRequest request = requestContext.getRequest();
+
+        System.out.println("address:" + request.getRemoteAddr());
+        System.out.println("uri:" + request.getRequestURI());
+        System.out.println("url:" + request.getRequestURL());
+        // 这里可以结合ACL进行本地化或者放入到redis
+        if ("/apigateway/order/api/v1/order/saveforribbon".equalsIgnoreCase(request.getRequestURI())) {
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -89,17 +99,17 @@ public class AccessFilter extends ZuulFilter {
                 return false;
             }
             //合法才通过
-            User user = userService.findUserByOpenid(openid);
-            if (user != null && Objects.equals(hash ,user.getHash())) {
-                return Boolean.TRUE;
-            }else {
-                try {
-                    response.sendRedirect(REDIRECT);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    log.error("zuul login error ------>" + e);
-                }
-            }
+            //User user = userService.findUserByOpenid(openid);
+//            if (user != null && Objects.equals(hash ,user.getHash())) {
+//                return Boolean.TRUE;
+//            }else {
+//                try {
+//                    response.sendRedirect(REDIRECT);
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                    log.error("zuul login error ------>" + e);
+//                }
+//            }
         }
         return null;
     }

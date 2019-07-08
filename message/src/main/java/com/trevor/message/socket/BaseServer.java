@@ -1,4 +1,4 @@
-package com.trevor.message.server;
+package com.trevor.message.socket;
 
 import com.trevor.commom.service.UserService;
 import com.trevor.message.service.PlayService;

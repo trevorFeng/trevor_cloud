@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.trevor.dao.UserMapper">
+<mapper namespace="com.trevor.commom.dao.mysql.UserMapper">
     <!-- 查询玩家是否开启好友管理功能,1为是，0为否 -->
     <select id="isFriendManage" resultType="java.lang.Integer">
         SELECT friend_manage_flag
@@ -57,7 +57,7 @@
     </update>
 
     <!-- 根据openid查询用户 -->
-    <select id="findUserByOpenid" resultType="com.trevor.domain.User">
+    <select id="findUserByOpenid" resultType="com.trevor.commom.domain.mysql.User">
         SELECT
         id id,
         app_name appName,
@@ -85,7 +85,7 @@
     </select>
 
     <!-- 根据phoneNum查询用户，包含id，weixinName，weixinPictureUrl字段 -->
-    <select id="findUserByPhoneNumContainOpenidAndHash" resultType="com.trevor.domain.User">
+    <select id="findUserByPhoneNumContainOpenidAndHash" resultType="com.trevor.commom.domain.mysql.User">
         SELECT
         open_id openid,
         hash hash
@@ -94,7 +94,7 @@
         phone_number=#{phoneNum}
     </select>
 
-    <select id="findUsersByIds" resultType="com.trevor.domain.User">
+    <select id="findUsersByIds" resultType="com.trevor.commom.domain.mysql.User">
         select
         id id,
         app_name appName,

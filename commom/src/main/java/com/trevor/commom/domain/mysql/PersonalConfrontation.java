@@ -24,7 +24,7 @@ public class PersonalConfrontation {
     /**
      * 开房记录id
      */
-    private Long roomRecordId;
+    private Long roomId;
 
     /**
      * 结束时间

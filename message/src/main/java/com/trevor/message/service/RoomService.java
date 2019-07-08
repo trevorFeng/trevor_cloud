@@ -2,10 +2,11 @@ package com.trevor.message.service;
 
 import com.trevor.commom.bo.RedisConstant;
 import com.trevor.commom.bo.SocketResult;
-import com.trevor.message.server.NiuniuServer;
+import com.trevor.message.socket.NiuniuServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.BoundListOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
@@ -35,7 +36,22 @@ public class RoomService {
     public void destory(){
         Iterator<NiuniuServer> iterator = sockets.values().iterator();
         while (iterator.hasNext()) {
-            NiuniuServer niuniuServer = iterator.next();
+            NiuniuServer socket = iterator.next();
+            socket.flush();
+            socket.stop();
+        }
+    }
+
+    /**
+     * fixedRate设置的上一个任务的开始时间到下一个任务开始时间的间隔
+     * fixedDelay是设定上一个任务结束后多久执行下一个任务，也就是fixedDelay只关心上一任务的结束时间和下一任务的开始时间
+     */
+    @Scheduled(initialDelay = 1000 * 30 ,fixedDelay = 1000)
+    public void checkRoom(){
+        Iterator<NiuniuServer> iterator = sockets.values().iterator();
+        while (iterator.hasNext()) {
+            NiuniuServer socket = iterator.next();
+            socket.flush();
         }
     }
 
@@ -80,8 +96,8 @@ public class RoomService {
      * @param niuniuServer
      */
     public void join(String roomId ,NiuniuServer niuniuServer){
-        if (sockets.containsKey(niuniuServer.roomId)) {
-            NiuniuServer s = sockets.get(niuniuServer.roomId);
+        if (sockets.containsKey(niuniuServer.userId)) {
+            NiuniuServer s = sockets.get(niuniuServer.userId);
             s.sendMessage(new SocketResult(500));
             s.close(niuniuServer.session);
             sockets.remove(niuniuServer.userId);

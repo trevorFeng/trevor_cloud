@@ -19,4 +19,7 @@ public interface NiuniuRoomParamMapper extends MongoRepository<NiuniuRoomParam,S
 
     @Query("{'roomId':{$in:?0}}")
     List<NiuniuRoomParam> findByRoomIds(List<Long> roomIdS);
+
+    @Query("{'roomId':?0")
+    NiuniuRoomParam findByRoomId(Long roomId);
 }

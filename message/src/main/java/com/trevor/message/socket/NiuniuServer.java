@@ -1,4 +1,4 @@
-package com.trevor.message.server;
+package com.trevor.message.socket;
 
 import com.trevor.commom.bo.RedisConstant;
 import com.trevor.commom.bo.SocketResult;
@@ -143,10 +143,6 @@ public class NiuniuServer extends BaseServer {
         }catch (Exception e) {
             log.error(e.getMessage() ,e);
         }
-
-
-
-
     }
 
     /**
@@ -162,6 +158,10 @@ public class NiuniuServer extends BaseServer {
                 log.error("close", e.getMessage(), e);
             }
         }
+    }
+
+    public void stop(){
+        redisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
     }
 
 
