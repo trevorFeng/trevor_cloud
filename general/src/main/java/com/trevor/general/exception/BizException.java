@@ -1,4 +1,4 @@
-package com.trevor.general;
+package com.trevor.general.exception;
 
 import lombok.Data;
 

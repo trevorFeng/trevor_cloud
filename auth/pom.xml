@@ -6,18 +6,19 @@
     <parent>
         <groupId>com.trevor</groupId>
         <artifactId>trevor-cloud</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>com.trevor.auth</groupId>
     <artifactId>auth</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
-            <groupId>${project.parent.groupId}.commom</groupId>
+            <groupId>com.trevor</groupId>
             <artifactId>commom</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>

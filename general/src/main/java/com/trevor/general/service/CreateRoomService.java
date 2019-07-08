@@ -14,7 +14,7 @@ import com.trevor.commom.domain.mysql.Room;
 import com.trevor.commom.domain.mysql.User;
 import com.trevor.commom.enums.ConsumCardEnum;
 import com.trevor.commom.enums.MessageCodeEnum;
-import com.trevor.general.BizException;
+import com.trevor.general.exception.BizException;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;

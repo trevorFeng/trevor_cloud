@@ -6,27 +6,47 @@
     <parent>
         <groupId>com.trevor</groupId>
         <artifactId>trevor-cloud</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>com.trevor.general</groupId>
     <artifactId>general</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+
+    <packaging>jar</packaging>
+
 
     <dependencies>
+
         <dependency>
-            <groupId>${project.parent.groupId}.commom</groupId>
+            <groupId>com.trevor</groupId>
             <artifactId>commom</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
+
+        <!-- spring boot web 依赖 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
     </dependencies>
+
+
+
 
 </project>

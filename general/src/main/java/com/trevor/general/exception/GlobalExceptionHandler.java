@@ -3,7 +3,6 @@ package com.trevor.general.exception;
 import com.trevor.commom.bo.JsonEntity;
 import com.trevor.commom.bo.ResponseHelper;
 import com.trevor.commom.enums.MessageCodeEnum;
-import com.trevor.general.BizException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
