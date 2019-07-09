@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @Service
-public class UserService implements UserServiceImpl{
+public class UserService {
 
     @Resource
     private UserMapper userMapper;
@@ -71,7 +71,6 @@ public class UserService implements UserServiceImpl{
      * 新增一个用户
      * @param user
      */
-    @Override
     @Transactional(rollbackFor = Exception.class)
     public void insertOne(User user) {
         userMapper.insertOne(user);

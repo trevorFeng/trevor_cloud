@@ -3,14 +3,27 @@ package com.trevor.gateway.filter;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
+import com.trevor.common.bo.WebKeys;
+import com.trevor.common.domain.mysql.User;
+import com.trevor.common.service.UserService;
+import com.trevor.common.util.TokenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Component
 public class AccessFilter extends ZuulFilter {
+
+
+    @Resource
+    private UserService userService;
 
 
 
@@ -54,53 +67,53 @@ public class AccessFilter extends ZuulFilter {
         if ("/apigateway/order/api/v1/order/saveforribbon".equalsIgnoreCase(request.getRequestURI())) {
             return true;
         }
-        return false;
+        return true;
     }
 
     @Override
     public Object run() throws ZuulException {
-//        RequestContext ctx = RequestContext.getCurrentContext();
-//        HttpServletRequest request = ctx.getRequest();
-//        HttpServletResponse response = ctx.getResponse();
-//        String token = request.getHeader(WebKeys.TOKEN);
-//        if (token == null) {
-//            try {
-//                log.info("zuul redirect:www.knave.top/wechat/");
-//                response.sendRedirect(REDIRECT);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                log.error("zuul login error ------>" + e);
-//            }
-//        }else {
-//            //解析token
-//            Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
-//            String openid = (String) claims.get("openid");
-//            String hash = (String) claims.get("hash");
-//            Long timestamp = (Long) claims.get("timestamp");
-//
-//            //三者必须存在,少一样说明token被篡改
-//            if (openid == null || hash == null || timestamp == null) {
-//                try {
-//                    response.sendRedirect(REDIRECT);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                    log.error("zuul login error ------>" + e);
-//                }
-//                return false;
-//            }
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+        HttpServletResponse response = ctx.getResponse();
+        String token = request.getHeader(WebKeys.TOKEN);
+        if (token == null) {
+            try {
+                log.info("zuul redirect:www.knave.top/wechat/");
+                response.sendRedirect(REDIRECT);
+            } catch (IOException e) {
+                e.printStackTrace();
+                log.error("zuul login error ------>" + e);
+            }
+        }else {
+            //解析token
+            Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
+            String openid = (String) claims.get("openid");
+            String hash = (String) claims.get("hash");
+            Long timestamp = (Long) claims.get("timestamp");
+
+            //三者必须存在,少一样说明token被篡改
+            if (openid == null || hash == null || timestamp == null) {
+                try {
+                    response.sendRedirect(REDIRECT);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    log.error("zuul login error ------>" + e);
+                }
+                return false;
+            }
             //合法才通过
-            //User user = userService.findUserByOpenid(openid);
-//            if (user != null && Objects.equals(hash ,user.getHash())) {
-//                return Boolean.TRUE;
-//            }else {
-//                try {
-//                    response.sendRedirect(REDIRECT);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                    log.error("zuul login error ------>" + e);
-//                }
-//            }
-//        }
+            User user = userService.findUserByOpenid(openid);
+            if (user != null && Objects.equals(hash ,user.getHash())) {
+                return Boolean.TRUE;
+            }else {
+                try {
+                    response.sendRedirect(REDIRECT);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    log.error("zuul login error ------>" + e);
+                }
+            }
+        }
         return null;
     }
 }

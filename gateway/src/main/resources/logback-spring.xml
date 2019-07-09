@@ -18,7 +18,7 @@
 			<onMismatch>DENY </onMismatch>
 		</filter>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<FileNamePattern>./gatewayLogs/debug.%d{yyyy-MM-dd}.log</FileNamePattern>
+			<FileNamePattern>./aa-logs/gateway/debug.%d{yyyy-MM-dd}.log</FileNamePattern>
 			<MaxHistory>30</MaxHistory>
 		</rollingPolicy>
 		<encoder>
@@ -36,7 +36,7 @@
 			<onMismatch>DENY </onMismatch>
 		</filter>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<FileNamePattern>./gatewayLogs/info.%d{yyyy-MM-dd}.log</FileNamePattern>
+			<FileNamePattern>./aa-logs/gateway/info.%d{yyyy-MM-dd}.log</FileNamePattern>
 			<MaxHistory>30</MaxHistory>
 		</rollingPolicy>
 		<encoder>
@@ -54,7 +54,7 @@
 			<onMismatch>DENY </onMismatch>
 		</filter>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<FileNamePattern>./gatewayLogs/warn.%d{yyyy-MM-dd}.log</FileNamePattern>
+			<FileNamePattern>./aa-logs/gateway/warn.%d{yyyy-MM-dd}.log</FileNamePattern>
 			<MaxHistory>30</MaxHistory>
 		</rollingPolicy>
 		<encoder>
@@ -72,7 +72,7 @@
 			<onMismatch>DENY </onMismatch>
 		</filter>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<FileNamePattern>./gatewayLogs/error.%d{yyyy-MM-dd}.log</FileNamePattern>
+			<FileNamePattern>./aa-logs/gateway/error.%d{yyyy-MM-dd}.log</FileNamePattern>
 			<MaxHistory>30</MaxHistory>
 		</rollingPolicy>
 		<encoder>

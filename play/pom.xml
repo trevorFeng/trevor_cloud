@@ -6,27 +6,26 @@
     <parent>
         <groupId>com.trevor</groupId>
         <artifactId>trevor-cloud</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.trevor.play</groupId>
     <artifactId>play</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
 
-    <name>play</name>
-    <description>Demo project for Spring Boot</description>
+    <packaging>jar</packaging>
 
-    <properties>
-        <java.version>1.8</java.version>
-    </properties>
 
     <dependencies>
 
 
         <dependency>
-            <groupId>${project.parent.groupId}.commom</groupId>
-            <artifactId>commom</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>com.trevor</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
         <!-- websocket模块 -->
