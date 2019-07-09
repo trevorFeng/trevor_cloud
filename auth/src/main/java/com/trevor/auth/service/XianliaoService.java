@@ -1,16 +1,16 @@
 package com.trevor.auth.service;
 
-import com.trevor.commom.bo.JsonEntity;
-import com.trevor.commom.bo.ResponseHelper;
-import com.trevor.commom.bo.WebKeys;
-import com.trevor.commom.dao.mysql.PersonalCardMapper;
-import com.trevor.commom.domain.mysql.PersonalCard;
-import com.trevor.commom.domain.mysql.User;
-import com.trevor.commom.enums.MessageCodeEnum;
-import com.trevor.commom.service.UserService;
-import com.trevor.commom.util.RandomUtils;
-import com.trevor.commom.util.TokenUtil;
-import com.trevor.commom.util.XianliaoAuthUtils;
+import com.trevor.common.bo.JsonEntity;
+import com.trevor.common.bo.ResponseHelper;
+import com.trevor.common.bo.WebKeys;
+import com.trevor.common.dao.mysql.PersonalCardMapper;
+import com.trevor.common.domain.mysql.PersonalCard;
+import com.trevor.common.domain.mysql.User;
+import com.trevor.common.enums.MessageCodeEnum;
+import com.trevor.common.service.UserService;
+import com.trevor.common.util.RandomUtils;
+import com.trevor.common.util.TokenUtil;
+import com.trevor.common.util.XianliaoAuthUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,9 +1,9 @@
 package com.trevor.general.controller;
 
-import com.trevor.commom.bo.JsonEntity;
-import com.trevor.commom.domain.mysql.CardTrans;
-import com.trevor.commom.domain.mysql.User;
-import com.trevor.commom.util.ThreadLocalUtil;
+import com.trevor.common.bo.JsonEntity;
+import com.trevor.common.domain.mysql.CardTrans;
+import com.trevor.common.domain.mysql.User;
+import com.trevor.common.util.ThreadLocalUtil;
 import com.trevor.general.service.CardTransService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

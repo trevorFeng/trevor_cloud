@@ -1,16 +1,16 @@
 package com.trevor.general.service;
 
 import com.alibaba.fastjson.JSON;
-import com.trevor.commom.bo.Authentication;
-import com.trevor.commom.bo.JsonEntity;
-import com.trevor.commom.bo.ProposalContent;
-import com.trevor.commom.bo.ResponseHelper;
-import com.trevor.commom.dao.mysql.UserProposalsMapper;
-import com.trevor.commom.domain.mysql.UserProposals;
-import com.trevor.commom.enums.MessageCodeEnum;
-import com.trevor.commom.service.UserService;
-import com.trevor.commom.util.FileUtil;
-import com.trevor.commom.util.ObjectUtil;
+import com.trevor.common.bo.Authentication;
+import com.trevor.common.bo.JsonEntity;
+import com.trevor.common.bo.ProposalContent;
+import com.trevor.common.bo.ResponseHelper;
+import com.trevor.common.dao.mysql.UserProposalsMapper;
+import com.trevor.common.domain.mysql.UserProposals;
+import com.trevor.common.enums.MessageCodeEnum;
+import com.trevor.common.service.UserService;
+import com.trevor.common.util.FileUtil;
+import com.trevor.common.util.ObjectUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

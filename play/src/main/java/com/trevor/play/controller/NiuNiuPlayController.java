@@ -1,8 +1,8 @@
 package com.trevor.play.controller;
 
-import com.trevor.commom.bo.JsonEntity;
-import com.trevor.commom.bo.ResponseHelper;
-import com.trevor.commom.enums.MessageCodeEnum;
+import com.trevor.common.bo.JsonEntity;
+import com.trevor.common.bo.ResponseHelper;
+import com.trevor.common.enums.MessageCodeEnum;
 import com.trevor.play.service.NiuniuPlayService;
 import org.springframework.stereotype.Controller;
 

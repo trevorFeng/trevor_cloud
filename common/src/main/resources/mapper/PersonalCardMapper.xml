@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.trevor.common.dao.mysql.PersonalCardMapper">
+
+    <!-- 根据玩家id更新房卡数量 -->
+    <update id="updatePersonalCardNum">
+        update `personal_card`
+        set
+        room_card_num=#{card}
+        WHERE
+        user_id = #{userId}
+    </update>
+
+    <update id="updatePersonalCardNumByUserIds">
+        <foreach collection="returnCards" item="item" index="index" open="" close="" separator=";">
+            update `personal_card`
+            set
+            room_card_num = #{item.returnCardNum}
+            where
+            user_id = #{item.userId}
+        </foreach>
+    </update>
+
+    <!-- 根据玩家查询玩家拥有的房卡数量 -->
+    <select id="findCardNumByUserId" resultType="java.lang.Integer">
+      select
+      room_card_num
+      from
+      `personal_card`
+      where
+      user_id = #{userId}
+    </select>
+
+     <select id="findByUserIds" resultType="com.trevor.common.domain.mysql.PersonalCard">
+      select
+      user_id userId,
+      room_card_num roomCardNum
+      from
+      personal_card
+      where
+      user_id in
+        <foreach collection="userIds" item="id"  open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- 插入一条新纪录 -->
+    <insert id="insertOne">
+        insert into
+        `personal_card`(user_id ,room_card_num)
+        values
+        (#{personalCard.userId} ,#{personalCard.roomCardNum})
+    </insert>
+
+</mapper>

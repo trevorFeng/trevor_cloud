@@ -1,7 +1,7 @@
 package com.trevor.message.service;
 
-import com.trevor.commom.bo.RedisConstant;
-import com.trevor.commom.bo.SocketResult;
+import com.trevor.common.bo.RedisConstant;
+import com.trevor.common.bo.SocketResult;
 import com.trevor.message.socket.NiuniuServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.BoundListOperations;

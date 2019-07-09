@@ -1,11 +1,11 @@
 package com.trevor.general.controller;
 
-import com.trevor.commom.bo.Authentication;
-import com.trevor.commom.bo.JsonEntity;
-import com.trevor.commom.bo.ProposalContent;
-import com.trevor.commom.domain.mysql.User;
-import com.trevor.commom.service.UserService;
-import com.trevor.commom.util.ThreadLocalUtil;
+import com.trevor.common.bo.Authentication;
+import com.trevor.common.bo.JsonEntity;
+import com.trevor.common.bo.ProposalContent;
+import com.trevor.common.domain.mysql.User;
+import com.trevor.common.service.UserService;
+import com.trevor.common.util.ThreadLocalUtil;
 import com.trevor.general.service.ProposalsService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

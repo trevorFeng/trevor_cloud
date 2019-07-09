@@ -1,8 +1,8 @@
 package com.trevor.message.service;
 
-import com.trevor.commom.bo.RedisConstant;
-import com.trevor.commom.bo.SocketResult;
-import com.trevor.commom.enums.GameStatusEnum;
+import com.trevor.common.bo.RedisConstant;
+import com.trevor.common.bo.SocketResult;
+import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.message.bo.SocketMessage;
 import com.trevor.message.socket.NiuniuServer;
 import org.springframework.data.redis.core.BoundHashOperations;

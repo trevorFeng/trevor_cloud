@@ -1,15 +1,15 @@
 package com.trevor.general.task;
 
 import com.google.common.collect.Lists;
-import com.trevor.commom.bo.RedisConstant;
-import com.trevor.commom.bo.ReturnCard;
-import com.trevor.commom.dao.mongo.NiuniuRoomParamMapper;
-import com.trevor.commom.dao.mysql.CardConsumRecordMapper;
-import com.trevor.commom.dao.mysql.PersonalCardMapper;
-import com.trevor.commom.dao.mysql.RoomMapper;
-import com.trevor.commom.domain.mongo.NiuniuRoomParam;
-import com.trevor.commom.domain.mysql.PersonalCard;
-import com.trevor.commom.domain.mysql.Room;
+import com.trevor.common.bo.RedisConstant;
+import com.trevor.common.bo.ReturnCard;
+import com.trevor.common.dao.mongo.NiuniuRoomParamMapper;
+import com.trevor.common.dao.mysql.CardConsumRecordMapper;
+import com.trevor.common.dao.mysql.PersonalCardMapper;
+import com.trevor.common.dao.mysql.RoomMapper;
+import com.trevor.common.domain.mongo.NiuniuRoomParam;
+import com.trevor.common.domain.mysql.PersonalCard;
+import com.trevor.common.domain.mysql.Room;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.BoundValueOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;

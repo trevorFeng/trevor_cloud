@@ -1,6 +1,6 @@
 package com.trevor.message.bo;
 
-import com.trevor.commom.enums.MessageCodeEnum;
+import com.trevor.common.enums.MessageCodeEnum;
 import lombok.Data;
 
 /**

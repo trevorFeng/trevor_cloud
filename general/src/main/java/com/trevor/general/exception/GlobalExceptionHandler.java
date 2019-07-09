@@ -1,8 +1,8 @@
 package com.trevor.general.exception;
 
-import com.trevor.commom.bo.JsonEntity;
-import com.trevor.commom.bo.ResponseHelper;
-import com.trevor.commom.enums.MessageCodeEnum;
+import com.trevor.common.bo.JsonEntity;
+import com.trevor.common.bo.ResponseHelper;
+import com.trevor.common.enums.MessageCodeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;

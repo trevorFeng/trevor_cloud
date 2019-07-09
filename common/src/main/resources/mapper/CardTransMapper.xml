@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.trevor.common.dao.mysql.CardTransMapper">
+    <insert id="insertOne">
+        insert into card_trans
+        set
+        card_num=#{cardTrans.cardNum},
+        turn_out_user_name=#{cardTrans.turnOutUserName},
+        turn_out_user_id=#{cardTrans.turnOutUserId},
+        trans_num=#{cardTrans.transNum},
+        turn_out_time=#{cardTrans.turnOutTime},
+        turn_in_user_id=#{cardTrans.turnInUserId},
+        turn_in_time=#{cardTrans.turnInTime},
+        version=#{cardTrans.version}
+    </insert>
+
+    <select id="findCardNumByTransNo" resultType="java.lang.Integer">
+        SELECT
+        t.card_num cardNum
+        FROM
+        card_trans t
+        WHERE
+        t.trans_num=#{transNo}
+    </select>
+
+    <update id="closeTrans">
+        update card_trans
+        set
+        turn_in_time=#{turnInTime},
+        turn_in_user_id=#{turnInUserId},
+        turn_in_user_name=#{turnInUserName},
+        version=1
+        WHERE
+        trans_num=#{transNo}
+        AND
+        version=0
+    </update>
+
+    <select id="findSendCardRecord" resultType="com.trevor.common.domain.mysql.CardTrans">
+        SELECT
+        t.card_num cardNum,
+        t.turn_in_user_id turnInUserId,
+        t.turn_out_time turnOutTime
+        FROM
+        card_trans t
+        WHERE
+        t.turn_out_user_id=#{userId}
+    </select>
+
+    <select id="findRecevedCardRecord" resultType="com.trevor.common.domain.mysql.CardTrans">
+        SELECT
+        t.card_num cardNum,
+        t.turn_out_user_name turnOutUserName,
+        t.turn_in_time turnInTime
+        FROM
+        card_trans t
+        WHERE
+        t.turn_in_user_id=#{turnInUserId}
+    </select>
+
+</mapper>

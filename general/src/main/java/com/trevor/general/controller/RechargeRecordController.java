@@ -1,8 +1,8 @@
 package com.trevor.general.controller;
 
 
-import com.trevor.commom.bo.JsonEntity;
-import com.trevor.commom.bo.RechargeCard;
+import com.trevor.common.bo.JsonEntity;
+import com.trevor.common.bo.RechargeCard;
 import com.trevor.general.service.RechargeRecordService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

@@ -4,10 +4,10 @@ package com.trevor.auth.controller;
 
 import com.trevor.auth.util.SessionUtil;
 import com.trevor.auth.service.XianliaoService;
-import com.trevor.commom.bo.JsonEntity;
-import com.trevor.commom.bo.ResponseHelper;
-import com.trevor.commom.enums.MessageCodeEnum;
-import com.trevor.commom.util.RandomUtils;
+import com.trevor.common.bo.JsonEntity;
+import com.trevor.common.bo.ResponseHelper;
+import com.trevor.common.enums.MessageCodeEnum;
+import com.trevor.common.util.RandomUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;

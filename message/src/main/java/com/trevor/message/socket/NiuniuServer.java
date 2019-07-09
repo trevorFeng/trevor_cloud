@@ -1,11 +1,11 @@
 package com.trevor.message.socket;
 
-import com.trevor.commom.bo.RedisConstant;
-import com.trevor.commom.bo.SocketResult;
-import com.trevor.commom.bo.WebKeys;
-import com.trevor.commom.domain.mysql.User;
-import com.trevor.commom.util.JsonUtil;
-import com.trevor.commom.util.ObjectUtil;
+import com.trevor.common.bo.RedisConstant;
+import com.trevor.common.bo.SocketResult;
+import com.trevor.common.bo.WebKeys;
+import com.trevor.common.domain.mysql.User;
+import com.trevor.common.util.JsonUtil;
+import com.trevor.common.util.ObjectUtil;
 import com.trevor.message.bo.SocketMessage;
 import com.trevor.message.decoder.MessageDecoder;
 import com.trevor.message.encoder.MessageEncoder;

@@ -5,6 +5,9 @@ spring:
   application:
     name: auth
 
+  resources:
+
+
 eureka:
   client:
     serviceUrl:

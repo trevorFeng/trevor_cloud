@@ -1,11 +1,11 @@
 package com.trevor.auth.service;
 
-import com.trevor.commom.bo.JsonEntity;
-import com.trevor.commom.bo.ResponseHelper;
-import com.trevor.commom.domain.mysql.User;
-import com.trevor.commom.enums.MessageCodeEnum;
-import com.trevor.commom.service.UserService;
-import com.trevor.commom.util.GetMessageCodeUtil;
+import com.trevor.common.bo.JsonEntity;
+import com.trevor.common.bo.ResponseHelper;
+import com.trevor.common.domain.mysql.User;
+import com.trevor.common.enums.MessageCodeEnum;
+import com.trevor.common.service.UserService;
+import com.trevor.common.util.GetMessageCodeUtil;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

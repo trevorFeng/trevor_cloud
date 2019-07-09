@@ -1,6 +1,6 @@
 package com.trevor.message.socket;
 
-import com.trevor.commom.service.UserService;
+import com.trevor.common.service.UserService;
 import com.trevor.message.service.PlayService;
 import com.trevor.message.service.RoomService;
 import org.springframework.data.redis.core.StringRedisTemplate;

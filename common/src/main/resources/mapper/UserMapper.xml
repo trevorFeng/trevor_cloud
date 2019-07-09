@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.trevor.common.dao.mysql.UserMapper">
+    <!-- 查询玩家是否开启好友管理功能,1为是，0为否 -->
+    <select id="isFriendManage" resultType="java.lang.Integer">
+        SELECT friend_manage_flag
+        from `user`
+        WHERE
+        id=#{userId}
+    </select>
+
+    <!-- 根据openid查找用户是否存在 -->
+    <select id="isExistByOpnenId" resultType="java.lang.Long">
+        SELECT count(id)
+        from `user`
+        WHERE
+        open_id=#{openid}
+    </select>
+
+    <!-- 更新用户 -->
+    <update id="updateUser">
+        update `user` SET
+        <if test="user.realName != null and user.realName != ''">
+            real_name=#{user.realName},
+        </if>
+        <if test="user.idCard != null and user.idCard != ''">
+            id_card=#{user.idCard},
+        </if>
+        <if test="user.hash != null and user.hash != ''">
+            hash=#{user.hash},
+        </if>
+        <if test="user.userId != null">
+            user_id=#{user.userId},
+        </if>
+        <if test="user.appName != null and user.appName != ''">
+            app_name=#{user.appName},
+        </if>
+        <if test="user.appPictureUrl != null and user.appPictureUrl != ''">
+            app_picture_url=#{user.appPictureUrl},
+        </if>
+        <if test="user.friendManageFlag != null">
+            friend_manage_flag=#{user.friendManageFlag},
+        </if>
+        <if test="user.phoneNumber != null and user.phoneNumber != ''">
+            phone_number=#{user.phoneNumber},
+        </if>
+        id=id
+        where
+        1=1
+        <if test="user.openid != null">
+            and open_id=#{user.openid}
+        </if>
+        <if test="user.id != null">
+            and id=#{user.id}
+        </if>
+
+    </update>
+
+    <!-- 根据openid查询用户 -->
+    <select id="findUserByOpenid" resultType="com.trevor.common.domain.mysql.User">
+        SELECT
+        id id,
+        app_name appName,
+        open_id openid,
+        hash hash,
+        app_picture_url appPictureUrl
+        from `user`
+        WHERE
+        open_id=#{openid}
+    </select>
+
+    <!-- 插入user -->
+    <insert id="insertOne" useGeneratedKeys="true" keyProperty="id">
+        INSERT  INTO
+        `user`(open_id ,hash ,app_name ,app_picture_url ,`type` ,friend_manage_flag)
+        VALUES (#{user.openid} ,#{user.hash} ,#{user.appName} ,#{user.appPictureUrl} ,#{user.type} ,#{user.friendManageFlag})
+    </insert>
+
+    <!-- 根据手机号查询用户是否存在 -->
+    <select id="isExistByPhoneNum" resultType="java.lang.Long">
+        SELECT count(id)
+        from `user`
+        WHERE
+        phone_number=#{phoneNum}
+    </select>
+
+    <!-- 根据phoneNum查询用户，包含id，weixinName，weixinPictureUrl字段 -->
+    <select id="findUserByPhoneNumContainOpenidAndHash" resultType="com.trevor.common.domain.mysql.User">
+        SELECT
+        open_id openid,
+        hash hash
+        from `user`
+        WHERE
+        phone_number=#{phoneNum}
+    </select>
+
+    <select id="findUsersByIds" resultType="com.trevor.common.domain.mysql.User">
+        select
+        id id,
+        app_name appName,
+        app_picture_url appPictureUrl
+        from
+        `user`
+        where
+        id in
+        <foreach collection="ids" item="id"  open="(" separator="," close=")">
+        #{id}
+        </foreach>
+    </select>
+
+</mapper>

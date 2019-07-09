@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.trevor.common.dao.mysql.RechargeRecordMapper">
+
+    <!-- 新增一条记录 -->
+    <insert id="insertOne">
+        INSERT  INTO
+        `recharge_record`(user_id ,recharge_card ,unit_price ,total_price ,`time`)
+        VALUES (#{rechargeRecord.userId} ,#{rechargeRecord.rechargeCard}
+        ,#{rechargeRecord.unitPrice} ,#{rechargeRecord.totalPrice} ,#{rechargeRecord.time})
+    </insert>
+
+</mapper>

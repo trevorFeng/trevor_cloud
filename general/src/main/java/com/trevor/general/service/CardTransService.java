@@ -1,13 +1,13 @@
 package com.trevor.general.service;
 
-import com.trevor.commom.bo.BizKeys;
-import com.trevor.commom.bo.JsonEntity;
-import com.trevor.commom.bo.ResponseHelper;
-import com.trevor.commom.dao.mysql.CardTransMapper;
-import com.trevor.commom.dao.mysql.PersonalCardMapper;
-import com.trevor.commom.domain.mysql.CardTrans;
-import com.trevor.commom.domain.mysql.User;
-import com.trevor.commom.enums.MessageCodeEnum;
+import com.trevor.common.bo.BizKeys;
+import com.trevor.common.bo.JsonEntity;
+import com.trevor.common.bo.ResponseHelper;
+import com.trevor.common.dao.mysql.CardTransMapper;
+import com.trevor.common.dao.mysql.PersonalCardMapper;
+import com.trevor.common.domain.mysql.CardTrans;
+import com.trevor.common.domain.mysql.User;
+import com.trevor.common.enums.MessageCodeEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

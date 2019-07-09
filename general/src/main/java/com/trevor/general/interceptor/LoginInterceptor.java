@@ -1,11 +1,11 @@
 package com.trevor.general.interceptor;
 
 
-import com.trevor.commom.bo.WebKeys;
-import com.trevor.commom.domain.mysql.User;
-import com.trevor.commom.service.UserService;
-import com.trevor.commom.util.ThreadLocalUtil;
-import com.trevor.commom.util.TokenUtil;
+import com.trevor.common.bo.WebKeys;
+import com.trevor.common.domain.mysql.User;
+import com.trevor.common.service.UserService;
+import com.trevor.common.util.ThreadLocalUtil;
+import com.trevor.common.util.TokenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;

@@ -1,15 +1,15 @@
 package com.trevor.general.service;
 
 import com.google.common.collect.Lists;
-import com.trevor.commom.bo.FriendInfo;
-import com.trevor.commom.bo.JsonEntity;
-import com.trevor.commom.bo.ResponseHelper;
-import com.trevor.commom.dao.mysql.FriendManageMapper;
-import com.trevor.commom.domain.mysql.FriendsManage;
-import com.trevor.commom.domain.mysql.User;
-import com.trevor.commom.enums.MessageCodeEnum;
-import com.trevor.commom.service.RoomService;
-import com.trevor.commom.service.UserService;
+import com.trevor.common.bo.FriendInfo;
+import com.trevor.common.bo.JsonEntity;
+import com.trevor.common.bo.ResponseHelper;
+import com.trevor.common.dao.mysql.FriendManageMapper;
+import com.trevor.common.domain.mysql.FriendsManage;
+import com.trevor.common.domain.mysql.User;
+import com.trevor.common.enums.MessageCodeEnum;
+import com.trevor.common.service.RoomService;
+import com.trevor.common.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
