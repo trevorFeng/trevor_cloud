@@ -5,6 +5,9 @@ spring:
   application:
     name: service-general
 
+  profiles:
+    include: common_dev
+
 eureka:
   client:
     serviceUrl:

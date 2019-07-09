@@ -11,6 +11,7 @@ import com.trevor.common.domain.mysql.PersonalCard;
 import com.trevor.common.domain.mysql.User;
 import com.trevor.common.enums.MessageCodeEnum;
 import com.trevor.common.service.UserService;
+import com.trevor.common.service.UserServiceImpl;
 import com.trevor.common.util.RandomUtils;
 import com.trevor.common.util.TokenUtil;
 import io.swagger.annotations.Api;
@@ -37,7 +38,7 @@ import java.util.Map;
 public class TestLoginController {
 
     @Resource
-    private UserService userService;
+    private UserServiceImpl userService;
 
     @Resource
     private PersonalCardMapper personalCardMapper;
