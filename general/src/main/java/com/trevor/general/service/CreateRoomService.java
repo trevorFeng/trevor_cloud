@@ -40,7 +40,7 @@ public class CreateRoomService{
     private CardConsumRecordMapper cardConsumRecordMapper;
 
     @Resource
-    private StringRedisTemplate redisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
 
     @Resource
     private NiuniuRoomParamMapper niuniuRoomParamMapper;
@@ -81,10 +81,11 @@ public class CreateRoomService{
         roomMapper.insertOne(room);
 
         //插入mongoDB
+        niuniuRoomParam.setRoomId(room.getId());
         niuniuRoomParamMapper.save(niuniuRoomParam);
 
         //存入redis
-        BoundHashOperations<String, String, String> ops = redisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + room.getId());
+        BoundHashOperations<String, String, String> ops = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + room.getId());
         ops.put(RedisConstant.ROOM_TYPE ,String.valueOf(niuniuRoomParam.getRoomType()));
         ops.put(RedisConstant.ROB_ZHUANG_TYPE ,String.valueOf(niuniuRoomParam.getRobZhuangType()));
         ops.put(RedisConstant.BASE_POINT ,String.valueOf(niuniuRoomParam.getBasePoint()));

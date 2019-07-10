@@ -5,8 +5,8 @@
     <!-- 插入一条记录并返回主键 -->
     <insert id="insertOne" useGeneratedKeys="true" keyProperty="id">
         insert into
-        `room`(`get_room_time` ,`room_auth` ,`state` ,`room_type` ,`room_config`)
-        values (#{room.getRoomTime} ,#{room.roomAuth} ,#{room.state} ,#{room.roomType} ,#{room.roomConfig})
+        `room`(`entry_time` ,`room_auth` ,`status` ,`room_type` ,`runing_num` ,`total_num`)
+        values (#{room.entryTime} ,#{room.roomAuth} ,#{room.status} ,#{room.roomType} ,#{room.runingNum} ,#{room.totalNum})
     </insert>
 
     <update id="updateStatus_3">
@@ -75,5 +75,19 @@
         status=0
         and
         entry_time &lt; #{entryTime}
+    </select>
+    <select id="findStatus_0" resultType="com.trevor.common.domain.mysql.Room">
+        select
+        id id,
+        entry_time entryTime,
+        room_auth roomAuth,
+        status status,
+        room_type roomType,
+        runing_num runingNum,
+        total_num totalNum
+        from
+        `room`
+        where
+        status=0
     </select>
 </mapper>

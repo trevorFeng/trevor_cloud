@@ -1,3 +1,10 @@
 spring:
   profiles:
     active: dev
+
+
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    root: ERROR
+    com.xdbigdata.subsidize_zjut: DEBUG

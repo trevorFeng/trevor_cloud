@@ -5,7 +5,7 @@
     <insert id="insertOne">
         insert into card_consum_record
         set
-        room_record_id=#{cardConsumRecord.roomRecordId},
+        room_id=#{cardConsumRecord.roomId},
         room_auth=#{cardConsumRecord.roomAuth},
         consum_num=#{cardConsumRecord.consumNum}
     </insert>
@@ -15,7 +15,7 @@
         from
         card_consum_record
         where
-        room_record_id in
+        room_id in
         <foreach collection="roomRecordIds" item="id"  open="(" separator="," close=")">
             #{id}
         </foreach>

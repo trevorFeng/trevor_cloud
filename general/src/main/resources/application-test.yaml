@@ -1,12 +1,27 @@
 server:
-     port: 8762
+  port: 9003
 
 spring:
-  application: 
-    name: service-hi
+  application:
+    name: service-general
+
+  profiles:
+    include: common_test
 
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://120.79.184.105:9000/eureka/
 
+  instance:
+    instance-id: 基础服务-9003
+    prefer-ip-address: true
+
+info:
+  author.name: trevor
+  app.name: general
+  server.port: ${server.port}
+  application.name: ${spring.application.name}
+
+file:
+  path: D:/trevor/file

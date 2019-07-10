@@ -68,7 +68,6 @@ public class NiuniuServer extends BaseServer {
         session.setMaxIdleTimeout(1000 * 60 * 45);
         this.session = session;
         redisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
-
     }
 
     /**

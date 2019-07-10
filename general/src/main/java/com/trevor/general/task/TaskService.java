@@ -43,7 +43,7 @@ public class TaskService{
     private NiuniuRoomParamMapper niuniuRoomParamMapper;
 
     @Resource
-    private StringRedisTemplate redisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
 
     @Transactional(rollbackFor = Exception.class)
     public void checkRoomRecord() {
@@ -54,7 +54,7 @@ public class TaskService{
         log.info("超过半小时未使用的房间ids：" + overDayRoomIds.toString() );
         List<Long> redisUnUserRoomIds = Lists.newArrayList();
         for (Long roomId : overDayRoomIds) {
-            BoundValueOperations<String, String> roomUseOps = redisTemplate.boundValueOps(RedisConstant.ROOM_USE + roomId);
+            BoundValueOperations<String, String> roomUseOps = stringRedisTemplate.boundValueOps(RedisConstant.ROOM_USE + roomId);
             if (roomUseOps.get() == null) {
                 redisUnUserRoomIds.add(roomId);
             }
@@ -65,7 +65,7 @@ public class TaskService{
         for (Long roomId : overDayRoomIds) {
             for (Long redisUnUserRoomId : redisUnUserRoomIds) {
                 if (Objects.equals(roomId ,redisUnUserRoomId)) {
-                    redisTemplate.delete(RedisConstant.BASE_ROOM_INFO + roomId);
+                    stringRedisTemplate.delete(RedisConstant.BASE_ROOM_INFO + roomId);
                 }
             }
         }

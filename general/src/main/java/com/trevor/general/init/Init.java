@@ -34,7 +34,7 @@ public class Init implements ApplicationRunner {
     private NiuniuRoomParamMapper niuniuRoomParamMapper;
 
     @Resource
-    private StringRedisTemplate redisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
     
     
 
@@ -46,15 +46,18 @@ public class Init implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         List<Room> rooms = roomMapper.findStatus_0();
+        if (rooms.isEmpty()) {
+            return;
+        }
         List<Long> roomIds = rooms.stream().map(room -> room.getId()).collect(Collectors.toList());
         List<NiuniuRoomParam> niuniuParams = niuniuRoomParamMapper.findByRoomIds(roomIds);
         Map<Long, Integer> collect = rooms.stream().collect(Collectors.toMap(Room::getId, Room::getTotalNum));
 
         for (NiuniuRoomParam niuniuRoomParam : niuniuParams) {
             String roomId = niuniuRoomParam.getRoomId().toString();
-            redisTemplate.delete(RedisConstant.BASE_ROOM_INFO + roomId);
+            stringRedisTemplate.delete(RedisConstant.BASE_ROOM_INFO + roomId);
 
-            BoundHashOperations<String, String, String> ops = redisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
+            BoundHashOperations<String, String, String> ops = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
             ops.put(RedisConstant.ROOM_TYPE ,String.valueOf(niuniuRoomParam.getRoomType()));
             ops.put(RedisConstant.ROB_ZHUANG_TYPE ,String.valueOf(niuniuRoomParam.getRobZhuangType()));
             ops.put(RedisConstant.BASE_POINT ,String.valueOf(niuniuRoomParam.getBasePoint()));
@@ -65,7 +68,7 @@ public class Init implements ApplicationRunner {
 
             ops.put(RedisConstant.GAME_STATUS ,"1");
             ops.put(RedisConstant.RUNING_NUM ,"0");
-            ops.put(RedisConstant.TOTAL_NUM ,collect.get(roomId).toString());
+            ops.put(RedisConstant.TOTAL_NUM ,collect.get(Long.valueOf(roomId)).toString());
         }
     }
 }

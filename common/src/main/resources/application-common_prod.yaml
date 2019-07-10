@@ -1,15 +1,14 @@
 mybatis:
   mapper-locations: classpath:/mapper/*.xml
-  type-aliases-package: com.trevor.
+  type-aliases-package: com.trevor.common.dao.mysql
   config-location: classpath:/mybatis-config.xml
 
 spring:
   data:
     mongodb:
-      host: 192.168.3.1
-        database: comprehensiveAppraisal
-        port: 27017
-
+      host: 120.79.184.105
+      database: trevor
+      port: 27017
 
   datasource:
     url: jdbc:mysql://120.79.184.105:3306/trevor?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true
@@ -30,3 +29,6 @@ spring:
     testOnReturn: false
     poolPreparedStatements: true
     maxOpenPreparedStatements: 20
+
+
+  profiles: common_prod
