@@ -38,10 +38,26 @@ public class NiuniuPlayService {
     private static StringRedisTemplate redisTemplate;
 
 
-    public void play(String roomIdStr){
-        BoundHashOperations<String, String, String> roomBaseInfoOps = redisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomIdStr);
+    /**
+     * 房间只有两个人打牌
+     * @param roomIdStr
+     */
+    public void playEqualTwo(String roomIdStr){
+        play(roomIdStr);
+    }
+
+    /**
+     * 房间里超过两个人
+     * @param roomIdStr
+     */
+    public void playOverTwo(String roomIdStr){
         //准备的倒计时
         countDown(1002 ,GameStatusEnum.BEFORE_FAPAI_4.getCode() ,roomIdStr);
+        play(roomIdStr);
+    }
+
+    private void play(String roomIdStr){
+        BoundHashOperations<String, String, String> roomBaseInfoOps = redisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomIdStr);
         //发4张牌
         fapai_4(roomIdStr ,JsonUtil.parse(roomBaseInfoOps.get(RedisConstant.PAIXING) ,new HashSet<>()));
         //开始抢庄倒计时

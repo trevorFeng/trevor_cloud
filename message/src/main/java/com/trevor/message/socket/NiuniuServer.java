@@ -164,6 +164,11 @@ public class NiuniuServer extends BaseServer {
     }
 
 
+    private void checkRoom(){
+
+    }
+
+
 
 
 }
