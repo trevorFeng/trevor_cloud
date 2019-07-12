@@ -5,8 +5,7 @@ import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.message.bo.SocketMessage;
 import com.trevor.message.feign.PlayFeign;
-import com.trevor.message.socket.NiuniuServer;
-import org.springframework.cloud.openfeign.FeignClient;
+import com.trevor.message.socket.NiuniuSocket;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.BoundListOperations;
 import org.springframework.data.redis.core.BoundValueOperations;
@@ -36,7 +35,7 @@ public class PlayService {
      * 处理准备的消息
      * @param roomId
      */
-    public void dealReadyMessage(String roomId , NiuniuServer socket){
+    public void dealReadyMessage(String roomId , NiuniuSocket socket){
         BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
         //根据房间状态判断
         BoundListOperations<String, String> realPlayerUserIds = stringRedisTemplate.boundListOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
@@ -67,7 +66,7 @@ public class PlayService {
      * 处理抢庄的消息
      * @param roomId
      */
-    public void dealQiangZhuangMessage(String roomId , NiuniuServer socket , SocketMessage socketMessage){
+    public void dealQiangZhuangMessage(String roomId , NiuniuSocket socket , SocketMessage socketMessage){
         //验证状态
         BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
         if (!Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_SELECT_ZHUANGJIA.getCode())) {
@@ -91,7 +90,7 @@ public class PlayService {
      * 处理闲家下注的消息
      * @param roomId
      */
-    public void dealXiaZhuMessage(String roomId , NiuniuServer socket , SocketMessage socketMessage){
+    public void dealXiaZhuMessage(String roomId , NiuniuSocket socket , SocketMessage socketMessage){
         BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
         if (!Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_LAST_POKE.getCode())) {
             socket.sendMessage(new SocketResult(-501));
@@ -119,7 +118,7 @@ public class PlayService {
      * 处理摊牌的消息
      * @param roomId
      */
-    public void dealTanPaiMessage(String roomId , NiuniuServer socket , SocketMessage socketMessage){
+    public void dealTanPaiMessage(String roomId , NiuniuSocket socket , SocketMessage socketMessage){
         //状态信息
         BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
         if (!Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_CALRESULT.getCode())) {

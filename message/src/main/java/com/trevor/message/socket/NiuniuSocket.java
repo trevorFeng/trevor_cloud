@@ -34,7 +34,7 @@ import java.util.Objects;
 )
 @Component
 @Slf4j
-public class NiuniuServer extends BaseServer {
+public class NiuniuSocket extends BaseServer {
 
     public Session session;
 

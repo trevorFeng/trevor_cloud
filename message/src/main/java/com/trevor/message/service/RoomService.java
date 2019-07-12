@@ -2,7 +2,7 @@ package com.trevor.message.service;
 
 import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
-import com.trevor.message.socket.NiuniuServer;
+import com.trevor.message.socket.NiuniuSocket;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.BoundListOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -24,7 +24,7 @@ import java.util.concurrent.Executor;
 @Service
 public class RoomService {
 
-    public static ConcurrentHashMap<String , NiuniuServer> sockets = new ConcurrentHashMap<>(2<<11);
+    public static ConcurrentHashMap<String , NiuniuSocket> sockets = new ConcurrentHashMap<>(2<<11);
 
     @Resource(name = "executor")
     private Executor executor;
@@ -34,9 +34,9 @@ public class RoomService {
 
     @PreDestroy
     public void destory(){
-        Iterator<NiuniuServer> iterator = sockets.values().iterator();
+        Iterator<NiuniuSocket> iterator = sockets.values().iterator();
         while (iterator.hasNext()) {
-            NiuniuServer socket = iterator.next();
+            NiuniuSocket socket = iterator.next();
             socket.flush();
             socket.stop();
         }
@@ -48,9 +48,9 @@ public class RoomService {
      */
     @Scheduled(initialDelay = 1000 * 30 ,fixedDelay = 1000)
     public void checkRoom(){
-        Iterator<NiuniuServer> iterator = sockets.values().iterator();
+        Iterator<NiuniuSocket> iterator = sockets.values().iterator();
         while (iterator.hasNext()) {
-            NiuniuServer socket = iterator.next();
+            NiuniuSocket socket = iterator.next();
             socket.flush();
         }
     }
@@ -64,7 +64,7 @@ public class RoomService {
         executor.execute(() -> {
             List<String> playerIds = getRoomPlayers(roomId);
             for (String playId : playerIds) {
-                NiuniuServer socket = sockets.get(playId);
+                NiuniuSocket socket = sockets.get(playId);
                 if (socket != null && socket.session != null && socket.session.isOpen()) {
                     socket.sendMessage(res);
                 }else {
@@ -81,9 +81,9 @@ public class RoomService {
      * @param roomId
      * @param socket
      */
-    public void leave(String roomId ,NiuniuServer socket){
+    public void leave(String roomId , NiuniuSocket socket){
         if (sockets.containsKey(socket.userId)) {
-            NiuniuServer s = sockets.get(socket.userId);
+            NiuniuSocket s = sockets.get(socket.userId);
             s.close(socket.session);
             sockets.remove(socket.userId);
             subRoomPlayer(roomId ,socket.userId);
@@ -93,17 +93,17 @@ public class RoomService {
     /**
      * 用户加入
      * @param roomId
-     * @param niuniuServer
+     * @param socket
      */
-    public void join(String roomId ,NiuniuServer niuniuServer){
-        if (sockets.containsKey(niuniuServer.userId)) {
-            NiuniuServer s = sockets.get(niuniuServer.userId);
+    public void join(String roomId , NiuniuSocket socket){
+        if (sockets.containsKey(socket.userId)) {
+            NiuniuSocket s = sockets.get(socket.userId);
             s.sendMessage(new SocketResult(500));
-            s.close(niuniuServer.session);
-            sockets.remove(niuniuServer.userId);
+            s.close(socket.session);
+            sockets.remove(socket.userId);
         }
-        addRoomPlayer(roomId ,niuniuServer.userId);
-        sockets.put(niuniuServer.userId ,niuniuServer);
+        addRoomPlayer(roomId , socket.userId);
+        sockets.put(socket.userId , socket);
     }
 
     /**
