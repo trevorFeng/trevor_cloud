@@ -22,7 +22,7 @@ import java.util.concurrent.Executor;
  */
 @Slf4j
 @Service
-public class RoomService {
+public class RoomSocketService {
 
     public static ConcurrentHashMap<String , NiuniuSocket> sockets = new ConcurrentHashMap<>(2<<11);
 
@@ -30,7 +30,7 @@ public class RoomService {
     private Executor executor;
 
     @Resource
-    private static StringRedisTemplate redisTemplate;
+    private  StringRedisTemplate stringRedisTemplate;
 
     @PreDestroy
     public void destory(){
@@ -112,7 +112,7 @@ public class RoomService {
      * @param userId
      */
     public void addRoomPlayer(String roomId ,String userId) {
-        BoundListOperations<String, String> ops = redisTemplate.boundListOps(RedisConstant.ROOM_PLAYER + roomId);
+        BoundListOperations<String, String> ops = stringRedisTemplate.boundListOps(RedisConstant.ROOM_PLAYER + roomId);
         ops.rightPush(userId);
     }
 
@@ -123,11 +123,11 @@ public class RoomService {
      */
     public void subRoomPlayer(String roomId ,String userId){
         //移除玩家id
-        BoundListOperations<String, String> ops = redisTemplate.boundListOps(RedisConstant.ROOM_PLAYER + roomId);
+        BoundListOperations<String, String> ops = stringRedisTemplate.boundListOps(RedisConstant.ROOM_PLAYER + roomId);
         //移除指定个数的值
         ops.remove(1 ,userId);
         //删除消息通道
-        redisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
+        stringRedisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
     }
 
     /**
@@ -136,7 +136,7 @@ public class RoomService {
      * @return
      */
     public List<String> getRoomPlayers(String roomId){
-        BoundListOperations<String, String> ops = redisTemplate.boundListOps(RedisConstant.ROOM_PLAYER);
+        BoundListOperations<String, String> ops = stringRedisTemplate.boundListOps(RedisConstant.ROOM_PLAYER);
         List<String> range = ops.range(0, -1);
         return range;
     }

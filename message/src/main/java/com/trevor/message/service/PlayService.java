@@ -26,7 +26,7 @@ public class PlayService {
     private  StringRedisTemplate stringRedisTemplate;
 
     @Resource
-    private RoomService roomService;
+    private RoomSocketService roomSocketService;
 
     @Resource
     private PlayFeign playFeign;
@@ -51,7 +51,7 @@ public class PlayService {
         BoundListOperations<String, String> readyPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER + roomId);
         readyPlayerOps.rightPush(socket.userId);
         //广播准备的消息
-        roomService.broadcast(roomId ,new SocketResult(1003 ,socket.userId));
+        roomSocketService.broadcast(roomId ,new SocketResult(1003 ,socket.userId));
 
         //判断房间里真正玩家的人数，如果只有两人，直接开始游戏，否则开始倒计时
         if (Objects.equals(realPlayerUserIds.size() ,2L)) {
@@ -83,7 +83,7 @@ public class PlayService {
         qiangZhuangOps.put(socket.userId ,socketMessage.getQiangZhuangMultiple().toString());
 
         //广播抢庄的消息
-        roomService.broadcast(roomId ,new SocketResult(1003 ,socket.userId ,socketMessage.getQiangZhuangMultiple()));
+        roomSocketService.broadcast(roomId ,new SocketResult(1003 ,socket.userId ,socketMessage.getQiangZhuangMultiple()));
     }
 
     /**
@@ -111,7 +111,7 @@ public class PlayService {
         BoundHashOperations<String, String ,String> xianJiaXiaZhuOps = stringRedisTemplate.boundHashOps(RedisConstant.XIANJIA_XIAZHU + roomId);
         xianJiaXiaZhuOps.put(socket.userId ,socketMessage.getXianJiaMultiple().toString());
         //广播下注的消息
-        roomService.broadcast(roomId ,new SocketResult(1003 ,socket.userId ,socketMessage.getXianJiaMultiple(), Boolean.TRUE));
+        roomSocketService.broadcast(roomId ,new SocketResult(1003 ,socket.userId ,socketMessage.getXianJiaMultiple(), Boolean.TRUE));
     }
 
     /**
@@ -136,6 +136,6 @@ public class PlayService {
         tanPaiOps.rightPush(socket.userId);
 
         //广播摊牌的消息
-        roomService.broadcast(roomId ,new SocketResult(1014 ,socket.userId));
+        roomSocketService.broadcast(roomId ,new SocketResult(1014 ,socket.userId));
     }
 }

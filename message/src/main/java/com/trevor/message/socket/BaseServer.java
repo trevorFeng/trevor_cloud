@@ -1,8 +1,11 @@
 package com.trevor.message.socket;
 
+import com.trevor.common.dao.mongo.NiuniuRoomParamMapper;
+import com.trevor.common.dao.mysql.FriendManageMapper;
+import com.trevor.common.service.RoomService;
 import com.trevor.common.service.UserService;
 import com.trevor.message.service.PlayService;
-import com.trevor.message.service.RoomService;
+import com.trevor.message.service.RoomSocketService;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -15,13 +18,17 @@ import javax.annotation.Resource;
 @Component
 public class BaseServer {
 
-    protected static StringRedisTemplate redisTemplate;
+    protected static StringRedisTemplate stringRedisTemplate;
 
     protected static UserService userService;
 
-    protected static RoomService roomService;
+    protected static RoomSocketService roomSocketService;
 
     protected static PlayService playService;
+
+    protected static RoomService roomService;
+
+    protected static FriendManageMapper friendManageMapper;
 
     @Resource
     public void setPlayService(PlayService playService){
@@ -29,13 +36,18 @@ public class BaseServer {
     }
 
     @Resource
-    public void setStringRedisTemplate(StringRedisTemplate redisTemplate){
-        BaseServer.redisTemplate = redisTemplate;
+    public void setStringRedisTemplate(StringRedisTemplate stringRedisTemplate){
+        BaseServer.stringRedisTemplate = stringRedisTemplate;
     }
 
     @Resource
     public void setUserService(UserService userService){
         BaseServer.userService = userService;
+    }
+
+    @Resource
+    public void setRoomSocketService(RoomSocketService roomSocketService){
+        BaseServer.roomSocketService = roomSocketService;
     }
 
     @Resource

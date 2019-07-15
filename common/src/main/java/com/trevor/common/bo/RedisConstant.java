@@ -80,7 +80,7 @@ public class RedisConstant {
     public final static String ROOM_TYPE = "roomType";
 
     /**
-     *
+     * 抢庄类型
      */
     public final static String ROB_ZHUANG_TYPE = "robZhuangType";
 
