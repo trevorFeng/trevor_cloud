@@ -26,6 +26,10 @@ public interface RoomMapper {
      */
     List<Long> findByEntryTimeAndStatus_0(Long entryTime);
 
+    /**
+     * 将状态改为3
+     * @param roomIds
+     */
     void updateStatus_3(List<Long> roomIds);
 
     /**

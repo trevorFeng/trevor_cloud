@@ -275,11 +275,22 @@ public class NiuniuSocket extends BaseServer {
         BoundHashOperations<String, String, String> roomBaseInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
         BoundListOperations<String, String> realPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
         String gameStatus = roomBaseInfoOps.get(RedisConstant.GAME_STATUS);
+        SocketResult socketResult = new SocketResult(2002);
         List<Player> players = Lists.newArrayList();
+        socketResult.setPlayers(players);
         List<String> realUserIds = realPlayerOps.range(0, -1);
         List<Long> realUserIdsLong = realUserIds.stream().map(str -> Long.valueOf(str)).collect(Collectors.toList());
         List<User> usersByIds = userService.findUsersByIds(realUserIdsLong);
         for (User  u : usersByIds) {
+            Player player = new Player();
+            player.setUserId(u.getId());
+            player.setName(u.getAppName());
+            player.setPictureUrl(u.getAppPictureUrl());
+
+            BoundHashOperations<String, String, String> scoreOps = stringRedisTemplate.boundHashOps(RedisConstant.SCORE + roomId);
+            player.setScore(scoreOps != null && scoreOps.get(u.getId()) != null ? Integer.valueOf(scoreOps.get(u.getId())) : 0);
+
+
 
         }
         if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_READY.getCode())) {

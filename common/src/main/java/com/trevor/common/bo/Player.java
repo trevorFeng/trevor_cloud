@@ -40,4 +40,6 @@ public class Player {
 
     private Integer xiaZhuBeiShu;
 
+    private Boolean isTanPai;
+
 }
