@@ -37,7 +37,4 @@ public enum GameStatusEnum {
         return code;
     }
 
-    public String getDesc() {
-        return desc;
-    }
 }

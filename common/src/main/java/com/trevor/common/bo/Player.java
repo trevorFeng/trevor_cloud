@@ -2,6 +2,8 @@ package com.trevor.common.bo;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author trevor
  * @date 06/28/19 12:40
@@ -29,5 +31,13 @@ public class Player {
      * 总分
      */
     private Integer score;
+
+    private Boolean isReady;
+
+    private List<String> pokes;
+
+    private Integer qiangZhuangBeiShu;
+
+    private Integer xiaZhuBeiShu;
 
 }

@@ -51,7 +51,7 @@ public class TaskService{
         Long Hour_12_Before = currentTime - 1000 * 60 * 60 * 12;
         //超过12小时未使用的房间ids
         List<Long> overDayRoomIds = roomMapper.findByEntryTimeAndStatus_0(Hour_12_Before);
-        log.info("超过半小时未使用的房间ids：" + overDayRoomIds.toString() );
+        log.info("超过12小时未使用的房间ids：" + overDayRoomIds.toString() );
         List<Long> redisUnUserRoomIds = Lists.newArrayList();
         for (Long roomId : overDayRoomIds) {
             BoundValueOperations<String, String> roomUseOps = stringRedisTemplate.boundValueOps(RedisConstant.ROOM_USE + roomId);

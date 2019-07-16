@@ -39,7 +39,7 @@ public class User {
     /**
      * 本表中自关联的userId，实则为同一用户（微信账号和闲聊账号）
      */
-    private Long userId;
+    private Long relationUserId;
 
     /**
      * 电话号码

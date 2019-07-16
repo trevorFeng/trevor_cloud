@@ -141,7 +141,7 @@ public class UserService {
     @Transactional(rollbackFor = Exception.class)
     public void realNameAuth(Long userId, Authentication authentication) {
         User user = new User();
-        user.setUserId(userId);
+        user.setId(userId);
         user.setIdCard(authentication.getIdCard());
         user.setRealName(authentication.getRealName());
         userMapper.updateUser(user);

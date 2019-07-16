@@ -13,7 +13,9 @@ public class RedisConstant {
      */
     public static final String BASE_ROOM_INFO = "baseRoomInfo_";
 
-
+    /**
+     * 房间是否正在被使用
+     */
     public static final String ROOM_USE = "roomUser_";
 
     /**
@@ -30,6 +32,16 @@ public class RedisConstant {
      * 真正的玩家，不包括观众
      */
     public static final String REAL_ROOM_PLAYER = "realRoomPlayer_";
+
+    /**
+     * 吃瓜群众
+     */
+    public static final String CHI_GUA_PEOPLE = "chiGuaPeople_";
+
+    /**
+     * 观众
+     */
+    public static final String GUANZHONG = "guanZhong_";
 
     /**
      * 玩家的牌
