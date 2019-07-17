@@ -1,7 +1,11 @@
 package com.trevor.message.service;
 
+import com.google.common.collect.Lists;
+import com.trevor.common.bo.Player;
 import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
+import com.trevor.common.domain.mysql.User;
+import com.trevor.common.service.UserService;
 import com.trevor.message.socket.NiuniuSocket;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.BoundListOperations;
@@ -15,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 /**
  * @author trevor
@@ -31,6 +36,9 @@ public class RoomSocketService {
 
     @Resource
     private  StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private UserService userService;
 
     @PreDestroy
     public void destory(){
@@ -136,8 +144,32 @@ public class RoomSocketService {
      * @return
      */
     public List<String> getRoomPlayers(String roomId){
-        BoundListOperations<String, String> ops = stringRedisTemplate.boundListOps(RedisConstant.ROOM_PLAYER);
+        BoundListOperations<String, String> ops = stringRedisTemplate.boundListOps(RedisConstant.ROOM_PLAYER + roomId);
         List<String> range = ops.range(0, -1);
         return range;
+    }
+
+    public List<Player> getRealRoomPlayerCount(String roomId){
+        BoundListOperations<String, String> realPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
+        List<String> realUserIds = realPlayerOps.range(0, -1);
+        List<Long> realUserIdsLong = realUserIds.stream().map(str -> Long.valueOf(str)).collect(Collectors.toList());
+        List<User> realPlayerUsers = userService.findUsersByIds(realUserIdsLong);
+        BoundListOperations<String, String> guanZhongOps = stringRedisTemplate.boundListOps(RedisConstant.GUANZHONG + roomId);
+        List<String> guanZhongUserIds = null;
+        if (guanZhongOps != null && guanZhongOps.size() > 0) {
+            guanZhongUserIds = guanZhongOps.range(0, -1);
+        }
+        List<Player> players = Lists.newArrayList();
+        for (User user : realPlayerUsers) {
+            Player player = new Player();
+            player.setUserId(user.getId());
+            player.setName(user.getAppName());
+            player.setPictureUrl(user.getAppPictureUrl());
+            if (guanZhongUserIds != null && guanZhongUserIds.contains(String.valueOf(user.getId()))) {
+                player.setIsGuanZhong(Boolean.TRUE);
+            }
+            players.add(player);
+        }
+        return players;
     }
 }

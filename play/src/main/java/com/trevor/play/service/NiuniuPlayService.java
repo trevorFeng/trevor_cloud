@@ -13,6 +13,7 @@ import com.trevor.common.util.RandomUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.BoundListOperations;
+import org.springframework.data.redis.core.BoundValueOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -154,7 +155,7 @@ public class NiuniuPlayService {
         BoundHashOperations<String, String, String> roomBaseInfoOps = redisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
         roomBaseInfoOps.put(RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_QIANGZHUANG_COUNTDOWN.getCode());
         //给每个人发牌
-        SocketResult socketResult = new SocketResult(1004 ,userPokeMap);
+        SocketResult socketResult = new SocketResult(1004 ,userPokeMap ,null);
         broadcast(socketResult ,roomId);
     }
 
@@ -165,7 +166,7 @@ public class NiuniuPlayService {
     private void selectZhaungJia(String roomId){
         BoundHashOperations<String, String, String> qiangZhuangUserIds = redisTemplate.boundHashOps(RedisConstant.QIANGZHAUNG + roomId);
         Integer randNum = 0;
-        BoundListOperations<String, String> zhuangJiaOps = redisTemplate.boundListOps(RedisConstant.ZHUANGJIA + roomId);
+        BoundValueOperations<String, String> zhuangJiaOps = redisTemplate.boundValueOps(RedisConstant.ZHUANGJIA + roomId);
         String zhuangJiaUserId = "";
         //没人抢庄
         if (qiangZhuangUserIds == null || qiangZhuangUserIds.size() == 0) {
@@ -173,12 +174,12 @@ public class NiuniuPlayService {
             randNum = RandomUtils.getRandNumMax(readyPlayerUserIds.size().intValue());
             zhuangJiaUserId = readyPlayerUserIds.range(0 ,-1).get(randNum);
             qiangZhuangUserIds.put(zhuangJiaUserId ,"1");
-            zhuangJiaOps.rightPush(zhuangJiaUserId);
+            zhuangJiaOps.set(zhuangJiaUserId);
         }else {
             randNum = RandomUtils.getRandNumMax(qiangZhuangUserIds.size().intValue());
             List<String> userIds = new ArrayList<>(qiangZhuangUserIds.keys());
             zhuangJiaUserId = userIds.get(randNum);
-            zhuangJiaOps.rightPush(zhuangJiaUserId);
+            zhuangJiaOps.set(zhuangJiaUserId);
         }
 
         SocketResult socketResult = new SocketResult(1006 ,zhuangJiaUserId);
@@ -198,7 +199,7 @@ public class NiuniuPlayService {
         for (Map.Entry<String ,String> entry : map.entrySet()) {
             userPokeMap.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new ArrayList<String>()).subList(4,5));
         }
-        SocketResult socketResult = new SocketResult(1008 ,userPokeMap);
+        SocketResult socketResult = new SocketResult(1008 , null,userPokeMap);
         broadcast(socketResult ,roomId);
     }
 

@@ -1,6 +1,7 @@
 package com.trevor.message.socket;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.trevor.common.bo.Player;
 import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
@@ -19,15 +20,14 @@ import com.trevor.message.encoder.MessageEncoder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.BoundListOperations;
+import org.springframework.data.redis.core.BoundValueOperations;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -103,13 +103,14 @@ public class NiuniuSocket extends BaseServer {
 
         soc.setHead(1000);
         //todo 前端需要比较useId是否与断线的玩家id（断线重连，断线时会给玩家一个消息谁断线了）、其中一个玩家是否相等（网络不好重连），不相等则未新加入的玩家
-        roomSocketService.broadcast(roomId ,soc);
         if (!soc.getIsChiGuaPeople()) {
             BoundListOperations<String, String> realPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
             if (realPlayerOps != null && realPlayerOps.size() > 0 && !realPlayerOps.range(0 ,-1).contains(userId)) {
                 realPlayerOps.rightPush(userId);
             }
         }
+        soc.setPlayers(roomSocketService.getRealRoomPlayerCount(this.roomId));
+        roomSocketService.broadcast(roomId ,soc);
         //todo welcome发的消息应该在队列第一条消息
         welcome(roomId);
     }
@@ -252,7 +253,6 @@ public class NiuniuSocket extends BaseServer {
         //允许观战
         if (special!= null && special.contains(SpecialEnum.CAN_SEE.getCode())) {
             if (realPlayerOps != null || realPlayerOps.size() < RoomTypeEnum.getRoomNumByType(Integer.valueOf(baseRoomInfoOps.get(RedisConstant.ROOM_TYPE)))) {
-                //socketResult.setIsGuanZhong(false);
                 socketResult.setIsChiGuaPeople(Boolean.FALSE);
             }else {
                 socketResult.setIsChiGuaPeople(Boolean.TRUE);
@@ -261,7 +261,6 @@ public class NiuniuSocket extends BaseServer {
         //不允许观战
         }else {
             if (realPlayerOps != null || realPlayerOps.size() < RoomTypeEnum.getRoomNumByType(Integer.valueOf(baseRoomInfoOps.get(RedisConstant.ROOM_TYPE)))) {
-                //socketResult.setIsGuanZhong(false);
                 socketResult.setIsChiGuaPeople(Boolean.FALSE);
                 return socketResult;
             }else {
@@ -275,34 +274,40 @@ public class NiuniuSocket extends BaseServer {
      * 欢迎玩家加入，发送房间状态信息
      */
     private void welcome(String roomId){
-        BoundHashOperations<String, String, String> roomBaseInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
-        BoundListOperations<String, String> realPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
-        String gameStatus = roomBaseInfoOps.get(RedisConstant.GAME_STATUS);
-        SocketResult socketResult = new SocketResult(2002);
-        List<Player> players = Lists.newArrayList();
-        socketResult.setPlayers(players);
-        List<String> realUserIds = realPlayerOps.range(0, -1);
-        List<Long> realUserIdsLong = realUserIds.stream().map(str -> Long.valueOf(str)).collect(Collectors.toList());
-        List<User> usersByIds = userService.findUsersByIds(realUserIdsLong);
-        for (User  u : usersByIds) {
-            Player player = new Player();
-            player.setUserId(u.getId());
-            player.setName(u.getAppName());
-            player.setPictureUrl(u.getAppPictureUrl());
-
-            String userIdStr = u.getId().toString();
-            BoundHashOperations<String, String, String> scoreOps = stringRedisTemplate.boundHashOps(RedisConstant.SCORE + roomId);
-            player.setScore(scoreOps != null && scoreOps.get(u.getId()) != null ? Integer.valueOf(scoreOps.get(userIdStr)) : 0);
-            if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_READY.getCode())) {
-                BoundListOperations<String, String> readyPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER);
-                if (readyPlayerOps != null && readyPlayerOps.size() > 0 && readyPlayerOps.range(0 ,-1).contains(userIdStr)) {
-                    player.setIsReady(Boolean.TRUE);
-                }
-            }
-
-
-
+        SocketResult socketResult = new SocketResult();
+        //设置准备的玩家
+        BoundListOperations<String, String> readyPlayersOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER + roomId);
+        if (readyPlayersOps != null && readyPlayersOps.size() > 0) {
+            socketResult.setReadyPlayerIds(readyPlayersOps.range(0 ,-1));
         }
+        //设置玩家先发的4张牌
+        BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
+        if (pokesOps != null && pokesOps.size() > 0) {
+            Map<String ,List<String>> userPokeMap_4 = Maps.newHashMap();
+            Map<String, String> userPokeStrMap = pokesOps.entries();
+            for (Map.Entry<String ,String> entry : userPokeStrMap.entrySet()) {
+                userPokeMap_4.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new ArrayList<String>()).subList(0 ,4));
+            }
+            socketResult.setUserPokeMap_4(userPokeMap_4);
+        }
+        //设置抢庄的玩家
+        BoundHashOperations<String, String ,String> qiangZhuangOps = stringRedisTemplate.boundHashOps(RedisConstant.QIANGZHAUNG + roomId);
+        if (qiangZhuangOps != null && qiangZhuangOps.size() > 0) {
+            socketResult.setQiangZhuangMap(qiangZhuangOps.entries());
+        }
+        //设置庄家
+        BoundValueOperations<String, String> zhuangJiaOps = stringRedisTemplate.boundValueOps(RedisConstant.ZHUANGJIA + roomId);
+        if (zhuangJiaOps != null) {
+            socketResult.setZhuangJiaUserId(zhuangJiaOps.get());
+        }
+        //设置闲家下注
+        BoundHashOperations<String, String, String> xianJiaXiaZhuOps = stringRedisTemplate.boundHashOps(RedisConstant.XIANJIA_XIAZHU + roomId);
+        if (xianJiaXiaZhuOps != null && xianJiaXiaZhuOps.size() > 0) {
+            socketResult.setXianJiaXiaZhuMap(xianJiaXiaZhuOps.entries());
+        }
+        //设置玩家发的最后一张牌
+
+
     }
 
 

@@ -22,24 +22,4 @@ public class Player {
      */
     private Boolean isGuanZhong;
 
-    /**
-     * 吃瓜群众，全程不能参与打牌
-     */
-    private Boolean isChiGuaPeople;
-
-    /**
-     * 总分
-     */
-    private Integer score;
-
-    private Boolean isReady;
-
-    private List<String> pokes;
-
-    private Integer qiangZhuangBeiShu;
-
-    private Integer xiaZhuBeiShu;
-
-    private Boolean isTanPai;
-
 }

@@ -95,9 +95,35 @@ public class SocketResult {
     private List<Player> players;
 
     /**
-     * 玩家的牌
+     * 已经点击准备的玩家
      */
-    private Map<String ,List<String>> userPokeMap;
+    private List<String> readyPlayerIds;
+
+    /**
+     * 玩家的4张牌
+     */
+    private Map<String ,List<String>> userPokeMap_4;
+
+    /**
+     * 玩家的1张牌
+     */
+    private Map<String ,List<String>> userPokeMap_1;
+
+    /**
+     * 抢庄的玩家
+     */
+    private Map<String ,String> qiangZhuangMap;
+
+    /**
+     * 庄家的id
+     */
+    private String zhuangJiaUserId;
+
+    /**
+     * 闲家下注的相关信息
+     */
+    private Map<String ,String> xianJiaXiaZhuMap;
+
 
     /**
      * 本局的分数情况
@@ -131,9 +157,15 @@ public class SocketResult {
         this.userId = userId;
     }
 
-    public SocketResult(Integer head ,Map<String ,List<String>> userPokeMap) {
+    public SocketResult(Integer head ,Map<String ,List<String>> userPokeMap_4 ,Map<String ,List<String>> userPokeMap_1) {
         this.head = head;
-        this.userPokeMap = userPokeMap;
+        if (userPokeMap_4 != null) {
+            this.userPokeMap_4 = userPokeMap_4;
+        }
+        if (userPokeMap_1 != null) {
+            this.userPokeMap_1 = userPokeMap_1;
+        }
+
     }
 
     public  SocketResult(Integer head ,String userId ,Integer qiangZhuangBeiShu){
