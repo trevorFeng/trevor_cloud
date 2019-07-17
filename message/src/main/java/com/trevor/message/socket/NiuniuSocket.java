@@ -86,12 +86,6 @@ public class NiuniuSocket extends BaseServer {
             close(session);
             return;
         }
-        this.roomId = roomId;
-        this.userId = String.valueOf(user.getId());
-        roomSocketService.join(roomId ,this);
-        session.setMaxIdleTimeout(1000 * 60 * 45);
-        this.session = session;
-        stringRedisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
 
         SocketResult soc = checkRoom(room ,user);
         if (soc.getHead() != null) {
@@ -99,8 +93,16 @@ public class NiuniuSocket extends BaseServer {
             close(session);
             return;
         }
+
+        this.roomId = roomId;
+        this.userId = String.valueOf(user.getId());
+        roomSocketService.join(roomId ,this);
+        session.setMaxIdleTimeout(1000 * 60 * 45);
+        this.session = session;
+        stringRedisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
+
         soc.setHead(1000);
-        //todo 前端需要比较useId是否与断线的玩家id（断线重连）、其中一个玩家是否相等（网络不好重连），不相等则未新加入的玩家
+        //todo 前端需要比较useId是否与断线的玩家id（断线重连，断线时会给玩家一个消息谁断线了）、其中一个玩家是否相等（网络不好重连），不相等则未新加入的玩家
         roomSocketService.broadcast(roomId ,soc);
         if (!soc.getIsChiGuaPeople()) {
             BoundListOperations<String, String> realPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
@@ -108,6 +110,7 @@ public class NiuniuSocket extends BaseServer {
                 realPlayerOps.rightPush(userId);
             }
         }
+        //todo welcome发的消息应该在队列第一条消息
         welcome(roomId);
     }
 
@@ -287,13 +290,17 @@ public class NiuniuSocket extends BaseServer {
             player.setName(u.getAppName());
             player.setPictureUrl(u.getAppPictureUrl());
 
+            String userIdStr = u.getId().toString();
             BoundHashOperations<String, String, String> scoreOps = stringRedisTemplate.boundHashOps(RedisConstant.SCORE + roomId);
-            player.setScore(scoreOps != null && scoreOps.get(u.getId()) != null ? Integer.valueOf(scoreOps.get(u.getId())) : 0);
+            player.setScore(scoreOps != null && scoreOps.get(u.getId()) != null ? Integer.valueOf(scoreOps.get(userIdStr)) : 0);
+            if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_READY.getCode())) {
+                BoundListOperations<String, String> readyPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER);
+                if (readyPlayerOps != null && readyPlayerOps.size() > 0 && readyPlayerOps.range(0 ,-1).contains(userIdStr)) {
+                    player.setIsReady(Boolean.TRUE);
+                }
+            }
 
 
-
-        }
-        if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_READY.getCode())) {
 
         }
     }
