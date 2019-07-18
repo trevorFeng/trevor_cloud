@@ -22,8 +22,6 @@ public enum GameStatusEnum {
     BEFORE_CALRESULT("8","摊牌倒计时-给玩家发返回结果前");
 
 
-
-
     private String code ;
 
     private String desc;
