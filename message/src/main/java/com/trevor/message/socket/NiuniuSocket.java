@@ -275,10 +275,14 @@ public class NiuniuSocket extends BaseServer {
      */
     private void welcome(String roomId){
         SocketResult socketResult = new SocketResult();
-        //设置准备的玩家
-        BoundListOperations<String, String> readyPlayersOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER + roomId);
-        if (readyPlayersOps != null && readyPlayersOps.size() > 0) {
-            socketResult.setReadyPlayerIds(readyPlayersOps.range(0 ,-1));
+        BoundHashOperations<String, String, String> roomBaseInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
+        String gameStatus = roomBaseInfoOps.get(RedisConstant.GAME_STATUS);
+        if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_READY.getCode())) {
+            //设置准备的玩家
+            BoundListOperations<String, String> readyPlayersOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER + roomId);
+            if (readyPlayersOps != null && readyPlayersOps.size() > 0) {
+                socketResult.setReadyPlayerIds(readyPlayersOps.range(0 ,-1));
+            }
         }
         //设置玩家先发的4张牌
         BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
@@ -309,8 +313,4 @@ public class NiuniuSocket extends BaseServer {
 
 
     }
-
-
-
-
 }
