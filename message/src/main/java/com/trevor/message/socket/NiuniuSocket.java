@@ -309,18 +309,12 @@ public class NiuniuSocket extends BaseServer {
         }
         //设置玩家发的最后一张牌
         else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_TABPAI_COUNTDOWN.getCode())) {
-            BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
-            if (pokesOps != null && pokesOps.size() > 0) {
-                Map<String ,List<String>> userPokeMap_1 = new HashMap<>();
-                Map<String, String> userPokeStrMap = pokesOps.entries();
-                for (Map.Entry<String ,String> entry : userPokeStrMap.entrySet()) {
-                    userPokeMap_1.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new ArrayList<String>()).subList(0 ,4));
-                }
-                socketResult.setUserPokeMap_1(userPokeMap_1);
-            }
+            socketResult.setUserPokeMap_1(getLastPoke());
         }
         //设置谁摊牌了
-
+        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_CALRESULT.getCode())) {
+            socketResult.setTanPaiPlayerUserIds(getTanPaiPlayer());
+        }
 
         sendMessage(socketResult);
         return;
@@ -367,5 +361,31 @@ public class NiuniuSocket extends BaseServer {
     private Map<String ,String> getXianJiaXiaZhu(){
         BoundHashOperations<String, String, String> xianJiaXiaZhuOps = stringRedisTemplate.boundHashOps(RedisConstant.XIANJIA_XIAZHU + roomId);
         return xianJiaXiaZhuOps.entries();
+    }
+
+    /**
+     * 得到最后一张牌
+     * @return
+     */
+    private Map<String ,List<String>> getLastPoke(){
+        BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
+        Map<String ,List<String>> userPokeMap_1 = new HashMap<>();
+        Map<String, String> userPokeStrMap = pokesOps.entries();
+        for (Map.Entry<String ,String> entry : userPokeStrMap.entrySet()) {
+            userPokeMap_1.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new ArrayList<String>()).subList(4 ,5));
+        }
+        return userPokeMap_1;
+    }
+
+    /**
+     * 得到摊牌的玩家
+     * @return
+     */
+    private List<String> getTanPaiPlayer(){
+        BoundListOperations<String, String> tanPaiOps = stringRedisTemplate.boundListOps(RedisConstant.TANPAI + roomId);
+        if (tanPaiOps != null && tanPaiOps.size() > 0) {
+            return tanPaiOps.range(0 ,-1);
+        }
+        return null;
     }
 }

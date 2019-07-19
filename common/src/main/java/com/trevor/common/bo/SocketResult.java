@@ -124,6 +124,11 @@ public class SocketResult {
      */
     private Map<String ,String> xianJiaXiaZhuMap;
 
+    /**
+     * 摊牌的玩家
+     */
+    private List<String> tanPaiPlayerUserIds;
+
 
     /**
      * 本局的分数情况

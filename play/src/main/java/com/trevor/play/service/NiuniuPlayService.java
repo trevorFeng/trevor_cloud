@@ -81,7 +81,7 @@ public class NiuniuPlayService {
                 ,Integer.valueOf(roomBaseInfoOps.get(RedisConstant.RULE)) ,Integer.valueOf(roomBaseInfoOps.get(RedisConstant.BASE_POINT)) ,scoreMap);
         // todo 保存结果
 
-
+        //给玩家发送其他人的最后一张牌
         //给玩家发送分数
         sendResultToUser(roomIdStr ,scoreMap);
         continueOrStop(roomIdStr);
