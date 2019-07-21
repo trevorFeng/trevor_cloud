@@ -19,7 +19,9 @@ public enum GameStatusEnum {
 
     BEFORE_TABPAI_COUNTDOWN("7" ,"再发一张牌-摊牌倒计时前"),
 
-    BEFORE_CALRESULT("8","摊牌倒计时-给玩家发返回结果前");
+    BEFORE_CALRESULT("8","摊牌倒计时-给玩家发返回结果前"),
+
+    BEFORE_RETURN_RESULT("9" ,"给玩家返回结果-下一句开始前");
 
 
     private String code ;

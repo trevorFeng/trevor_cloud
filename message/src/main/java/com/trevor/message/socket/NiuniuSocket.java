@@ -102,7 +102,6 @@ public class NiuniuSocket extends BaseServer {
         stringRedisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
 
         soc.setHead(1000);
-        //todo 前端需要比较useId是否与断线的玩家id（断线重连，断线时会给玩家一个消息谁断线了）、其中一个玩家是否相等（网络不好重连），不相等则未新加入的玩家
         if (!soc.getIsChiGuaPeople()) {
             BoundListOperations<String, String> realPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
             if (realPlayerOps != null && realPlayerOps.size() > 0 && !realPlayerOps.range(0 ,-1).contains(userId)) {
@@ -110,6 +109,7 @@ public class NiuniuSocket extends BaseServer {
             }
         }
         soc.setPlayers(roomSocketService.getRealRoomPlayerCount(this.roomId));
+        //广播新人加入，前端需要比较useId是否与断线的玩家id（断线重连，断线时会给玩家一个消息谁断线了）、网络不好的玩家是否相等（网络不好重连），不相等则未新加入的玩家
         roomSocketService.broadcast(roomId ,soc);
         //todo welcome发的消息应该在队列第一条消息
         welcome(roomId);
@@ -169,12 +169,12 @@ public class NiuniuSocket extends BaseServer {
                 List<String> messages = ops.range(0, -1);
                 stringRedisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
 
-                StringBuffer stringBuffer = new StringBuffer("{");
+                StringBuffer stringBuffer = new StringBuffer("[");
                 for (String mess : messages) {
                     stringBuffer.append(mess).append(",");
                 }
                 stringBuffer.setLength(stringBuffer.length() - 1);
-                stringBuffer.append("}");
+                stringBuffer.append("]");
                 synchronized (session) {
                     RemoteEndpoint.Async async = session.getAsyncRemote();
                     if (session.isOpen()) {
@@ -278,12 +278,9 @@ public class NiuniuSocket extends BaseServer {
         socketResult.setHead(2002);
         BoundHashOperations<String, String, String> roomBaseInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
         String gameStatus = roomBaseInfoOps.get(RedisConstant.GAME_STATUS);
+        //设置准备的玩家
         if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_READY.getCode()) || Objects.equals(gameStatus ,GameStatusEnum.BEFORE_FAPAI_4.getCode())) {
-            //设置准备的玩家
-            BoundListOperations<String, String> readyPlayersOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER + roomId);
-            if (readyPlayersOps != null && readyPlayersOps.size() > 0) {
-                socketResult.setReadyPlayerIds(readyPlayersOps.range(0 ,-1));
-            }
+            socketResult.setReadyPlayerIds(getReadyPlayers());
         }
         //设置玩家先发的4张牌
         else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_QIANGZHUANG_COUNTDOWN.getCode())) {
@@ -323,6 +320,18 @@ public class NiuniuSocket extends BaseServer {
     }
 
     /**
+     * 得到准备的玩家
+     * @return
+     */
+    private List<String> getReadyPlayers(){
+        BoundListOperations<String, String> readyPlayersOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER + roomId);
+        if (readyPlayersOps != null && readyPlayersOps.size() > 0) {
+            return readyPlayersOps.range(0 ,-1);
+        }
+        return null;
+    }
+
+    /**
      * 得到先发的4张牌
      * @return
      */
@@ -342,7 +351,10 @@ public class NiuniuSocket extends BaseServer {
      */
     private Map<String ,String> getQiangZhuangPlayers(){
         BoundHashOperations<String, String ,String> qiangZhuangOps = stringRedisTemplate.boundHashOps(RedisConstant.QIANGZHAUNG + roomId);
-        return qiangZhuangOps.entries();
+        if (qiangZhuangOps != null || qiangZhuangOps.size() > 0) {
+            return qiangZhuangOps.entries();
+        }
+        return null;
     }
 
     /**
@@ -360,7 +372,10 @@ public class NiuniuSocket extends BaseServer {
      */
     private Map<String ,String> getXianJiaXiaZhu(){
         BoundHashOperations<String, String, String> xianJiaXiaZhuOps = stringRedisTemplate.boundHashOps(RedisConstant.XIANJIA_XIAZHU + roomId);
-        return xianJiaXiaZhuOps.entries();
+        if (xianJiaXiaZhuOps != null && xianJiaXiaZhuOps.size() > 0) {
+            return xianJiaXiaZhuOps.entries();
+        }
+        return null;
     }
 
     /**

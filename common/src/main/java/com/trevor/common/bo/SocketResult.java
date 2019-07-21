@@ -136,6 +136,11 @@ public class SocketResult {
     private Map<String ,Integer> scoreMap;
 
     /**
+     * 玩家牌型
+     */
+    private Map<String ,Integer> paiXing;
+
+    /**
      * 是否结束
      */
     private Boolean isOver;
@@ -183,16 +188,6 @@ public class SocketResult {
         this.head = head;
         this.userId = userId;
         this.xiaZhuBeiShu = xiaZhuBeiShu;
-    }
-
-    /**
-     * 本局结果
-     * @param head
-     * @param scoreMap
-     */
-    public SocketResult(Integer head ,Map<String ,Integer> scoreMap ,Boolean isResult){
-        this.head = head;
-        this.scoreMap = scoreMap;
     }
 
     /**
