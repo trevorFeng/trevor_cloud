@@ -10,6 +10,9 @@ import java.util.List;
 @Repository
 public interface PlayerResultMapper extends MongoRepository<PlayerResult,String> {
 
+    @Override
+    <S extends PlayerResult> List<S> saveAll(Iterable<S> iterable);
+
     @Query(value = "{'userId' : ?0 ,'entryTime' : {$gte : ?1}}")
     List<PlayerResult> findByUserId(Long userId ,Long entryTime);
 

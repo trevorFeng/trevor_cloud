@@ -3,6 +3,8 @@ package com.trevor.play.service;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.trevor.common.bo.*;
+import com.trevor.common.dao.mongo.PlayerResultMapper;
+import com.trevor.common.domain.mongo.PlayerResult;
 import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.enums.NiuNiuPaiXingEnum;
 import com.trevor.common.service.RoomParamService;
@@ -36,7 +38,10 @@ public class NiuniuPlayService {
     private RoomParamService roomParamService;
 
     @Resource
-    private static StringRedisTemplate stringRedisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private PlayerResultMapper playerResultMapper;
 
 
     /**
@@ -84,8 +89,9 @@ public class NiuniuPlayService {
                 ,Integer.valueOf(roomBaseInfoOps.get(RedisConstant.BASE_POINT))
                 ,scoreMap
                 ,paiXingMap);
-        // todo 保存结果
-
+        //保存结果
+        List<PlayerResult> playerResults = generatePlayerResults();
+        playerResultMapper.saveAll(playerResults);
         //给玩家发送分数、玩家发送其他人的最后一张牌,玩家的牌型
         sendResultToUser(roomIdStr ,scoreMap ,paiXingMap);
         continueOrStop(roomIdStr);
@@ -228,6 +234,12 @@ public class NiuniuPlayService {
         }
         socketResult.setPaiXing(paiXing);
         broadcast(socketResult ,roomId);
+    }
+
+    private List<PlayerResult> generatePlayerResults(){
+
+
+        return null;
     }
 
     /**
