@@ -95,7 +95,7 @@ public class NiuniuPlayService {
                 ,scoreMap
                 ,paiXingMap);
         //保存结果
-        List<PlayerResult> playerResults = generatePlayerResults();
+        List<PlayerResult> playerResults = generatePlayerResults(roomIdStr);
         playerResultMapper.saveAll(playerResults);
         //给玩家发送分数、玩家发送其他人的最后一张牌,玩家的牌型
         sendResultToUser(roomIdStr ,scoreMap ,paiXingMap);
