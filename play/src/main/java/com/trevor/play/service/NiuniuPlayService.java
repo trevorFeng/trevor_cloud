@@ -5,10 +5,12 @@ import com.google.common.collect.Maps;
 import com.trevor.common.bo.*;
 import com.trevor.common.dao.mongo.PlayerResultMapper;
 import com.trevor.common.domain.mongo.PlayerResult;
+import com.trevor.common.domain.mysql.User;
 import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.enums.NiuNiuPaiXingEnum;
 import com.trevor.common.service.RoomParamService;
 import com.trevor.common.service.RoomService;
+import com.trevor.common.service.UserService;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.PokeUtil;
 import com.trevor.common.util.RandomUtils;
@@ -42,6 +44,9 @@ public class NiuniuPlayService {
 
     @Resource
     private PlayerResultMapper playerResultMapper;
+
+    @Resource
+    private UserService userService;
 
 
     /**
@@ -243,9 +248,30 @@ public class NiuniuPlayService {
         broadcast(socketResult ,roomId);
     }
 
-    private List<PlayerResult> generatePlayerResults(){
+    private List<PlayerResult> generatePlayerResults(String roomId){
+        BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
+        Map<String ,String> baseRoomInfoMap = baseRoomInfoOps.entries();
+        BoundHashOperations<String, String, String> scoreOps = stringRedisTemplate.boundHashOps(RedisConstant.SCORE + roomId);
+        Map<String ,String> scoreMap = scoreOps.entries();
 
 
+        BoundListOperations<String, String> readyPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER + roomId);
+        List<String> readyPlayerStr = readyPlayerOps.range(0, -1);
+        List<Long> readyPlayerLong = readyPlayerStr.stream().map(s -> Long.valueOf(s)).collect(Collectors.toList());
+        List<User> users = userService.findUsersByIds(readyPlayerLong);
+        for (User user : users) {
+            PlayerResult playerResult = new PlayerResult();
+            //玩家id
+            playerResult.setUserId(user.getId());
+            //房间id
+            playerResult.setRoomId(Long.valueOf(roomId));
+            //第几局
+            playerResult.setGameNum(Integer.valueOf(baseRoomInfoMap.get(RedisConstant.RUNING_NUM)));
+            //本局得分情况
+            playerResult.setScore(Integer.valueOf(scoreMap.get(String.valueOf(user.getId()))));
+            //是否是庄家
+
+        }
         return null;
     }
 
