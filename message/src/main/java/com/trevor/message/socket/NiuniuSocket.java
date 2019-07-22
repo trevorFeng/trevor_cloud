@@ -2,10 +2,7 @@ package com.trevor.message.socket;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.trevor.common.bo.Player;
-import com.trevor.common.bo.RedisConstant;
-import com.trevor.common.bo.SocketResult;
-import com.trevor.common.bo.WebKeys;
+import com.trevor.common.bo.*;
 import com.trevor.common.domain.mysql.Room;
 import com.trevor.common.domain.mysql.User;
 import com.trevor.common.enums.FriendManageEnum;
@@ -294,29 +291,38 @@ public class NiuniuSocket extends BaseServer {
         //设置庄家
         else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_XIANJIA_XIAZHU.getCode())) {
             socketResult.setUserPokeMap_4(getPokes_4());
-            socketResult.setQiangZhuangMap(getQiangZhuangPlayers());
+            //socketResult.setQiangZhuangMap(getQiangZhuangPlayers());
             socketResult.setZhuangJiaUserId(getZhuangJia());
         }
         //设置闲家下注
         else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_LAST_POKE.getCode())) {
             socketResult.setUserPokeMap_4(getPokes_4());
-            socketResult.setQiangZhuangMap(getQiangZhuangPlayers());
+            //socketResult.setQiangZhuangMap(getQiangZhuangPlayers());
             socketResult.setZhuangJiaUserId(getZhuangJia());
             socketResult.setXianJiaXiaZhuMap(getXianJiaXiaZhu());
         }
         //设置玩家发的最后一张牌
         else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_TABPAI_COUNTDOWN.getCode())) {
-            socketResult.setUserPokeMap_1(getLastPoke());
+            socketResult.setUserPokeMap_4(getPokes_4());
+            socketResult.setZhuangJiaUserId(getZhuangJia());
+            socketResult.setUserPokeMap_1(getLastPoke(Boolean.FALSE ,Boolean.FALSE));
         }
         //设置谁摊牌了
         else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_CALRESULT.getCode())) {
+            socketResult.setUserPokeMap_4(getPokes_4());
+            socketResult.setZhuangJiaUserId(getZhuangJia());
             socketResult.setTanPaiPlayerUserIds(getTanPaiPlayer());
+            socketResult.setUserPokeMap_1(getLastPoke(Boolean.TRUE ,Boolean.FALSE));
         }
-
+        //设置本局结果
+        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_RETURN_RESULT.getCode())) {
+            socketResult.setUserPokeMap_4(getPokes_4());
+            socketResult.setZhuangJiaUserId(getZhuangJia());
+            socketResult.setUserPokeMap_1(getLastPoke(null ,Boolean.TRUE));
+            setResult(socketResult);
+        }
         sendMessage(socketResult);
         return;
-
-
     }
 
     /**
@@ -382,12 +388,34 @@ public class NiuniuSocket extends BaseServer {
      * 得到最后一张牌
      * @return
      */
-    private Map<String ,List<String>> getLastPoke(){
-        BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
+    private Map<String ,List<String>> getLastPoke(Boolean isTanPai ,Boolean isReturnResult){
         Map<String ,List<String>> userPokeMap_1 = new HashMap<>();
+        BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
+        BoundListOperations<String, String> tanPaiOps = stringRedisTemplate.boundListOps(RedisConstant.TANPAI + roomId);
         Map<String, String> userPokeStrMap = pokesOps.entries();
-        for (Map.Entry<String ,String> entry : userPokeStrMap.entrySet()) {
-            userPokeMap_1.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new ArrayList<String>()).subList(4 ,5));
+        List<String> tanPaiPlayerIds = Lists.newArrayList();
+        if (tanPaiOps != null && tanPaiOps.size() > 0) {
+            tanPaiPlayerIds = tanPaiOps.range(0 ,-1);
+        }
+        if (isReturnResult) {
+            for (Map.Entry<String ,String> entry : userPokeStrMap.entrySet()) {
+                if (!tanPaiPlayerIds.contains(entry.getKey())) {
+                    userPokeMap_1.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new ArrayList<String>()).subList(4 ,5));
+                }
+            }
+        }else {
+            for (Map.Entry<String ,String> entry : userPokeStrMap.entrySet()) {
+                if (isTanPai) {
+                    if (tanPaiPlayerIds.contains(entry.getKey())) {
+                        userPokeMap_1.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new ArrayList<String>()).subList(4 ,5));
+                    }
+                }else {
+                    if (Objects.equals(entry.getKey() ,userId)) {
+                        userPokeMap_1.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new ArrayList<String>()).subList(4 ,5));
+                        break;
+                    }
+                }
+            }
         }
         return userPokeMap_1;
     }
@@ -402,5 +430,28 @@ public class NiuniuSocket extends BaseServer {
             return tanPaiOps.range(0 ,-1);
         }
         return null;
+    }
+
+    /**
+     * 得到结果
+     * @return
+     */
+    private void setResult(SocketResult socketResult){
+        //设置本局得分
+        BoundHashOperations<String, String, String> scoreOps = stringRedisTemplate.boundHashOps(RedisConstant.SCORE + roomId);
+        Map<String ,String> scoreMap = scoreOps.entries();
+        Map<String ,Integer> stringIntegerMap = Maps.newHashMap();
+        for (Map.Entry<String ,String> entry : scoreMap.entrySet()) {
+            stringIntegerMap.put(entry.getKey() ,Integer.valueOf(entry.getValue()));
+        }
+        socketResult.setScoreMap(stringIntegerMap);
+
+        BoundHashOperations<String, String, String> paiXingOps = stringRedisTemplate.boundHashOps(RedisConstant.PAI_XING + roomId);
+        Map<String ,String> paiXingMap = paiXingOps.entries();
+        Map<String ,Integer> paiXingIntegerMap = Maps.newHashMap();
+        for (Map.Entry<String ,String> entry : paiXingMap.entrySet()) {
+            paiXingIntegerMap.put(entry.getKey() ,Integer.valueOf(entry.getValue()));
+        }
+        socketResult.setPaiXing(paiXingIntegerMap);
     }
 }

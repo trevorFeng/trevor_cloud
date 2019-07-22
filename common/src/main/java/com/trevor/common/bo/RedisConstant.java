@@ -79,6 +79,11 @@ public class RedisConstant {
     public static final String SCORE = "score_";
 
     /**
+     * 玩家的牌型
+     */
+    public static final String PAI_XING = "paiXing_";
+
+    /**
      * 玩家的总分
      */
     public static final String TOTAL_SCORE = "totalScore_";
