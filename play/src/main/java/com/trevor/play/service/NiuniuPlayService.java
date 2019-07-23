@@ -99,6 +99,8 @@ public class NiuniuPlayService {
         playerResultMapper.saveAll(playerResults);
         //给玩家发送分数、玩家发送其他人的最后一张牌,玩家的牌型
         sendResultToUser(roomIdStr ,scoreMap ,paiXingMap);
+        //删除redis的键
+        deleteKeys(roomIdStr);
         continueOrStop(roomIdStr);
     }
 
@@ -249,30 +251,70 @@ public class NiuniuPlayService {
     }
 
     private List<PlayerResult> generatePlayerResults(String roomId){
+        Long entryDatetime = System.currentTimeMillis();
         BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
         Map<String ,String> baseRoomInfoMap = baseRoomInfoOps.entries();
         BoundHashOperations<String, String, String> scoreOps = stringRedisTemplate.boundHashOps(RedisConstant.SCORE + roomId);
         Map<String ,String> scoreMap = scoreOps.entries();
-
-
         BoundListOperations<String, String> readyPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER + roomId);
         List<String> readyPlayerStr = readyPlayerOps.range(0, -1);
         List<Long> readyPlayerLong = readyPlayerStr.stream().map(s -> Long.valueOf(s)).collect(Collectors.toList());
         List<User> users = userService.findUsersByIds(readyPlayerLong);
+        BoundValueOperations<String, String> zhuangJiaOps = stringRedisTemplate.boundValueOps(RedisConstant.ZHUANGJIA + roomId);
+        String zhuangJiaId = zhuangJiaOps.get();
+        BoundHashOperations<String, String, String> totalSocreOps = stringRedisTemplate.boundHashOps(RedisConstant.TOTAL_SCORE + roomId);
+        Map<String ,String> totalScoreMap = totalSocreOps.entries();
+        BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
+        Map<String ,String> pokesMap = pokesOps.entries();
+        BoundHashOperations<String, String, String> paiXingOps = stringRedisTemplate.boundHashOps(RedisConstant.PAI_XING + roomId);
+        Map<String ,String> paiXingMap = paiXingOps.entries();
+        List<PlayerResult> playerResults = new ArrayList<>();
         for (User user : users) {
             PlayerResult playerResult = new PlayerResult();
+            Long userId = user.getId();
+            String userIdStr = String.valueOf(user.getId());
             //玩家id
-            playerResult.setUserId(user.getId());
+            playerResult.setUserId(userId);
             //房间id
             playerResult.setRoomId(Long.valueOf(roomId));
             //第几局
             playerResult.setGameNum(Integer.valueOf(baseRoomInfoMap.get(RedisConstant.RUNING_NUM)));
             //本局得分情况
-            playerResult.setScore(Integer.valueOf(scoreMap.get(String.valueOf(user.getId()))));
+            playerResult.setScore(Integer.valueOf(scoreMap.get(userIdStr)));
             //是否是庄家
-
+            if (Objects.equals(zhuangJiaId ,userIdStr)) {
+                playerResult.setIsZhuangJia(Boolean.TRUE);
+            }else {
+                playerResult.setIsZhuangJia(Boolean.FALSE);
+            }
+            //设置总分
+            playerResult.setTotalScore(Integer.valueOf(totalScoreMap.get(userIdStr)));
+            //设置牌
+            playerResult.setPokes(JsonUtil.parse(pokesMap.get(userIdStr) ,new ArrayList<String>()));
+            //设置牌型
+            PaiXing paiXing = JsonUtil.parse(paiXingMap.get(userIdStr) ,new PaiXing());
+            playerResult.setPaiXing(paiXing.getPaixing());
+            //设置倍数
+            playerResult.setPaiXing(paiXing.getMultiple());
+            //设置时间
+            playerResult.setEntryTime(entryDatetime);
+            playerResults.add(playerResult);
         }
-        return null;
+        return playerResults;
+    }
+
+    private void deleteKeys(String roomId){
+        stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId).put(RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_DELETE_KEYS.getCode());
+        List<String> keys = new ArrayList<>();
+        keys.add(RedisConstant.POKES + roomId);
+        keys.add(RedisConstant.READY_PLAYER + roomId);
+        keys.add(RedisConstant.QIANGZHAUNG + roomId);
+        keys.add(RedisConstant.ZHUANGJIA + roomId);
+        keys.add(RedisConstant.TANPAI + roomId);
+        keys.add(RedisConstant.XIANJIA_XIAZHU + roomId);
+        keys.add(RedisConstant.SCORE + roomId);
+        keys.add(RedisConstant.PAI_XING + roomId);
+        stringRedisTemplate.delete(keys);
     }
 
     /**
@@ -282,13 +324,19 @@ public class NiuniuPlayService {
         BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO);
         String runingNum = baseRoomInfoOps.get(RedisConstant.RUNING_NUM);
         String totalNum = baseRoomInfoOps.get(RedisConstant.TOTAL_NUM);
+        stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId).put(RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_READY.getCode());
         //结束
         if (Objects.equals(Integer.valueOf(runingNum) ,Integer.valueOf(totalNum))) {
-
+            SocketResult socketResult = new SocketResult(1013);
+            broadcast(socketResult ,roomId);
         }else {
-            SocketResult socketResult = new SocketResult(1013 ,Boolean.TRUE);
+            SocketResult socketResult = new SocketResult();
+            socketResult.setHead(1016);
+            socketResult.setRuningAndTotal(runingNum + "/" + totalNum);
             broadcast(socketResult ,roomId);
         }
+
+
 
     }
 
@@ -310,7 +358,7 @@ public class NiuniuPlayService {
             if (!Objects.equals(entry.getKey() ,zhuangJiaUserId)) {
                 List<String> xianJiaPokes = JsonUtil.parse(entry.getValue() ,new ArrayList<String>());
                 PaiXing xianJiaPaiXing = PokeUtil.isNiuNiu(xianJiaPokes ,paiXing ,rule);
-                paiXingOps.put(entry.getKey() ,xianJiaPaiXing.getPaixing().toString());
+                paiXingOps.put(entry.getKey() ,JsonUtil.toJsonString(xianJiaPaiXing));
                 paiXingMap.put(entry.getKey() ,xianJiaPaiXing);
                 Integer score = Integer.valueOf(qiangZhuangOps.get(zhuangJiaUserId)) * Integer.valueOf(xianJiaXiaZhuOps.get(entry.getKey())) * basePoint;
                 //庄家大于闲家
@@ -391,7 +439,7 @@ public class NiuniuPlayService {
 
             }
         }
-        paiXingOps.put(zhuangJiaUserId ,zhuangJiaPaiXing.getPaixing().toString());
+        paiXingOps.put(zhuangJiaUserId ,JsonUtil.toJsonString(zhuangJiaPaiXing));
         scoreOps.put(zhuangJiaUserId ,String.valueOf(zhuangJiaScore));
         scoreMap.put(zhuangJiaUserId ,zhuangJiaScore);
         totalScoreOps.put(zhuangJiaUserId ,String.valueOf(Integer.valueOf(totalScoreOps.get(zhuangJiaUserId)) + zhuangJiaScore));

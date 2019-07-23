@@ -42,6 +42,7 @@ public class SocketResult {
      * 1013--本房间是否结束
      * 1014--摊牌的消息
      * 1015--玩家重新连接的消息
+     * 1016--继续下一句
      * ****************************2000以上发给自己
      * 2002--房间内情况，发给新人，数据为其他人的得分，牌，是否抢庄等
      *
@@ -141,11 +142,6 @@ public class SocketResult {
     private Map<String ,Integer> paiXing;
 
     /**
-     * 是否结束
-     */
-    private Boolean isOver;
-
-    /**
      * 5/12这样的信息
      */
     private String runingAndTotal;
@@ -188,15 +184,6 @@ public class SocketResult {
         this.head = head;
         this.userId = userId;
         this.xiaZhuBeiShu = xiaZhuBeiShu;
-    }
-
-    /**
-     * 是否继续
-     * @param head
-     */
-    public SocketResult(Integer head ,Boolean isOver){
-        this.head = head;
-        this.isOver = isOver;
     }
 
 }

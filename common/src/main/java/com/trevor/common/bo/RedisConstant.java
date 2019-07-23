@@ -33,15 +33,24 @@ public class RedisConstant {
      */
     public static final String REAL_ROOM_PLAYER = "realRoomPlayer_";
 
-    /**
-     * 吃瓜群众
-     */
-    public static final String CHI_GUA_PEOPLE = "chiGuaPeople_";
+//    /**
+//     * 吃瓜群众
+//     */
+//    public static final String CHI_GUA_PEOPLE = "chiGuaPeople_";
 
     /**
      * 观众
      */
     public static final String GUANZHONG = "guanZhong_";
+
+    /**
+     * 玩家的总分
+     */
+    public static final String TOTAL_SCORE = "totalScore_";
+
+
+
+    /**    从这里开始每局清理     **/
 
     /**
      * 玩家的牌
@@ -83,11 +92,7 @@ public class RedisConstant {
      */
     public static final String PAI_XING = "paiXing_";
 
-    /**
-     * 玩家的总分
-     */
-    public static final String TOTAL_SCORE = "totalScore_";
-
+    /**    从这里开始每局清理结束     **/
 
     /**-----------------------------------------------------------------  hash key  -------------------------------------------------------------**/
 

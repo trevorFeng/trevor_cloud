@@ -450,7 +450,7 @@ public class NiuniuSocket extends BaseServer {
         Map<String ,String> paiXingMap = paiXingOps.entries();
         Map<String ,Integer> paiXingIntegerMap = Maps.newHashMap();
         for (Map.Entry<String ,String> entry : paiXingMap.entrySet()) {
-            paiXingIntegerMap.put(entry.getKey() ,Integer.valueOf(entry.getValue()));
+            paiXingIntegerMap.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new PaiXing()).getPaixing());
         }
         socketResult.setPaiXing(paiXingIntegerMap);
     }

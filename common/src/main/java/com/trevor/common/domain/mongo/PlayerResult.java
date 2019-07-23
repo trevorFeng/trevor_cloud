@@ -56,7 +56,7 @@ public class PlayerResult {
     /**
      * 牛牛或牛一
      */
-    private String pokesDesc;
+    private Integer paiXing;
 
     /**
      * 倍数
