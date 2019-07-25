@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -68,6 +69,7 @@ public class NiuniuPlayService {
     }
 
     private void play(String roomIdStr){
+        stringRedisTemplate.expire(RedisConstant.BASE_ROOM_INFO + roomIdStr , 12 ,TimeUnit.HOURS);
         BoundHashOperations<String, String, String> roomBaseInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomIdStr);
         //发4张牌
         fapai_4(roomIdStr ,JsonUtil.parse(roomBaseInfoOps.get(RedisConstant.PAIXING) ,new HashSet<>()));
