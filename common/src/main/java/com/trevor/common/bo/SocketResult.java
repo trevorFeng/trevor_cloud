@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author trevor
@@ -98,7 +99,7 @@ public class SocketResult {
     /**
      * 已经点击准备的玩家
      */
-    private List<String> readyPlayerIds;
+    private Set<String> readyPlayerIds;
 
     /**
      * 玩家的4张牌
@@ -128,7 +129,7 @@ public class SocketResult {
     /**
      * 摊牌的玩家
      */
-    private List<String> tanPaiPlayerUserIds;
+    private Set<String> tanPaiPlayerUserIds;
 
 
     /**

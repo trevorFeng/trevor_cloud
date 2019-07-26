@@ -158,18 +158,15 @@ public class RoomSocketService {
         List<Long> realUserIdsLong = realUserIds.stream().map(str -> Long.valueOf(str)).collect(Collectors.toList());
         List<User> realPlayerUsers = userService.findUsersByIds(realUserIdsLong);
 
-        BoundListOperations<String, String> guanZhongOps = stringRedisTemplate.boundListOps(RedisConstant.GUANZHONG + roomId);
-        List<String> guanZhongUserIds = null;
-        //if (guanZhongOps != null && guanZhongOps.size() > 0) {
-            guanZhongUserIds = guanZhongOps.range(0, -1);
-        //}
+        BoundSetOperations<String, String> guanZhongOps = stringRedisTemplate.boundSetOps(RedisConstant.GUANZHONG + roomId);
+        Set<String> guanZhongUserIds = guanZhongOps.members();
         List<Player> players = Lists.newArrayList();
         for (User user : realPlayerUsers) {
             Player player = new Player();
             player.setUserId(user.getId());
             player.setName(user.getAppName());
             player.setPictureUrl(user.getAppPictureUrl());
-            if (guanZhongUserIds != null && guanZhongUserIds.contains(String.valueOf(user.getId()))) {
+            if (guanZhongUserIds.contains(String.valueOf(user.getId()))) {
                 player.setIsGuanZhong(Boolean.TRUE);
             }
             players.add(player);

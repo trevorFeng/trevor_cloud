@@ -28,11 +28,6 @@ public class RedisConstant {
      */
     public static final String REAL_ROOM_PLAYER = "realRoomPlayer_";
 
-//    /**
-//     * 吃瓜群众
-//     */
-//    public static final String CHI_GUA_PEOPLE = "chiGuaPeople_";
-
     /**
      * 观众
      */

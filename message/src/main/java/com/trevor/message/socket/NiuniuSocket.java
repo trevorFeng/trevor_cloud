@@ -107,7 +107,7 @@ public class NiuniuSocket extends BaseServer {
         soc.setPlayers(roomSocketService.getRealRoomPlayerCount(this.roomId));
         //广播新人加入，前端需要比较useId是否与断线的玩家id（断线重连，断线时会给玩家一个消息谁断线了）、网络不好的玩家是否相等（网络不好重连），不相等则未新加入的玩家
         roomSocketService.broadcast(roomId ,soc);
-        //todo welcome发的消息应该在队列第一条消息
+        //发送房间状态消息
         welcome(roomId);
     }
 
@@ -334,10 +334,10 @@ public class NiuniuSocket extends BaseServer {
      * 得到准备的玩家
      * @return
      */
-    private List<String> getReadyPlayers(){
-        BoundListOperations<String, String> readyPlayersOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER + roomId);
+    private Set<String> getReadyPlayers(){
+        BoundSetOperations<String, String> readyPlayersOps = stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId);
         if (readyPlayersOps != null && readyPlayersOps.size() > 0) {
-            return readyPlayersOps.range(0 ,-1);
+            return readyPlayersOps.members();
         }
         return null;
     }
@@ -396,12 +396,9 @@ public class NiuniuSocket extends BaseServer {
     private Map<String ,List<String>> getLastPoke(Boolean isTanPai ,Boolean isReturnResult){
         Map<String ,List<String>> userPokeMap_1 = new HashMap<>();
         BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
-        BoundListOperations<String, String> tanPaiOps = stringRedisTemplate.boundListOps(RedisConstant.TANPAI + roomId);
+        BoundSetOperations<String, String> tanPaiOps = stringRedisTemplate.boundSetOps(RedisConstant.TANPAI + roomId);
         Map<String, String> userPokeStrMap = pokesOps.entries();
-        List<String> tanPaiPlayerIds = Lists.newArrayList();
-        if (tanPaiOps != null && tanPaiOps.size() > 0) {
-            tanPaiPlayerIds = tanPaiOps.range(0 ,-1);
-        }
+        Set<String> tanPaiPlayerIds = tanPaiOps.members();
         if (isReturnResult) {
             for (Map.Entry<String ,String> entry : userPokeStrMap.entrySet()) {
                 if (!tanPaiPlayerIds.contains(entry.getKey())) {
@@ -429,12 +426,9 @@ public class NiuniuSocket extends BaseServer {
      * 得到摊牌的玩家
      * @return
      */
-    private List<String> getTanPaiPlayer(){
-        BoundListOperations<String, String> tanPaiOps = stringRedisTemplate.boundListOps(RedisConstant.TANPAI + roomId);
-        if (tanPaiOps != null && tanPaiOps.size() > 0) {
-            return tanPaiOps.range(0 ,-1);
-        }
-        return null;
+    private Set<String> getTanPaiPlayer(){
+        BoundSetOperations<String, String> tanPaiOps = stringRedisTemplate.boundSetOps(RedisConstant.TANPAI + roomId);
+        return tanPaiOps.members();
     }
 
     /**

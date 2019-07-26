@@ -48,8 +48,8 @@ public class PlayService {
             socket.sendMessage(new SocketResult(-502));
             return;
         }
-        BoundListOperations<String, String> readyPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER + roomId);
-        readyPlayerOps.rightPush(socket.userId);
+        BoundSetOperations<String, String> readyPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId);
+        readyPlayerOps.add(socket.userId);
         //广播准备的消息
         roomSocketService.broadcast(roomId ,new SocketResult(1003 ,socket.userId));
 
@@ -74,8 +74,8 @@ public class PlayService {
             return;
         }
         //该玩家是否已经准备
-        BoundListOperations<String, String> readyPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER + roomId);
-        if (!readyPlayerOps.range(0 ,-1).contains(socket.userId)) {
+        BoundSetOperations<String, String> readyPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId);
+        if (!readyPlayerOps.members().contains(socket.userId)) {
             socket.sendMessage(new SocketResult(-503));
             return;
         }
@@ -97,8 +97,8 @@ public class PlayService {
             return;
         }
         //该玩家是否已经准备
-        BoundListOperations<String, String> readyPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER + roomId);
-        if (!readyPlayerOps.range(0 ,-1).contains(socket.userId)) {
+        BoundSetOperations<String, String> readyPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId);
+        if (!readyPlayerOps.members().contains(socket.userId)) {
             socket.sendMessage(new SocketResult(-504));
             return;
         }
@@ -126,14 +126,14 @@ public class PlayService {
             return;
         }
         //该玩家是否已经准备
-        BoundListOperations<String, String> readyPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.READY_PLAYER + roomId);
-        if (!readyPlayerOps.range(0 ,-1).contains(socket.userId)) {
+        BoundSetOperations<String, String> readyPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId);
+        if (!readyPlayerOps.members().contains(socket.userId)) {
             socket.sendMessage(new SocketResult(-503));
             return;
         }
 
-        BoundListOperations<String, String> tanPaiOps = stringRedisTemplate.boundListOps(RedisConstant.TANPAI + roomId);
-        tanPaiOps.rightPush(socket.userId);
+        BoundSetOperations<String, String> tanPaiOps = stringRedisTemplate.boundSetOps(RedisConstant.TANPAI + roomId);
+        tanPaiOps.add(socket.userId);
 
         //广播摊牌的消息
         SocketResult socketResult = new SocketResult();
