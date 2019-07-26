@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-@FeignClient(value = "service-play")
+@FeignClient(name = "service-play")
 public interface PlayFeign {
 
     @RequestMapping(value = "/api/niuniu/two/{roomId}" ,method = RequestMethod.GET)

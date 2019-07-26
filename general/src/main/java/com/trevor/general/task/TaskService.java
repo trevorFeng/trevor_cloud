@@ -52,18 +52,18 @@ public class TaskService{
         //超过12小时未使用的房间ids
         List<Long> overDayRoomIds = roomMapper.findByEntryTimeAndStatus_0(Hour_12_Before);
         log.info("超过12小时未使用的房间ids：" + overDayRoomIds.toString() );
-        List<Long> redisUnUserRoomIds = Lists.newArrayList();
-        for (Long roomId : overDayRoomIds) {
-            BoundValueOperations<String, String> roomUseOps = stringRedisTemplate.boundValueOps(RedisConstant.ROOM_USE + roomId);
-            if (roomUseOps.get() == null) {
-                redisUnUserRoomIds.add(roomId);
-            }
-        }
-        roomMapper.updateStatus_3(redisUnUserRoomIds);
+//        List<Long> redisUnUserRoomIds = Lists.newArrayList();
+//        for (Long roomId : overDayRoomIds) {
+//            BoundValueOperations<String, String> roomUseOps = stringRedisTemplate.boundValueOps(RedisConstant.ROOM_USE + roomId);
+//            if (roomUseOps.get() == null) {
+//                redisUnUserRoomIds.add(roomId);
+//            }
+//        }
+        roomMapper.updateStatus_3(overDayRoomIds);
 
         //删除redis中的key
         for (Long roomId : overDayRoomIds) {
-            for (Long redisUnUserRoomId : redisUnUserRoomIds) {
+            for (Long redisUnUserRoomId : overDayRoomIds) {
                 if (Objects.equals(roomId ,redisUnUserRoomId)) {
                     stringRedisTemplate.delete(RedisConstant.BASE_ROOM_INFO + roomId);
                 }
@@ -71,9 +71,9 @@ public class TaskService{
         }
 
         //返回房卡
-        List<Room> rooms = roomMapper.findByIds(redisUnUserRoomIds);
+        List<Room> rooms = roomMapper.findByIds(overDayRoomIds);
         //删除房卡消费记录
-        cardConsumRecordMapper.deleteByRoomRecordIds(redisUnUserRoomIds);
+        cardConsumRecordMapper.deleteByRoomRecordIds(overDayRoomIds);
         //返回房卡
         List<Long> userIds = rooms.stream().map(r -> r.getRoomAuth()).collect(Collectors.toList());
         List<PersonalCard> personalCards = personalCardMapper.findByUserIds(userIds);

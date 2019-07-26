@@ -14,11 +14,6 @@ public class RedisConstant {
     public static final String BASE_ROOM_INFO = "baseRoomInfo_";
 
     /**
-     * 房间是否正在被使用
-     */
-    public static final String ROOM_USE = "roomUser_";
-
-    /**
      * 玩家的消息队列
      */
     public static final String MESSAGES_QUEUE = "MessageQueue_";

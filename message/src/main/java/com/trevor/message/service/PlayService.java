@@ -9,10 +9,7 @@ import com.trevor.common.util.PokeUtil;
 import com.trevor.message.bo.SocketMessage;
 import com.trevor.message.feign.PlayFeign;
 import com.trevor.message.socket.NiuniuSocket;
-import org.springframework.data.redis.core.BoundHashOperations;
-import org.springframework.data.redis.core.BoundListOperations;
-import org.springframework.data.redis.core.BoundValueOperations;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -41,13 +38,13 @@ public class PlayService {
     public void dealReadyMessage(String roomId , NiuniuSocket socket){
         BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
         //根据房间状态判断
-        BoundListOperations<String, String> realPlayerUserIds = stringRedisTemplate.boundListOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
+        BoundSetOperations<String, String> realPlayerUserIds = stringRedisTemplate.boundSetOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
         if (!Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_FAPAI_4.getCode())) {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
         //准备的人是否是真正的玩家
-        if (!realPlayerUserIds.range(0 ,-1).contains(socket.userId)) {
+        if (!realPlayerUserIds.members().contains(socket.userId)) {
             socket.sendMessage(new SocketResult(-502));
             return;
         }

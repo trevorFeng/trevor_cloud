@@ -4,17 +4,21 @@ import com.trevor.common.bo.Authentication;
 import com.trevor.common.bo.WebKeys;
 import com.trevor.common.dao.mysql.UserMapper;
 import com.trevor.common.domain.mysql.User;
+import com.trevor.common.util.ObjectUtil;
 import com.trevor.common.util.TokenUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 @Service
+@Slf4j
 public class UserService {
 
     @Resource
@@ -27,18 +31,24 @@ public class UserService {
      * @throws IOException
      */
     public User getUserByToken(String token) {
-        Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
-        String openid = (String) claims.get(WebKeys.OPEN_ID);
-        String hash = (String) claims.get("hash");
-        Long timestamp = (Long) claims.get("timestamp");
-        if (openid == null || hash == null || timestamp == null) {
+        try {
+            Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
+            String openid = (String) claims.get(WebKeys.OPEN_ID);
+            String hash = (String) claims.get("hash");
+            Long timestamp = (Long) claims.get("timestamp");
+            if (openid == null || hash == null || timestamp == null) {
+                return null;
+            }
+            User user = findUserByOpenid(openid);
+            if (user == null || !Objects.equals(user.getHash(), hash)) {
+                return null;
+            }
+            return user;
+        }catch (Exception e) {
+            log.error("解析token错误，token：" + token);
             return null;
         }
-        User user = findUserByOpenid(openid);
-        if (user == null || !Objects.equals(user.getHash(), hash)) {
-            return null;
-        }
-        return user;
+
     }
 
     /**
@@ -159,6 +169,9 @@ public class UserService {
     }
 
     public List<User> findUsersByIds(List<Long> ids) {
+        if (ObjectUtil.isEmpty(ids)) {
+            return new ArrayList<>();
+        }
         return userMapper.findUsersByIds(ids);
     }
 }

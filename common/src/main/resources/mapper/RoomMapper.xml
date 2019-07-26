@@ -25,11 +25,12 @@
     <select id="findOneById" resultType="com.trevor.common.domain.mysql.Room">
         select
         id id,
-        get_room_time getRoomTime,
+        entry_time entryTime,
         room_auth roomAuth,
-        state state,
+        status status,
         room_type roomType,
-        room_config roomConfig
+        runing_num runingNum,
+        total_num totalNum
         from
         `room`
         where

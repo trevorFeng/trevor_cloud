@@ -99,8 +99,8 @@ public class CreateRoomService{
         ops.put(RedisConstant.RUNING_NUM ,"0");
         ops.put(RedisConstant.TOTAL_NUM ,totalNum.toString());
 
-        //设置key的过期时间,12个小时
-        stringRedisTemplate.expire(RedisConstant.BASE_ROOM_INFO + room.getId() ,12 , TimeUnit.HOURS);
+//        //设置key的过期时间,12个小时
+//        stringRedisTemplate.expire(RedisConstant.BASE_ROOM_INFO + room.getId() ,12 , TimeUnit.HOURS);
 
         //生成房卡消费记录
         CardConsumRecord cardConsumRecord = new CardConsumRecord();

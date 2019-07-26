@@ -15,10 +15,7 @@ import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.PokeUtil;
 import com.trevor.common.util.RandomUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.BoundHashOperations;
-import org.springframework.data.redis.core.BoundListOperations;
-import org.springframework.data.redis.core.BoundValueOperations;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -69,7 +66,6 @@ public class NiuniuPlayService {
     }
 
     private void play(String roomIdStr){
-        stringRedisTemplate.expire(RedisConstant.BASE_ROOM_INFO + roomIdStr , 12 ,TimeUnit.HOURS);
         BoundHashOperations<String, String, String> roomBaseInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomIdStr);
         //发4张牌
         fapai_4(roomIdStr ,JsonUtil.parse(roomBaseInfoOps.get(RedisConstant.PAIXING) ,new HashSet<>()));
@@ -453,13 +449,13 @@ public class NiuniuPlayService {
      * @param roomIdStr
      */
     private void broadcast(SocketResult socketResult ,String roomIdStr){
-        BoundListOperations<String, String> roomPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.ROOM_PLAYER + roomIdStr);
-        if (roomPlayerOps != null && roomPlayerOps.size() > 0) {
-            List<String> playerIds = roomPlayerOps.range(0, -1);
+        BoundSetOperations<String, String> roomPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.ROOM_PLAYER + roomIdStr);
+        //if (roomPlayerOps != null && roomPlayerOps.size() > 0) {
+            Set<String> playerIds = roomPlayerOps.members();
             for (String playerId : playerIds) {
                 stringRedisTemplate.boundListOps(RedisConstant.MESSAGES_QUEUE + playerId).rightPush(JsonUtil.toJsonString(socketResult));
             }
-        }
+        //}
     }
 
 }

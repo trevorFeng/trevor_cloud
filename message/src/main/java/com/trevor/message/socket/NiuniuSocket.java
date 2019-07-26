@@ -17,6 +17,7 @@ import com.trevor.message.encoder.MessageEncoder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.BoundListOperations;
+import org.springframework.data.redis.core.BoundSetOperations;
 import org.springframework.data.redis.core.BoundValueOperations;
 import org.springframework.stereotype.Component;
 
@@ -100,10 +101,8 @@ public class NiuniuSocket extends BaseServer {
 
         soc.setHead(1000);
         if (!soc.getIsChiGuaPeople()) {
-            BoundListOperations<String, String> realPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
-            if (realPlayerOps != null && realPlayerOps.size() > 0 && !realPlayerOps.range(0 ,-1).contains(userId)) {
-                realPlayerOps.rightPush(userId);
-            }
+            BoundSetOperations<String, String> realPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
+            realPlayerOps.add(userId);
         }
         soc.setPlayers(roomSocketService.getRealRoomPlayerCount(this.roomId));
         //广播新人加入，前端需要比较useId是否与断线的玩家id（断线重连，断线时会给玩家一个消息谁断线了）、网络不好的玩家是否相等（网络不好重连），不相等则未新加入的玩家
@@ -121,6 +120,10 @@ public class NiuniuSocket extends BaseServer {
             playService.dealReadyMessage(roomId ,this);
         }else if (Objects.equals(socketMessage.getMessageCode() ,2)) {
             playService.dealQiangZhuangMessage(roomId ,this ,socketMessage);
+        }else if (Objects.equals(socketMessage.getMessageCode() ,3)) {
+            playService.dealXiaZhuMessage(roomId ,this ,socketMessage);
+        }else if (Objects.equals(socketMessage.getMessageCode() ,4)) {
+            playService.dealTanPaiMessage(roomId ,this ,socketMessage);
         }
     }
 
@@ -132,10 +135,12 @@ public class NiuniuSocket extends BaseServer {
         if (!ObjectUtil.isEmpty(userId)) {
             roomSocketService.leave(roomId ,this);
             //如果是真正的玩家则广播消息
-            if (stringRedisTemplate.boundListOps(RedisConstant.REAL_ROOM_PLAYER + roomId).range(0 ,-1).contains(userId)) {
+            BoundSetOperations<String, String> realRoomPlayOps = stringRedisTemplate.boundSetOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
+            if (realRoomPlayOps.members().contains(userId)) {
                 SocketResult res = new SocketResult(1001 ,userId);
                 roomSocketService.broadcast(roomId ,res);
             }
+
         }
     }
 
@@ -245,11 +250,11 @@ public class NiuniuSocket extends BaseServer {
         socketResult.setUserId(String.valueOf(user.getId()));
         socketResult.setName(user.getAppName());
         socketResult.setPictureUrl(user.getAppPictureUrl());
-        BoundListOperations<String, String> realPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.REAL_ROOM_PLAYER);
+        BoundSetOperations<String, String> realPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.REAL_ROOM_PLAYER);
         BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO);
         //允许观战
         if (special!= null && special.contains(SpecialEnum.CAN_SEE.getCode())) {
-            if (realPlayerOps != null || realPlayerOps.size() < RoomTypeEnum.getRoomNumByType(Integer.valueOf(baseRoomInfoOps.get(RedisConstant.ROOM_TYPE)))) {
+            if (realPlayerOps.size() < RoomTypeEnum.getRoomNumByType(Integer.valueOf(baseRoomInfoOps.get(RedisConstant.ROOM_TYPE)))) {
                 socketResult.setIsChiGuaPeople(Boolean.FALSE);
             }else {
                 socketResult.setIsChiGuaPeople(Boolean.TRUE);
@@ -257,7 +262,7 @@ public class NiuniuSocket extends BaseServer {
             return socketResult;
         //不允许观战
         }else {
-            if (realPlayerOps != null || realPlayerOps.size() < RoomTypeEnum.getRoomNumByType(Integer.valueOf(baseRoomInfoOps.get(RedisConstant.ROOM_TYPE)))) {
+            if (realPlayerOps.size() < RoomTypeEnum.getRoomNumByType(Integer.valueOf(baseRoomInfoOps.get(RedisConstant.ROOM_TYPE)))) {
                 socketResult.setIsChiGuaPeople(Boolean.FALSE);
                 return socketResult;
             }else {

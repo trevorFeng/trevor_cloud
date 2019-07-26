@@ -9,6 +9,7 @@ import com.trevor.common.service.UserService;
 import com.trevor.message.socket.NiuniuSocket;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.BoundListOperations;
+import org.springframework.data.redis.core.BoundSetOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
@@ -54,11 +56,12 @@ public class RoomSocketService {
      * fixedRate设置的上一个任务的开始时间到下一个任务开始时间的间隔
      * fixedDelay是设定上一个任务结束后多久执行下一个任务，也就是fixedDelay只关心上一任务的结束时间和下一任务的开始时间
      */
-    @Scheduled(initialDelay = 1000 * 30 ,fixedDelay = 1000)
+    @Scheduled(initialDelay = 1000 * 3 ,fixedDelay = 1000)
     public void checkRoom(){
         Iterator<NiuniuSocket> iterator = sockets.values().iterator();
         while (iterator.hasNext()) {
             NiuniuSocket socket = iterator.next();
+            log.info("给玩家：" + socket.userId + "发消息");
             socket.flush();
         }
     }
@@ -70,7 +73,7 @@ public class RoomSocketService {
      */
     public void broadcast(String roomId , SocketResult res){
         executor.execute(() -> {
-            List<String> playerIds = getRoomPlayers(roomId);
+            Set<String> playerIds = getRoomPlayers(roomId);
             for (String playId : playerIds) {
                 NiuniuSocket socket = sockets.get(playId);
                 if (socket != null && socket.session != null && socket.session.isOpen()) {
@@ -120,8 +123,8 @@ public class RoomSocketService {
      * @param userId
      */
     public void addRoomPlayer(String roomId ,String userId) {
-        BoundListOperations<String, String> ops = stringRedisTemplate.boundListOps(RedisConstant.ROOM_PLAYER + roomId);
-        ops.rightPush(userId);
+        BoundSetOperations<String, String> ops = stringRedisTemplate.boundSetOps(RedisConstant.ROOM_PLAYER + roomId);
+        ops.add(userId);
     }
 
     /**
@@ -131,9 +134,9 @@ public class RoomSocketService {
      */
     public void subRoomPlayer(String roomId ,String userId){
         //移除玩家id
-        BoundListOperations<String, String> ops = stringRedisTemplate.boundListOps(RedisConstant.ROOM_PLAYER + roomId);
-        //移除指定个数的值
-        ops.remove(1 ,userId);
+        BoundSetOperations<String, String> roomPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.ROOM_PLAYER + roomId);
+        //移除
+        roomPlayerOps.remove(userId);
         //删除消息通道
         stringRedisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
     }
@@ -143,22 +146,23 @@ public class RoomSocketService {
      * @param roomId
      * @return
      */
-    public List<String> getRoomPlayers(String roomId){
-        BoundListOperations<String, String> ops = stringRedisTemplate.boundListOps(RedisConstant.ROOM_PLAYER + roomId);
-        List<String> range = ops.range(0, -1);
+    public Set<String> getRoomPlayers(String roomId){
+        BoundSetOperations<String, String> roomPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.ROOM_PLAYER + roomId);
+        Set<String> range = roomPlayerOps.members();
         return range;
     }
 
     public List<Player> getRealRoomPlayerCount(String roomId){
-        BoundListOperations<String, String> realPlayerOps = stringRedisTemplate.boundListOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
-        List<String> realUserIds = realPlayerOps.range(0, -1);
+        BoundSetOperations<String, String> realPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
+        Set<String> realUserIds = realPlayerOps.members();
         List<Long> realUserIdsLong = realUserIds.stream().map(str -> Long.valueOf(str)).collect(Collectors.toList());
         List<User> realPlayerUsers = userService.findUsersByIds(realUserIdsLong);
+
         BoundListOperations<String, String> guanZhongOps = stringRedisTemplate.boundListOps(RedisConstant.GUANZHONG + roomId);
         List<String> guanZhongUserIds = null;
-        if (guanZhongOps != null && guanZhongOps.size() > 0) {
+        //if (guanZhongOps != null && guanZhongOps.size() > 0) {
             guanZhongUserIds = guanZhongOps.range(0, -1);
-        }
+        //}
         List<Player> players = Lists.newArrayList();
         for (User user : realPlayerUsers) {
             Player player = new Player();
