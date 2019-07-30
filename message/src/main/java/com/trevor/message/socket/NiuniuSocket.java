@@ -227,16 +227,16 @@ public class NiuniuSocket extends BaseServer {
                     return new SocketResult(508);
                     //是房主的好友
                 }else {
-                    return this.dealCanSee(user ,special);
+                    return this.dealCanSee(user ,special ,room);
                 }
             }
             //未配置仅限好友
             else {
-                return this.dealCanSee(user ,special);
+                return this.dealCanSee(user ,special ,room);
             }
             // 未开通
         }else {
-            return this.dealCanSee( user ,special);
+            return this.dealCanSee( user ,special ,room);
         }
 
     }
@@ -245,13 +245,13 @@ public class NiuniuSocket extends BaseServer {
      * 处理是否可以观战
      * @throws IOException
      */
-    private SocketResult dealCanSee(User user, HashSet<Integer> special){
+    private SocketResult dealCanSee(User user, HashSet<Integer> special ,Room room){
         SocketResult socketResult = new SocketResult();
         socketResult.setUserId(String.valueOf(user.getId()));
         socketResult.setName(user.getAppName());
         socketResult.setPictureUrl(user.getAppPictureUrl());
-        BoundSetOperations<String, String> realPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.REAL_ROOM_PLAYER);
-        BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO);
+        BoundSetOperations<String, String> realPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.REAL_ROOM_PLAYER + room.getId());
+        BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + room.getId());
         //允许观战
         if (special!= null && special.contains(SpecialEnum.CAN_SEE.getCode())) {
             if (realPlayerOps.size() < RoomTypeEnum.getRoomNumByType(Integer.valueOf(baseRoomInfoOps.get(RedisConstant.ROOM_TYPE)))) {

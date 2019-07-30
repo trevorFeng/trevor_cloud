@@ -39,7 +39,8 @@ public class PlayService {
         BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
         //根据房间状态判断
         BoundSetOperations<String, String> realPlayerUserIds = stringRedisTemplate.boundSetOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
-        if (!Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_FAPAI_4.getCode())) {
+        if (!Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_FAPAI_4.getCode())
+            || Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_READY.getCode())) {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
