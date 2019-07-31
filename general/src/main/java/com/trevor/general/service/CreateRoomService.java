@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -92,7 +93,8 @@ public class CreateRoomService{
         ops.put(RedisConstant.BASE_POINT ,String.valueOf(niuniuRoomParam.getBasePoint()));
         ops.put(RedisConstant.RULE ,String.valueOf(niuniuRoomParam.getRule()));
         ops.put(RedisConstant.XIAZHU ,String.valueOf(niuniuRoomParam.getXiazhu()));
-        ops.put(RedisConstant.SPECIAL , JSON.toJSONString(niuniuRoomParam.getSpecial()));
+
+        ops.put(RedisConstant.SPECIAL , JSON.toJSONString(niuniuRoomParam.getSpecial() == null ? new HashSet<>() : niuniuRoomParam.getSpecial()));
         ops.put(RedisConstant.PAIXING ,JSON.toJSONString(niuniuRoomParam.getPaiXing()));
 
         ops.put(RedisConstant.GAME_STATUS ,"1");
