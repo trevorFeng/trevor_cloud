@@ -89,10 +89,10 @@ public class PokeUtil {
      * @param pokes
      * @return
      */
-    public static PaiXing isNiuNiu(List<String> pokes , Set<Integer> paiXingSet , Integer rule){
+    public static PaiXing isNiuNiu(List<String> pokes , List<Integer> paiXingSet , Integer rule){
         PaiXing paiXing;
         if (paiXingSet == null) {
-            paiXingSet = new HashSet<>();
+            paiXingSet = new ArrayList<>();
         }
         //是否是五小牛
         paiXing = isNiu_16(pokes ,paiXingSet);
@@ -214,7 +214,7 @@ public class PokeUtil {
      * @param paiXingSet
      * @return
      */
-    public static PaiXing isNiu_16(List<String> pokes , Set<Integer> paiXingSet){
+    public static PaiXing isNiu_16(List<String> pokes , List<Integer> paiXingSet){
         PaiXing paiXing;
         if (paiXingSet.contains(6)) {
             int num = 0;
@@ -283,7 +283,7 @@ public class PokeUtil {
      * @param paiXingSet
      * @return
      */
-    public static PaiXing isNiu_15(List<String> pokes , Set<Integer> paiXingSet){
+    public static PaiXing isNiu_15(List<String> pokes , List<Integer> paiXingSet){
         PaiXing paiXing;
         if (paiXingSet.contains(5)) {
             int num = 0;
@@ -342,7 +342,7 @@ public class PokeUtil {
      * @param paiXingSet
      * @return
      */
-    public static PaiXing isNiu_12(List<String> pokes , Set<Integer> paiXingSet){
+    public static PaiXing isNiu_12(List<String> pokes , List<Integer> paiXingSet){
         PaiXing paiXing;
         if (paiXingSet.contains(2)) {
             boolean j_q_k = true;
@@ -372,7 +372,7 @@ public class PokeUtil {
      * @param paiXingSet
      * @return
      */
-    public static PaiXing isNiu_14(List<String> pokes , Set<Integer> paiXingSet){
+    public static PaiXing isNiu_14(List<String> pokes , List<Integer> paiXingSet){
         PaiXing paiXing;
         if (paiXingSet.contains(4)) {
             Set<String> set = new HashSet<>();
@@ -404,7 +404,7 @@ public class PokeUtil {
      * @param paiXingSet
      * @return
      */
-    public static PaiXing isNiu_13(List<String> pokes , Set<Integer> paiXingSet){
+    public static PaiXing isNiu_13(List<String> pokes , List<Integer> paiXingSet){
         PaiXing paiXing;
         if (paiXingSet.contains(3)) {
             Set<String> set = new HashSet<>();
@@ -427,7 +427,7 @@ public class PokeUtil {
      * @param paiXingSet
      * @return
      */
-    public static PaiXing isNiu_11(List<String> pokes , Set<Integer> paiXingSet){
+    public static PaiXing isNiu_11(List<String> pokes , List<Integer> paiXingSet){
         PaiXing paiXing;
         if (paiXingSet.contains(1)) {
             List<Integer> paiList = Lists.newArrayList();

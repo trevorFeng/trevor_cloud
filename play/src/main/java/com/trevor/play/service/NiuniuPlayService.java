@@ -68,7 +68,7 @@ public class NiuniuPlayService {
     private void play(String roomIdStr){
         BoundHashOperations<String, String, String> roomBaseInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomIdStr);
         //发4张牌
-        fapai_4(roomIdStr ,JsonUtil.parse(roomBaseInfoOps.get(RedisConstant.PAIXING) ,new HashSet<>()));
+        fapai_4(roomIdStr ,JsonUtil.parse(roomBaseInfoOps.get(RedisConstant.PAIXING) ,new ArrayList<>()));
         //开始抢庄倒计时
         countDown(1005 ,GameStatusEnum.BEFORE_SELECT_ZHUANGJIA.getCode() ,roomIdStr);
         //选取庄家
@@ -87,7 +87,7 @@ public class NiuniuPlayService {
         Map<String ,PaiXing> paiXingMap = new HashMap<>();
         Map<String ,Integer> scoreMap = new HashMap<>(2<<4);
         setScore(roomIdStr
-                ,JsonUtil.parse(roomBaseInfoOps.get(RedisConstant.PAIXING) ,new HashSet<>())
+                ,JsonUtil.parse(roomBaseInfoOps.get(RedisConstant.PAIXING) ,new ArrayList<>())
                 ,Integer.valueOf(roomBaseInfoOps.get(RedisConstant.RULE))
                 ,Integer.valueOf(roomBaseInfoOps.get(RedisConstant.BASE_POINT))
                 ,scoreMap
@@ -113,11 +113,11 @@ public class NiuniuPlayService {
         for (int i = 5; i > 0 ; i--) {
             SocketResult socketResult = new SocketResult(head ,i);
             broadcast(socketResult ,roomIdStr);
-        }
-        try {
-            Thread.sleep(500);
-        }catch (Exception e) {
-            log.error(e.toString());
+            try {
+                Thread.sleep(1000);
+            }catch (Exception e) {
+                log.error(e.toString());
+            }
         }
     }
 
@@ -126,7 +126,7 @@ public class NiuniuPlayService {
      * @param roomId
      * @param paiXing
      */
-    private void fapai_4(String roomId ,Set<Integer> paiXing){
+    private void fapai_4(String roomId ,List<Integer> paiXing){
         List<String> rootPokes = PokeUtil.generatePoke5();
         //生成牌在rootPokes的索引
         List<List<Integer>> lists;
@@ -208,19 +208,19 @@ public class NiuniuPlayService {
         SocketResult socketResult = new SocketResult(1006 ,zhuangJiaUserId);
         broadcast(socketResult ,roomId);
         //改变状态
-        stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO).put(RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_XIANJIA_XIAZHU.getCode());
+        stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId).put(RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_XIANJIA_XIAZHU.getCode());
     }
 
     /**
      * 发一张牌
      */
     private void fapai_1(String roomId){
-        stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO).put(RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_TABPAI_COUNTDOWN.getCode());
+        stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId).put(RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_TABPAI_COUNTDOWN.getCode());
         BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
         Map<String ,List<String>> userPokeMap = new HashMap<>(2<<4);
         Map<String, String> map = pokesOps.entries();
         for (Map.Entry<String ,String> entry : map.entrySet()) {
-            userPokeMap.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new ArrayList<String>()).subList(4,5));
+            userPokeMap.put(entry.getKey() ,JsonUtil.parseJavaList(entry.getValue() ,String.class).subList(4,5));
         }
         SocketResult socketResult = new SocketResult(1008 , null,userPokeMap);
         broadcast(socketResult ,roomId);
@@ -242,7 +242,7 @@ public class NiuniuPlayService {
         Map<String, String> userPokeStrMap = pokesOps.entries();
         for (Map.Entry<String ,String> entry : userPokeStrMap.entrySet()) {
             if (!tanPaiPlayers.contains(entry.getKey())) {
-                userPokeMap_1.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new ArrayList<String>()).subList(4 ,5));
+                userPokeMap_1.put(entry.getKey() ,JsonUtil.parseJavaList(entry.getValue() ,String.class).subList(4 ,5));
             }
         }
         socketResult.setUserPokeMap_1(userPokeMap_1);
@@ -296,7 +296,7 @@ public class NiuniuPlayService {
             //设置牌
             playerResult.setPokes(JsonUtil.parse(pokesMap.get(userIdStr) ,new ArrayList<String>()));
             //设置牌型
-            PaiXing paiXing = JsonUtil.parse(paiXingMap.get(userIdStr) ,new PaiXing());
+            PaiXing paiXing = JsonUtil.parseJavaObject(paiXingMap.get(userIdStr) ,PaiXing.class);
             playerResult.setPaiXing(paiXing.getPaixing());
             //设置倍数
             playerResult.setPaiXing(paiXing.getMultiple());
@@ -325,27 +325,30 @@ public class NiuniuPlayService {
      * 继续开始或者停止
      */
     private void continueOrStop(String roomId){
-        BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO);
-        String runingNum = baseRoomInfoOps.get(RedisConstant.RUNING_NUM);
-        String totalNum = baseRoomInfoOps.get(RedisConstant.TOTAL_NUM);
+        BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
+        Integer runingNum = Integer.valueOf(baseRoomInfoOps.get(RedisConstant.RUNING_NUM));
+        Integer totalNum = Integer.valueOf(baseRoomInfoOps.get(RedisConstant.TOTAL_NUM));
         stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId).put(RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_READY.getCode());
         //结束
-        if (Objects.equals(Integer.valueOf(runingNum) ,Integer.valueOf(totalNum))) {
+        if (Objects.equals(runingNum ,totalNum)) {
             SocketResult socketResult = new SocketResult(1013);
             broadcast(socketResult ,roomId);
         }else {
+            Integer next = runingNum + 1;
+            baseRoomInfoOps.put(RedisConstant.RUNING_NUM ,String.valueOf(next));
             SocketResult socketResult = new SocketResult();
             socketResult.setHead(1016);
-            socketResult.setRuningAndTotal(runingNum + "/" + totalNum);
+            socketResult.setRuningAndTotal(next + "/" + totalNum);
             broadcast(socketResult ,roomId);
         }
+
 
 
 
     }
 
 
-    private void setScore(String roomId ,Set<Integer> paiXing ,Integer rule ,Integer basePoint
+    private void setScore(String roomId ,List<Integer> paiXing ,Integer rule ,Integer basePoint
             ,Map<String ,Integer> scoreMap ,Map<String ,PaiXing> paiXingMap){
         String zhuangJiaUserId = stringRedisTemplate.boundValueOps(RedisConstant.ZHUANGJIA + roomId).get();
         BoundHashOperations<String, String, String> qiangZhuangOps = stringRedisTemplate.boundHashOps(RedisConstant.QIANGZHAUNG + roomId);
@@ -358,26 +361,30 @@ public class NiuniuPlayService {
         PaiXing zhuangJiaPaiXing = PokeUtil.isNiuNiu(zhuangJiaPokes , paiXing ,rule);
         Integer zhuangJiaScore = 0;
         paiXingMap.put(zhuangJiaUserId ,zhuangJiaPaiXing);
+        Integer zhuangJiaQiangZhuang = qiangZhuangOps.get(zhuangJiaUserId) == null ? 1 : Integer.valueOf(qiangZhuangOps.get(zhuangJiaUserId));
         for (Map.Entry<String ,String> entry : pokes.entries().entrySet()) {
             if (!Objects.equals(entry.getKey() ,zhuangJiaUserId)) {
                 List<String> xianJiaPokes = JsonUtil.parse(entry.getValue() ,new ArrayList<String>());
                 PaiXing xianJiaPaiXing = PokeUtil.isNiuNiu(xianJiaPokes ,paiXing ,rule);
                 paiXingOps.put(entry.getKey() ,JsonUtil.toJsonString(xianJiaPaiXing));
                 paiXingMap.put(entry.getKey() ,xianJiaPaiXing);
-                Integer score = Integer.valueOf(qiangZhuangOps.get(zhuangJiaUserId)) * Integer.valueOf(xianJiaXiaZhuOps.get(entry.getKey())) * basePoint;
+                Integer xianJiaQiangZhuang = xianJiaXiaZhuOps.get(entry.getKey()) == null ? 1 : Integer.valueOf(xianJiaXiaZhuOps.get(entry.getKey()));
+                Integer score = zhuangJiaQiangZhuang * xianJiaQiangZhuang * basePoint;
+                Integer xianJiaTotalScore = totalScoreOps.get(entry.getKey()) == null ? 0 : Integer.valueOf(totalScoreOps.get(entry.getKey()));
                 //庄家大于闲家
                 if (zhuangJiaPaiXing.getPaixing() > xianJiaPaiXing.getPaixing()) {
                     score = score * zhuangJiaPaiXing.getMultiple();
                     zhuangJiaScore += score;
                     scoreOps.put(entry.getKey() ,String.valueOf(-score));
-                    totalScoreOps.put(entry.getKey() ,String.valueOf(Integer.valueOf(totalScoreOps.get(entry.getKey())) - score));
+
+                    totalScoreOps.put(entry.getKey() ,String.valueOf(xianJiaTotalScore - score));
                     scoreMap.put(entry.getKey() ,-score);
                     //庄家小于闲家
                 }else if (zhuangJiaPaiXing.getPaixing() < xianJiaPaiXing.getPaixing()) {
                     score = score * xianJiaPaiXing.getMultiple();
                     zhuangJiaScore -= score;
                     scoreOps.put(entry.getKey() ,String.valueOf(-score));
-                    totalScoreOps.put(entry.getKey() ,String.valueOf(Integer.valueOf(totalScoreOps.get(entry.getKey())) + score));
+                    totalScoreOps.put(entry.getKey() ,String.valueOf(xianJiaTotalScore + score));
                     scoreMap.put(entry.getKey() ,score);
                 }else{
                     boolean zhuangJiaDa = true;
@@ -431,22 +438,23 @@ public class NiuniuPlayService {
                         zhuangJiaScore += score;
                         scoreOps.put(entry.getKey() ,String.valueOf(-score));
                         scoreMap.put(entry.getKey() ,-score);
-                        totalScoreOps.put(entry.getKey() ,String.valueOf(Integer.valueOf(totalScoreOps.get(entry.getKey())) - score));
+                        totalScoreOps.put(entry.getKey() ,String.valueOf(xianJiaTotalScore - score));
                     }else {
                         score = score * xianJiaPaiXing.getMultiple();
                         zhuangJiaScore += score;
                         scoreOps.put(entry.getKey() ,String.valueOf(score));
-                        totalScoreOps.put(entry.getKey() ,String.valueOf(Integer.valueOf(totalScoreOps.get(entry.getKey())) + score));
+                        totalScoreOps.put(entry.getKey() ,String.valueOf(xianJiaTotalScore + score));
                         scoreMap.put(entry.getKey() ,score);
                     }
                 }
 
             }
         }
+        Integer zhuangJiaTotalScore = totalScoreOps.get(zhuangJiaUserId) == null ? 0 : Integer.valueOf(totalScoreOps.get(zhuangJiaUserId));
         paiXingOps.put(zhuangJiaUserId ,JsonUtil.toJsonString(zhuangJiaPaiXing));
         scoreOps.put(zhuangJiaUserId ,String.valueOf(zhuangJiaScore));
         scoreMap.put(zhuangJiaUserId ,zhuangJiaScore);
-        totalScoreOps.put(zhuangJiaUserId ,String.valueOf(Integer.valueOf(totalScoreOps.get(zhuangJiaUserId)) + zhuangJiaScore));
+        totalScoreOps.put(zhuangJiaUserId ,String.valueOf(zhuangJiaTotalScore + zhuangJiaScore));
     }
 
     /**

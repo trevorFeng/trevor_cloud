@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -64,7 +65,7 @@ public class Init implements ApplicationRunner {
             ops.put(RedisConstant.RULE ,String.valueOf(niuniuRoomParam.getRule()));
             ops.put(RedisConstant.XIAZHU ,String.valueOf(niuniuRoomParam.getXiazhu()));
             ops.put(RedisConstant.SPECIAL , JSON.toJSONString(niuniuRoomParam.getSpecial()));
-            ops.put(RedisConstant.PAIXING ,JSON.toJSONString(niuniuRoomParam.getPaiXing()));
+            ops.put(RedisConstant.PAIXING ,niuniuRoomParam.getPaiXing() == null ? JSON.toJSONString(new HashSet<Integer>()) : JSON.toJSONString(niuniuRoomParam.getPaiXing()));
 
             ops.put(RedisConstant.GAME_STATUS ,"1");
             ops.put(RedisConstant.RUNING_NUM ,"0");

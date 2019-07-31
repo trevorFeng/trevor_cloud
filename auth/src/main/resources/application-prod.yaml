@@ -6,7 +6,7 @@ spring:
     name: service-auth
 
   profiles:
-    include: common_dev
+    include: common_prod
 
 eureka:
   client:

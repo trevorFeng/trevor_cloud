@@ -1,5 +1,6 @@
 package com.trevor.message.service;
 
+import com.trevor.common.bo.JsonEntity;
 import com.trevor.common.bo.PaiXing;
 import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
@@ -40,7 +41,7 @@ public class PlayService {
         //根据房间状态判断
         BoundSetOperations<String, String> realPlayerUserIds = stringRedisTemplate.boundSetOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
         if (!Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_FAPAI_4.getCode())
-            || Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_READY.getCode())) {
+            && !Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_READY.getCode())) {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
@@ -54,11 +55,15 @@ public class PlayService {
         //广播准备的消息
         roomSocketService.broadcast(roomId ,new SocketResult(1003 ,socket.userId));
 
-        //判断房间里真正玩家的人数，如果只有两人，直接开始游戏，否则开始倒计时
-        if (Objects.equals(realPlayerUserIds.size() ,2L)) {
-            playFeign.niuniuEqualsTwo(roomId);
-        }else if (realPlayerUserIds.size() > 3L) {
-            playFeign.niuniuOverTwo(roomId);
+        //准备的人数超过两人
+        if (readyPlayerOps.size() >= 2) {
+            //判断房间里真正玩家的人数，如果只有两人，直接开始游戏，否则开始倒计时
+            JsonEntity<Object> jsonEntity;
+            if (Objects.equals(realPlayerUserIds.size() ,2L)) {
+                jsonEntity = playFeign.niuniuEqualsTwo(roomId);
+            }else if (realPlayerUserIds.size() > 3L) {
+                jsonEntity = playFeign.niuniuOverTwo(roomId);
+            }
         }
     }
 
@@ -142,7 +147,7 @@ public class PlayService {
         socketResult.setUserId(socket.userId);
         BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + socket.roomId);
         List<String> pokes = JsonUtil.parse(pokesOps.get(socket.userId) ,new ArrayList<String>());
-        Set<Integer> paiXingSet = JsonUtil.parse(baseRoomInfoOps.get(RedisConstant.PAIXING) ,new HashSet<Integer>());
+        List<Integer> paiXingSet = JsonUtil.parse(baseRoomInfoOps.get(RedisConstant.PAIXING) ,new ArrayList<>());
         Integer rule = Integer.valueOf(baseRoomInfoOps.get(RedisConstant.RULE));
         PaiXing paiXing = PokeUtil.isNiuNiu(pokes ,paiXingSet ,rule);
         Map<String ,Integer> map = new HashMap<>();

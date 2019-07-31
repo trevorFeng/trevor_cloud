@@ -54,7 +54,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <!-- 指定该Main Class为全局的唯一入口 -->
-                    <mainClass>com.trevor.gateway.GatewayApplication</mainClass>
+                    <mainClass>com.trevor.general.GeneralApplication</mainClass>
                     <layout>ZIP</layout>
                 </configuration>
                 <executions>

@@ -29,7 +29,7 @@ public class BindingPhoneService{
     @Transactional(rollbackFor = Exception.class)
     public JsonEntity<String> bindingPhone(Long userId, String phoneNum) {
         User user = new User();
-        user.setUserId(userId);
+        user.setId(userId);
         userService.updatePhoneByUserId(userId ,phoneNum);
         return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.BINDING_SUCCESS);
     }
