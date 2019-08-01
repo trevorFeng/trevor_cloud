@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -59,17 +60,19 @@ public class Init implements ApplicationRunner {
             stringRedisTemplate.delete(RedisConstant.BASE_ROOM_INFO + roomId);
 
             BoundHashOperations<String, String, String> ops = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
-            ops.put(RedisConstant.ROOM_TYPE ,String.valueOf(niuniuRoomParam.getRoomType()));
-            ops.put(RedisConstant.ROB_ZHUANG_TYPE ,String.valueOf(niuniuRoomParam.getRobZhuangType()));
-            ops.put(RedisConstant.BASE_POINT ,String.valueOf(niuniuRoomParam.getBasePoint()));
-            ops.put(RedisConstant.RULE ,String.valueOf(niuniuRoomParam.getRule()));
-            ops.put(RedisConstant.XIAZHU ,String.valueOf(niuniuRoomParam.getXiazhu()));
-            ops.put(RedisConstant.SPECIAL , JSON.toJSONString(niuniuRoomParam.getSpecial()));
-            ops.put(RedisConstant.PAIXING ,niuniuRoomParam.getPaiXing() == null ? JSON.toJSONString(new HashSet<Integer>()) : JSON.toJSONString(niuniuRoomParam.getPaiXing()));
+            Map<String ,String> baseRoomInfoMap = new HashMap<>();
+            baseRoomInfoMap.put(RedisConstant.ROOM_TYPE ,String.valueOf(niuniuRoomParam.getRoomType()));
+            baseRoomInfoMap.put(RedisConstant.ROB_ZHUANG_TYPE ,String.valueOf(niuniuRoomParam.getRobZhuangType()));
+            baseRoomInfoMap.put(RedisConstant.BASE_POINT ,String.valueOf(niuniuRoomParam.getBasePoint()));
+            baseRoomInfoMap.put(RedisConstant.RULE ,String.valueOf(niuniuRoomParam.getRule()));
+            baseRoomInfoMap.put(RedisConstant.XIAZHU ,String.valueOf(niuniuRoomParam.getXiazhu()));
+            baseRoomInfoMap.put(RedisConstant.SPECIAL , JSON.toJSONString(niuniuRoomParam.getSpecial() == null ? new HashSet<>() : niuniuRoomParam.getSpecial()));
+            baseRoomInfoMap.put(RedisConstant.PAIXING ,niuniuRoomParam.getPaiXing() == null ? JSON.toJSONString(new HashSet<Integer>()) : JSON.toJSONString(niuniuRoomParam.getPaiXing()));
 
-            ops.put(RedisConstant.GAME_STATUS ,"1");
-            ops.put(RedisConstant.RUNING_NUM ,"0");
-            ops.put(RedisConstant.TOTAL_NUM ,collect.get(Long.valueOf(roomId)).toString());
+            baseRoomInfoMap.put(RedisConstant.GAME_STATUS ,"1");
+            baseRoomInfoMap.put(RedisConstant.RUNING_NUM ,"0");
+            baseRoomInfoMap.put(RedisConstant.TOTAL_NUM ,collect.get(Long.valueOf(roomId)).toString());
+            ops.putAll(baseRoomInfoMap);
         }
     }
 }

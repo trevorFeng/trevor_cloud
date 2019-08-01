@@ -11,7 +11,7 @@ spring:
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://120.79.184.105:9000/eureka/
+      defaultZone: http://localhost:9000/eureka/
 
   instance:
     instance-id: 授权服务-9002
