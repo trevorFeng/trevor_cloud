@@ -111,8 +111,8 @@ public class RandomUtils {
         return result;
     }
 
-    public static void main(String[] args) {
-        List<List<Integer>> integers = getSplitListByMax(60 ,25);
-        System.out.println(integers);
-    }
+//    public static void main(String[] args) {
+//        List<List<Integer>> integers = getSplitListByMax(60 ,25);
+//        System.out.println(integers);
+//    }
 }

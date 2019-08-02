@@ -1,5 +1,6 @@
 package com.trevor.message;
 
+import com.trevor.common.util.ExecutorUtil;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -29,18 +30,9 @@ public class MessageApplication {
     }
 
 
-    /**
-     * 注入线程池
-     * @return
-     */
     @Bean(name = "executor")
-    public Executor orderSolrSumExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(20);
-        executor.setMaxPoolSize(40);
-        executor.setQueueCapacity(1000);
-        executor.setThreadNamePrefix("executor-");
-        return executor;
+    public Executor getExecutor() {
+        return ExecutorUtil.getExecutor(20 ,40 ,1000);
     }
 
 }

@@ -1,7 +1,6 @@
 package com.trevor.auth.controller;
 
 
-import com.trevor.auth.util.SessionUtil;
 import com.trevor.auth.bo.PhoneCode;
 import com.trevor.auth.service.BindingPhoneService;
 import com.trevor.auth.service.BrowserLoginService;
@@ -14,6 +13,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +22,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Pattern;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -42,6 +43,9 @@ public class BindingPhoneController {
     @Resource
     private BindingPhoneService bindingPhoneService;
 
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
 
     @ApiOperation(value = "发送验证码")
     @ApiImplicitParam(name = "phoneNum" ,value = "phoneNum" , required = true ,paramType = "path" ,dataType = "string")
@@ -52,7 +56,7 @@ public class BindingPhoneController {
 //            return stringJsonEntity;
 //        }
 //        String code = stringJsonEntity.getData();
-        SessionUtil.getSession().setAttribute(phoneNum ,"123456");
+        stringRedisTemplate.boundValueOps(phoneNum).set("123456" ,60*5 , TimeUnit.SECONDS);
         return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.SEND_MESSAGE);
     }
 
@@ -61,7 +65,10 @@ public class BindingPhoneController {
     @RequestMapping(value = "/api/front/phone/submit", method = {RequestMethod.POST}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<String> submit(@RequestBody @Validated PhoneCode phoneCode){
         //校验验证码是否正确
-        String code = (String) SessionUtil.getSession().getAttribute(phoneCode.getPhoneNum());
+        String code = stringRedisTemplate.boundValueOps(phoneCode.getPhoneNum()).get();
+        if (code == null) {
+            return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.CODE_EXPIRE);
+        }
         if (Objects.equals(code ,phoneCode.getCode())) {
             User user = ThreadLocalUtil.getInstance().getUserInfo();
             JsonEntity<String> stringJsonEntity = bindingPhoneService.bindingPhone(user.getId(), phoneCode.getPhoneNum());

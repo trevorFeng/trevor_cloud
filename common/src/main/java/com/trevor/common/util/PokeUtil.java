@@ -44,9 +44,9 @@ public class PokeUtil {
 
     }
 
-    public static void main(String[] a) {
-        System.out.println(generatePoke5());
-    }
+//    public static void main(String[] a) {
+//        System.out.println(generatePoke5());
+//    }
 
     /**
      * 生成一副随机牌，5个花色

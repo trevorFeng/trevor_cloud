@@ -43,6 +43,11 @@ public enum MessageCodeEnum {
     CODE_ERROR(-5 ,"验证码错误"),
 
     /**
+     * 验证码错误
+     */
+    CODE_EXPIRE(-5 ,"验证码已过期或不存在"),
+
+    /**
      * 草，报异常了
      */
     SYSTEM_ERROR(-6 ,"鸡巴，报错了"),
@@ -60,7 +65,7 @@ public enum MessageCodeEnum {
     /**
      * 操你妈，想黑爸爸呢
      */
-    ERROR_NUM_MAX(-9 ,"操你妈，想黑爸爸呢"),
+    ERROR_NUM_MAX(-9 ,"临时凭证不存在或已过期"),
 
 
     /**

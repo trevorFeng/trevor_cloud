@@ -1,8 +1,6 @@
 package com.trevor.auth.controller;
 
 
-
-import com.trevor.auth.util.SessionUtil;
 import com.trevor.auth.service.XianliaoService;
 import com.trevor.common.bo.JsonEntity;
 import com.trevor.common.bo.ResponseHelper;
@@ -10,6 +8,7 @@ import com.trevor.common.enums.MessageCodeEnum;
 import com.trevor.common.util.RandomUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 一句话描述该类作用:【】
@@ -32,19 +32,22 @@ public class XianliaoLoginController {
     @Resource
     private XianliaoService xianliaoService;
 
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
     @ApiOperation("得到用户临时凭证uuid")
     @RequestMapping(value = "/front/xianliao/login/uuid", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<String> xianliaoForward()  {
         //用户临时凭证
         String uuid = RandomUtils.getRandomChars(40);
-        SessionUtil.getSession().setAttribute(uuid ,uuid);
+        stringRedisTemplate.boundValueOps(uuid).set(uuid ,60, TimeUnit.SECONDS);
         return ResponseHelper.createInstance(uuid , MessageCodeEnum.CREATE_SUCCESS);
     }
 
     @ApiOperation("根据code码请求用户信息")
     @RequestMapping(value = "/front/xianliao/login/user", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<String> checkAuth(@RequestParam("uuid") String uuid , @RequestParam("code") String code) throws IOException {
-        if (SessionUtil.getSession().getAttribute(uuid) == null) {
+        if (stringRedisTemplate.boundValueOps(uuid).get() == null) {
             return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.ERROR_NUM_MAX);
         }
         JsonEntity<String> jsonEntity = xianliaoService.weixinAuth(code);
