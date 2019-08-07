@@ -156,9 +156,7 @@ public class NiuniuSocket extends BaseServer {
      * @param pack
      */
     public void sendMessage(SocketResult pack) {
-        synchronized (userId) {
-            redisService.listRightPush(RedisConstant.MESSAGES_QUEUE + userId ,JsonUtil.toJsonString(pack));
-        }
+        redisService.listRightPush(RedisConstant.MESSAGES_QUEUE + userId ,JsonUtil.toJsonString(pack));
     }
 
     /**
