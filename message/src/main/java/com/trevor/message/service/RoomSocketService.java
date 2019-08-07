@@ -5,6 +5,7 @@ import com.trevor.common.bo.Player;
 import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
 import com.trevor.common.domain.mysql.User;
+import com.trevor.common.service.RedisService;
 import com.trevor.common.service.UserService;
 import com.trevor.message.socket.NiuniuSocket;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,9 @@ public class RoomSocketService {
     @Resource
     private UserService userService;
 
+    @Resource
+    private RedisService redisService;
+
     @PreDestroy
     public void destory(){
         Iterator<NiuniuSocket> iterator = sockets.values().iterator();
@@ -73,7 +77,7 @@ public class RoomSocketService {
      */
     public void broadcast(String roomId , SocketResult res){
         executor.execute(() -> {
-            Set<String> playerIds = getRoomPlayers(roomId);
+            Set<String> playerIds = redisService.getSetMembers(RedisConstant.ROOM_PLAYER + roomId);
             for (String playId : playerIds) {
                 NiuniuSocket socket = sockets.get(playId);
                 if (socket != null && socket.session != null && socket.session.isOpen()) {
@@ -110,21 +114,11 @@ public class RoomSocketService {
         if (sockets.containsKey(socket.userId)) {
             NiuniuSocket s = sockets.get(socket.userId);
             s.sendMessage(new SocketResult(500));
-            s.close(socket.session);
+            s.close(s.session);
             sockets.remove(socket.userId);
         }
-        addRoomPlayer(roomId , socket.userId);
+        redisService.setAdd(RedisConstant.ROOM_PLAYER + roomId ,socket.userId);
         sockets.put(socket.userId , socket);
-    }
-
-    /**
-     * 添加玩家
-     * @param roomId
-     * @param userId
-     */
-    public void addRoomPlayer(String roomId ,String userId) {
-        BoundSetOperations<String, String> ops = stringRedisTemplate.boundSetOps(RedisConstant.ROOM_PLAYER + roomId);
-        ops.add(userId);
     }
 
     /**
@@ -134,32 +128,23 @@ public class RoomSocketService {
      */
     public void subRoomPlayer(String roomId ,String userId){
         //移除玩家id
-        BoundSetOperations<String, String> roomPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.ROOM_PLAYER + roomId);
-        //移除
-        roomPlayerOps.remove(userId);
+        redisService.setDeleteMember(RedisConstant.ROOM_PLAYER + roomId ,userId);
         //删除消息通道
-        stringRedisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
+        redisService.delete(RedisConstant.MESSAGES_QUEUE + userId);
     }
 
+
     /**
-     * 得到玩家集合
+     * 得到房间里真正的玩家
      * @param roomId
      * @return
      */
-    public Set<String> getRoomPlayers(String roomId){
-        BoundSetOperations<String, String> roomPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.ROOM_PLAYER + roomId);
-        Set<String> range = roomPlayerOps.members();
-        return range;
-    }
-
     public List<Player> getRealRoomPlayerCount(String roomId){
-        BoundSetOperations<String, String> realPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
-        Set<String> realUserIds = realPlayerOps.members();
+        Set<String> realUserIds = redisService.getSetMembers(RedisConstant.REAL_ROOM_PLAYER + roomId);
         List<Long> realUserIdsLong = realUserIds.stream().map(str -> Long.valueOf(str)).collect(Collectors.toList());
         List<User> realPlayerUsers = userService.findUsersByIds(realUserIdsLong);
 
-        BoundSetOperations<String, String> guanZhongOps = stringRedisTemplate.boundSetOps(RedisConstant.GUANZHONG + roomId);
-        Set<String> guanZhongUserIds = guanZhongOps.members();
+        Set<String> guanZhongUserIds = redisService.getSetMembers(RedisConstant.GUANZHONG + roomId);
         List<Player> players = Lists.newArrayList();
         for (User user : realPlayerUsers) {
             Player player = new Player();

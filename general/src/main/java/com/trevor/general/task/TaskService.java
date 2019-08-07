@@ -10,6 +10,7 @@ import com.trevor.common.dao.mysql.RoomMapper;
 import com.trevor.common.domain.mongo.NiuniuRoomParam;
 import com.trevor.common.domain.mysql.PersonalCard;
 import com.trevor.common.domain.mysql.Room;
+import com.trevor.common.service.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.BoundValueOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -45,6 +46,9 @@ public class TaskService{
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
+    @Resource
+    private RedisService redisService;
+
     @Transactional(rollbackFor = Exception.class)
     public void checkRoomRecord() {
         Long currentTime = System.currentTimeMillis();
@@ -65,7 +69,7 @@ public class TaskService{
         for (Long roomId : overDayRoomIds) {
             for (Long redisUnUserRoomId : overDayRoomIds) {
                 if (Objects.equals(roomId ,redisUnUserRoomId)) {
-                    stringRedisTemplate.delete(RedisConstant.BASE_ROOM_INFO + roomId);
+                    redisService.delete(RedisConstant.BASE_ROOM_INFO + roomId);
                 }
             }
         }

@@ -5,11 +5,13 @@ import com.trevor.common.bo.PaiXing;
 import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;
+import com.trevor.common.service.RedisService;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.PokeUtil;
 import com.trevor.message.bo.SocketMessage;
 import com.trevor.message.feign.PlayFeign;
 import com.trevor.message.socket.NiuniuSocket;
+import io.swagger.models.auth.In;
 import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Service;
 
@@ -32,37 +34,37 @@ public class PlayService {
     @Resource
     private PlayFeign playFeign;
 
+    @Resource
+    private RedisService redisService;
+
     /**
      * 处理准备的消息
      * @param roomId
      */
     public void dealReadyMessage(String roomId , NiuniuSocket socket){
-        BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
         //根据房间状态判断
-        BoundSetOperations<String, String> realPlayerUserIds = stringRedisTemplate.boundSetOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
-        if (!Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_FAPAI_4.getCode())
-            && !Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_READY.getCode())) {
+        if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.BEFORE_FAPAI_4.getCode())
+            && !Objects.equals(getRoomStatus(roomId) , GameStatusEnum.BEFORE_READY.getCode())) {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
         //准备的人是否是真正的玩家
-        if (!realPlayerUserIds.members().contains(socket.userId)) {
+        if (!redisService.getSetMembers(RedisConstant.REAL_ROOM_PLAYER + roomId).contains(socket.userId)) {
             socket.sendMessage(new SocketResult(-502));
             return;
         }
-        BoundSetOperations<String, String> readyPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId);
-        readyPlayerOps.add(socket.userId);
+        redisService.setAdd(RedisConstant.READY_PLAYER + roomId ,socket.userId);
         //广播准备的消息
         roomSocketService.broadcast(roomId ,new SocketResult(1003 ,socket.userId));
 
         //准备的人数超过两人
-        if (readyPlayerOps.size() >= 2) {
+        Integer readyPlayerSize = redisService.getSetSize(RedisConstant.READY_PLAYER + roomId);
+        if (readyPlayerSize >= 2) {
             //判断房间里真正玩家的人数，如果只有两人，直接开始游戏，否则开始倒计时
-            JsonEntity<Object> jsonEntity;
-            if (Objects.equals(realPlayerUserIds.size() ,2L)) {
-                jsonEntity = playFeign.niuniuEqualsTwo(roomId);
-            }else if (realPlayerUserIds.size() > 3L) {
-                jsonEntity = playFeign.niuniuOverTwo(roomId);
+            if (Objects.equals(redisService.getSetSize(RedisConstant.REAL_ROOM_PLAYER + roomId) ,2)) {
+                playFeign.niuniuEqualsTwo(roomId);
+            }else if (readyPlayerSize > 3) {
+                playFeign.niuniuOverTwo(roomId);
             }
         }
     }
@@ -74,19 +76,14 @@ public class PlayService {
      */
     public void dealQiangZhuangMessage(String roomId , NiuniuSocket socket , SocketMessage socketMessage){
         //验证状态
-        BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
-        if (!Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_SELECT_ZHUANGJIA.getCode())) {
+        if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.BEFORE_SELECT_ZHUANGJIA.getCode())) {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
-        //该玩家是否已经准备
-        BoundSetOperations<String, String> readyPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId);
-        if (!readyPlayerOps.members().contains(socket.userId)) {
-            socket.sendMessage(new SocketResult(-503));
+        if (!checkAlreadyReady(roomId ,socket ,-503)) {
             return;
         }
-        BoundHashOperations<String, String ,String> qiangZhuangOps = stringRedisTemplate.boundHashOps(RedisConstant.QIANGZHAUNG + roomId);
-        qiangZhuangOps.put(socket.userId ,socketMessage.getQiangZhuangMultiple().toString());
+        redisService.put(RedisConstant.QIANGZHAUNG + roomId ,socket.userId ,socketMessage.getQiangZhuangMultiple().toString());
 
         //广播抢庄的消息
         roomSocketService.broadcast(roomId ,new SocketResult(1003 ,socket.userId ,socketMessage.getQiangZhuangMultiple()));
@@ -97,25 +94,19 @@ public class PlayService {
      * @param roomId
      */
     public void dealXiaZhuMessage(String roomId , NiuniuSocket socket , SocketMessage socketMessage){
-        BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
-        if (!Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_LAST_POKE.getCode())) {
+        if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.BEFORE_LAST_POKE.getCode())) {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
-        //该玩家是否已经准备
-        BoundSetOperations<String, String> readyPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId);
-        if (!readyPlayerOps.members().contains(socket.userId)) {
-            socket.sendMessage(new SocketResult(-504));
+        if (!checkAlreadyReady(roomId ,socket ,-504)) {
             return;
         }
         //该玩家是否是闲家
-        BoundValueOperations<String, String> zhuangJiaOps = stringRedisTemplate.boundValueOps(RedisConstant.ZHUANGJIA + roomId);
-        if (Objects.equals(zhuangJiaOps.get() ,socket.userId)) {
+        if (Objects.equals(redisService.getValue(RedisConstant.ZHUANGJIA + roomId) ,socket.userId)) {
             socket.sendMessage(new SocketResult(-505));
             return;
         }
-        BoundHashOperations<String, String ,String> xianJiaXiaZhuOps = stringRedisTemplate.boundHashOps(RedisConstant.XIANJIA_XIAZHU + roomId);
-        xianJiaXiaZhuOps.put(socket.userId ,socketMessage.getXianJiaMultiple().toString());
+        redisService.put(RedisConstant.XIANJIA_XIAZHU + roomId ,socket.userId ,socketMessage.getXianJiaMultiple().toString());
         //广播下注的消息
         roomSocketService.broadcast(roomId ,new SocketResult(1003 ,socket.userId ,socketMessage.getXianJiaMultiple(), Boolean.TRUE));
     }
@@ -126,33 +117,50 @@ public class PlayService {
      */
     public void dealTanPaiMessage(String roomId , NiuniuSocket socket , SocketMessage socketMessage){
         //状态信息
-        BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
-        if (!Objects.equals(baseRoomInfoOps.get(RedisConstant.GAME_STATUS) , GameStatusEnum.BEFORE_CALRESULT.getCode())) {
+        if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.BEFORE_CALRESULT.getCode())) {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
-        //该玩家是否已经准备
-        BoundSetOperations<String, String> readyPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId);
-        if (!readyPlayerOps.members().contains(socket.userId)) {
-            socket.sendMessage(new SocketResult(-503));
+        if (!checkAlreadyReady(roomId ,socket ,-503)) {
             return;
         }
-
-        BoundSetOperations<String, String> tanPaiOps = stringRedisTemplate.boundSetOps(RedisConstant.TANPAI + roomId);
-        tanPaiOps.add(socket.userId);
-
+        redisService.setAdd(RedisConstant.TANPAI + roomId ,socket.userId);
         //广播摊牌的消息
         SocketResult socketResult = new SocketResult();
         socketResult.setHead(1014);
         socketResult.setUserId(socket.userId);
-        BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + socket.roomId);
-        List<String> pokes = JsonUtil.parse(pokesOps.get(socket.userId) ,new ArrayList<String>());
-        List<Integer> paiXingSet = JsonUtil.parse(baseRoomInfoOps.get(RedisConstant.PAIXING) ,new ArrayList<>());
-        Integer rule = Integer.valueOf(baseRoomInfoOps.get(RedisConstant.RULE));
+        List<String> pokes = JsonUtil.parseJavaList(redisService.getHashValue(RedisConstant.POKES + socket.roomId ,socket.userId) ,String.class);
+        List<Integer> paiXingSet = JsonUtil.parseJavaList(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.PAIXING) , Integer.class);
+        Integer rule = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.RULE));
         PaiXing paiXing = PokeUtil.isNiuNiu(pokes ,paiXingSet ,rule);
         Map<String ,Integer> map = new HashMap<>();
         map.put(socket.userId ,paiXing.getPaixing());
         socketResult.setPaiXing(map);
         roomSocketService.broadcast(roomId ,socketResult);
+    }
+
+    /**
+     * 校验玩家是否已经准备
+     * @param roomId
+     * @param socket
+     * @param head
+     * @return
+     */
+    private Boolean checkAlreadyReady(String roomId ,NiuniuSocket socket ,Integer head){
+        if (!redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId).contains(socket.userId)) {
+            socket.sendMessage(new SocketResult(head));
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 得到房间状态
+     * @param roomId
+     * @return
+     */
+    private String getRoomStatus(String roomId){
+        String gameStatus = redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS);
+        return gameStatus;
     }
 }

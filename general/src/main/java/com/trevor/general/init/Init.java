@@ -6,6 +6,7 @@ import com.trevor.common.dao.mongo.NiuniuRoomParamMapper;
 import com.trevor.common.dao.mysql.RoomMapper;
 import com.trevor.common.domain.mongo.NiuniuRoomParam;
 import com.trevor.common.domain.mysql.Room;
+import com.trevor.common.service.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -37,6 +38,9 @@ public class Init implements ApplicationRunner {
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private RedisService redisService;
     
     
 
@@ -57,22 +61,10 @@ public class Init implements ApplicationRunner {
 
         for (NiuniuRoomParam niuniuRoomParam : niuniuParams) {
             String roomId = niuniuRoomParam.getRoomId().toString();
-            stringRedisTemplate.delete(RedisConstant.BASE_ROOM_INFO + roomId);
-
-            BoundHashOperations<String, String, String> ops = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
-            Map<String ,String> baseRoomInfoMap = new HashMap<>();
-            baseRoomInfoMap.put(RedisConstant.ROOM_TYPE ,String.valueOf(niuniuRoomParam.getRoomType()));
-            baseRoomInfoMap.put(RedisConstant.ROB_ZHUANG_TYPE ,String.valueOf(niuniuRoomParam.getRobZhuangType()));
-            baseRoomInfoMap.put(RedisConstant.BASE_POINT ,String.valueOf(niuniuRoomParam.getBasePoint()));
-            baseRoomInfoMap.put(RedisConstant.RULE ,String.valueOf(niuniuRoomParam.getRule()));
-            baseRoomInfoMap.put(RedisConstant.XIAZHU ,String.valueOf(niuniuRoomParam.getXiazhu()));
-            baseRoomInfoMap.put(RedisConstant.SPECIAL , JSON.toJSONString(niuniuRoomParam.getSpecial() == null ? new HashSet<>() : niuniuRoomParam.getSpecial()));
-            baseRoomInfoMap.put(RedisConstant.PAIXING ,niuniuRoomParam.getPaiXing() == null ? JSON.toJSONString(new HashSet<Integer>()) : JSON.toJSONString(niuniuRoomParam.getPaiXing()));
-
-            baseRoomInfoMap.put(RedisConstant.GAME_STATUS ,"1");
-            baseRoomInfoMap.put(RedisConstant.RUNING_NUM ,"0");
+            redisService.delete(RedisConstant.BASE_ROOM_INFO + roomId);
+            Map<String ,String> baseRoomInfoMap = niuniuRoomParam.generateBaseRoomInfoMap();
             baseRoomInfoMap.put(RedisConstant.TOTAL_NUM ,collect.get(Long.valueOf(roomId)).toString());
-            ops.putAll(baseRoomInfoMap);
+            redisService.putAll(RedisConstant.BASE_ROOM_INFO + roomId ,baseRoomInfoMap);
         }
     }
 }

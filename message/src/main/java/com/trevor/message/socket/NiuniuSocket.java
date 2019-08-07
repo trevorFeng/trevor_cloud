@@ -1,8 +1,10 @@
 package com.trevor.message.socket;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.trevor.common.bo.*;
+import com.trevor.common.bo.PaiXing;
+import com.trevor.common.bo.RedisConstant;
+import com.trevor.common.bo.SocketResult;
+import com.trevor.common.bo.WebKeys;
 import com.trevor.common.domain.mysql.Room;
 import com.trevor.common.domain.mysql.User;
 import com.trevor.common.enums.FriendManageEnum;
@@ -26,7 +28,6 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 /**
@@ -97,12 +98,11 @@ public class NiuniuSocket extends BaseServer {
         roomSocketService.join(roomId ,this);
         session.setMaxIdleTimeout(1000 * 60 * 45);
         this.session = session;
-        stringRedisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
+        redisService.delete(RedisConstant.MESSAGES_QUEUE + userId);
 
         soc.setHead(1000);
         if (!soc.getIsChiGuaPeople()) {
-            BoundSetOperations<String, String> realPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
-            realPlayerOps.add(userId);
+            redisService.setAdd(RedisConstant.REAL_ROOM_PLAYER + roomId ,userId);
         }
         soc.setPlayers(roomSocketService.getRealRoomPlayerCount(this.roomId));
         //广播新人加入，前端需要比较useId是否与断线的玩家id（断线重连，断线时会给玩家一个消息谁断线了）、网络不好的玩家是否相等（网络不好重连），不相等则未新加入的玩家
@@ -135,8 +135,7 @@ public class NiuniuSocket extends BaseServer {
         if (!ObjectUtil.isEmpty(userId)) {
             roomSocketService.leave(roomId ,this);
             //如果是真正的玩家则广播消息
-            BoundSetOperations<String, String> realRoomPlayOps = stringRedisTemplate.boundSetOps(RedisConstant.REAL_ROOM_PLAYER + roomId);
-            if (realRoomPlayOps.members().contains(userId)) {
+            if (redisService.getSetMembers(RedisConstant.REAL_ROOM_PLAYER + roomId).contains(userId)) {
                 SocketResult res = new SocketResult(1001 ,userId);
                 roomSocketService.broadcast(roomId ,res);
             }
@@ -157,8 +156,9 @@ public class NiuniuSocket extends BaseServer {
      * @param pack
      */
     public void sendMessage(SocketResult pack) {
-        BoundListOperations<String, String> messageChannel = stringRedisTemplate.boundListOps(RedisConstant.MESSAGES_QUEUE + userId);
-        messageChannel.rightPush(JsonUtil.toJsonString(pack));
+        synchronized (userId) {
+            redisService.listRightPush(RedisConstant.MESSAGES_QUEUE + userId ,JsonUtil.toJsonString(pack));
+        }
     }
 
     /**
@@ -166,11 +166,8 @@ public class NiuniuSocket extends BaseServer {
      */
     public void flush(){
         try {
-            BoundListOperations<String ,String> ops = stringRedisTemplate.boundListOps(RedisConstant.MESSAGES_QUEUE + userId);
-            if (ops != null && ops.size() > 0) {
-                List<String> messages = ops.range(0, -1);
-                stringRedisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
-
+            List<String> messages = redisService.getListMembersAndDelete(RedisConstant.MESSAGES_QUEUE + userId);
+            if (!messages.isEmpty()) {
                 StringBuffer stringBuffer = new StringBuffer("[");
                 for (String mess : messages) {
                     stringBuffer.append(mess).append(",");
@@ -208,15 +205,14 @@ public class NiuniuSocket extends BaseServer {
 
 
     public void stop(){
-        stringRedisTemplate.delete(RedisConstant.MESSAGES_QUEUE + userId);
+        redisService.delete(RedisConstant.MESSAGES_QUEUE + userId);
     }
 
 
     private SocketResult checkRoom(Room room ,User user){
         //房主是否开启好友管理功能
         Boolean isFriendManage = Objects.equals(userService.isFriendManage(room.getRoomAuth()) , FriendManageEnum.YES.getCode());
-        BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO);
-        HashSet<Integer> special = JsonUtil.parse(baseRoomInfoOps.get(RedisConstant.SPECIAL), new HashSet<Integer>());
+        List<Integer> special = JsonUtil.parseJavaList(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO ,RedisConstant.SPECIAL), Integer.class);
         //开通
         if (isFriendManage) {
             //配置仅限好友
@@ -245,16 +241,18 @@ public class NiuniuSocket extends BaseServer {
      * 处理是否可以观战
      * @throws IOException
      */
-    private SocketResult dealCanSee(User user, HashSet<Integer> special ,Room room){
+    private SocketResult dealCanSee(User user, List<Integer> special ,Room room){
         SocketResult socketResult = new SocketResult();
         socketResult.setUserId(String.valueOf(user.getId()));
         socketResult.setName(user.getAppName());
         socketResult.setPictureUrl(user.getAppPictureUrl());
-        BoundSetOperations<String, String> realPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.REAL_ROOM_PLAYER + room.getId());
-        BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + room.getId());
+        Boolean bo = redisService.getSetSize(RedisConstant.REAL_ROOM_PLAYER + room.getId()) <
+                RoomTypeEnum.getRoomNumByType(
+                        Integer.valueOf(
+                                redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + room.getId() ,RedisConstant.ROOM_TYPE)));
         //允许观战
         if (special!= null && special.contains(SpecialEnum.CAN_SEE.getCode())) {
-            if (realPlayerOps.size() < RoomTypeEnum.getRoomNumByType(Integer.valueOf(baseRoomInfoOps.get(RedisConstant.ROOM_TYPE)))) {
+            if (bo) {
                 socketResult.setIsChiGuaPeople(Boolean.FALSE);
             }else {
                 socketResult.setIsChiGuaPeople(Boolean.TRUE);
@@ -262,7 +260,7 @@ public class NiuniuSocket extends BaseServer {
             return socketResult;
         //不允许观战
         }else {
-            if (realPlayerOps.size() < RoomTypeEnum.getRoomNumByType(Integer.valueOf(baseRoomInfoOps.get(RedisConstant.ROOM_TYPE)))) {
+            if (bo) {
                 socketResult.setIsChiGuaPeople(Boolean.FALSE);
                 return socketResult;
             }else {
@@ -278,8 +276,7 @@ public class NiuniuSocket extends BaseServer {
     private void welcome(String roomId){
         SocketResult socketResult = new SocketResult();
         socketResult.setHead(2002);
-        BoundHashOperations<String, String, String> roomBaseInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
-        String gameStatus = roomBaseInfoOps.get(RedisConstant.GAME_STATUS);
+        String gameStatus = redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS);
         //设置准备的玩家
         if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_READY.getCode()) || Objects.equals(gameStatus ,GameStatusEnum.BEFORE_FAPAI_4.getCode())) {
             socketResult.setReadyPlayerIds(getReadyPlayers());
@@ -335,9 +332,9 @@ public class NiuniuSocket extends BaseServer {
      * @return
      */
     private Set<String> getReadyPlayers(){
-        BoundSetOperations<String, String> readyPlayersOps = stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId);
-        if (readyPlayersOps != null && readyPlayersOps.size() > 0) {
-            return readyPlayersOps.members();
+        Set<String> set = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
+        if (!set.isEmpty()) {
+            return set;
         }
         return null;
     }
@@ -347,11 +344,10 @@ public class NiuniuSocket extends BaseServer {
      * @return
      */
     private Map<String ,List<String>> getPokes_4(){
-        BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
         Map<String ,List<String>> userPokeMap_4 = Maps.newHashMap();
-        Map<String, String> userPokeStrMap = pokesOps.entries();
+        Map<String, String> userPokeStrMap = redisService.getMap(RedisConstant.POKES + roomId);
         for (Map.Entry<String ,String> entry : userPokeStrMap.entrySet()) {
-            userPokeMap_4.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new ArrayList<String>()).subList(0 ,4));
+            userPokeMap_4.put(entry.getKey() ,JsonUtil.parseJavaList(entry.getValue() ,String.class).subList(0 ,4));
         }
         return userPokeMap_4;
     }
@@ -361,9 +357,9 @@ public class NiuniuSocket extends BaseServer {
      * @return
      */
     private Map<String ,String> getQiangZhuangPlayers(){
-        BoundHashOperations<String, String ,String> qiangZhuangOps = stringRedisTemplate.boundHashOps(RedisConstant.QIANGZHAUNG + roomId);
-        if (qiangZhuangOps != null || qiangZhuangOps.size() > 0) {
-            return qiangZhuangOps.entries();
+        Map<String ,String> qiangZhuangMap = redisService.getMap(RedisConstant.QIANGZHAUNG + roomId);
+        if (!qiangZhuangMap.isEmpty()) {
+            return qiangZhuangMap;
         }
         return null;
     }
@@ -373,8 +369,8 @@ public class NiuniuSocket extends BaseServer {
      * @return
      */
     private String getZhuangJia(){
-        BoundValueOperations<String, String> zhuangJiaOps = stringRedisTemplate.boundValueOps(RedisConstant.ZHUANGJIA + roomId);
-        return zhuangJiaOps.get();
+        String zhuangJia = redisService.getValue(RedisConstant.ZHUANGJIA + roomId);
+        return zhuangJia;
     }
 
     /**
@@ -382,9 +378,9 @@ public class NiuniuSocket extends BaseServer {
      * @return
      */
     private Map<String ,String> getXianJiaXiaZhu(){
-        BoundHashOperations<String, String, String> xianJiaXiaZhuOps = stringRedisTemplate.boundHashOps(RedisConstant.XIANJIA_XIAZHU + roomId);
-        if (xianJiaXiaZhuOps != null && xianJiaXiaZhuOps.size() > 0) {
-            return xianJiaXiaZhuOps.entries();
+        Map<String ,String> xianJiaXiaZhu = redisService.getMap(RedisConstant.XIANJIA_XIAZHU + roomId);
+        if (!xianJiaXiaZhu.isEmpty()) {
+            return xianJiaXiaZhu;
         }
         return null;
     }
@@ -395,25 +391,23 @@ public class NiuniuSocket extends BaseServer {
      */
     private Map<String ,List<String>> getLastPoke(Boolean isTanPai ,Boolean isReturnResult){
         Map<String ,List<String>> userPokeMap_1 = new HashMap<>();
-        BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
-        BoundSetOperations<String, String> tanPaiOps = stringRedisTemplate.boundSetOps(RedisConstant.TANPAI + roomId);
-        Map<String, String> userPokeStrMap = pokesOps.entries();
-        Set<String> tanPaiPlayerIds = tanPaiOps.members();
+        Map<String, String> userPokeStrMap = redisService.getMap(RedisConstant.POKES + roomId);
+        Set<String> tanPaiPlayerIds = redisService.getSetMembers(RedisConstant.TANPAI + roomId);
         if (isReturnResult) {
             for (Map.Entry<String ,String> entry : userPokeStrMap.entrySet()) {
                 if (!tanPaiPlayerIds.contains(entry.getKey())) {
-                    userPokeMap_1.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new ArrayList<String>()).subList(4 ,5));
+                    userPokeMap_1.put(entry.getKey() ,JsonUtil.parseJavaList(entry.getValue() ,String.class).subList(4 ,5));
                 }
             }
         }else {
             for (Map.Entry<String ,String> entry : userPokeStrMap.entrySet()) {
                 if (isTanPai) {
                     if (tanPaiPlayerIds.contains(entry.getKey())) {
-                        userPokeMap_1.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new ArrayList<String>()).subList(4 ,5));
+                        userPokeMap_1.put(entry.getKey() ,JsonUtil.parseJavaList(entry.getValue() ,String.class).subList(4 ,5));
                     }
                 }else {
                     if (Objects.equals(entry.getKey() ,userId)) {
-                        userPokeMap_1.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new ArrayList<String>()).subList(4 ,5));
+                        userPokeMap_1.put(entry.getKey() ,JsonUtil.parseJavaList(entry.getValue() ,String.class).subList(4 ,5));
                         break;
                     }
                 }
@@ -427,8 +421,7 @@ public class NiuniuSocket extends BaseServer {
      * @return
      */
     private Set<String> getTanPaiPlayer(){
-        BoundSetOperations<String, String> tanPaiOps = stringRedisTemplate.boundSetOps(RedisConstant.TANPAI + roomId);
-        return tanPaiOps.members();
+        return redisService.getSetMembers(RedisConstant.TANPAI + roomId);
     }
 
     /**
@@ -437,19 +430,18 @@ public class NiuniuSocket extends BaseServer {
      */
     private void setResult(SocketResult socketResult){
         //设置本局得分
-        BoundHashOperations<String, String, String> scoreOps = stringRedisTemplate.boundHashOps(RedisConstant.SCORE + roomId);
-        Map<String ,String> scoreMap = scoreOps.entries();
+        Map<String ,String> scoreMap = redisService.getMap(RedisConstant.SCORE + roomId);
         Map<String ,Integer> stringIntegerMap = Maps.newHashMap();
         for (Map.Entry<String ,String> entry : scoreMap.entrySet()) {
             stringIntegerMap.put(entry.getKey() ,Integer.valueOf(entry.getValue()));
         }
         socketResult.setScoreMap(stringIntegerMap);
 
-        BoundHashOperations<String, String, String> paiXingOps = stringRedisTemplate.boundHashOps(RedisConstant.PAI_XING + roomId);
-        Map<String ,String> paiXingMap = paiXingOps.entries();
+        Map<String ,String> paiXingMap = redisService.getMap(RedisConstant.PAI_XING + roomId);
         Map<String ,Integer> paiXingIntegerMap = Maps.newHashMap();
         for (Map.Entry<String ,String> entry : paiXingMap.entrySet()) {
-            paiXingIntegerMap.put(entry.getKey() ,JsonUtil.parse(entry.getValue() ,new PaiXing()).getPaixing());
+            paiXingIntegerMap.put(entry.getKey() ,JsonUtil.parseJavaObject(entry.getValue() ,PaiXing.class).getPaixing());
+
         }
         socketResult.setPaiXing(paiXingIntegerMap);
     }

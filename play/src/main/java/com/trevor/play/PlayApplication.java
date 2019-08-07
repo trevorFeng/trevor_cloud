@@ -27,7 +27,7 @@ public class PlayApplication {
 
     @Bean(name = "executor")
     public Executor getExecutor() {
-        return ExecutorUtil.getExecutor(200 ,10 ,1000);
+        return ExecutorUtil.getExecutor(20 ,40 ,1000);
     }
 
 }

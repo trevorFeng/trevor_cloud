@@ -15,12 +15,6 @@ public class JsonUtil {
         return JSON.toJSONString(t);
     }
 
-
-    public static <T> T parse(String str ,T t){
-        T t1 = JSON.parseObject(str,new TypeReference<T>() {});
-        return t1;
-    }
-
     public static <T> List<T> parseJavaList(String str , Class<T> c){
         List<T> t1 = JSON.parseArray(str,c);
         return t1;

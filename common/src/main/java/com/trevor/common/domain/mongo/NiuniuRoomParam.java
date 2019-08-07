@@ -1,8 +1,13 @@
 package com.trevor.common.domain.mongo;
 
+import com.alibaba.fastjson.JSON;
+import com.trevor.common.bo.RedisConstant;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -78,4 +83,21 @@ public class NiuniuRoomParam {
      * 2---24局，房卡x6
      */
     private Integer consumCardNum;
+
+
+    public Map<String ,String> generateBaseRoomInfoMap(){
+        Map<String ,String> baseRoomInfoMap = new HashMap<>();
+        baseRoomInfoMap.put(RedisConstant.ROOM_TYPE ,String.valueOf(getRoomType()));
+        baseRoomInfoMap.put(RedisConstant.ROB_ZHUANG_TYPE ,String.valueOf(getRobZhuangType()));
+        baseRoomInfoMap.put(RedisConstant.BASE_POINT ,String.valueOf(getBasePoint()));
+        baseRoomInfoMap.put(RedisConstant.RULE ,String.valueOf(getRule()));
+        baseRoomInfoMap.put(RedisConstant.XIAZHU ,String.valueOf(getXiazhu()));
+        baseRoomInfoMap.put(RedisConstant.SPECIAL , JSON.toJSONString(getSpecial() == null ? new HashSet<>() : getSpecial()));
+        baseRoomInfoMap.put(RedisConstant.PAIXING ,getPaiXing() == null ? JSON.toJSONString(new HashSet<Integer>()) : JSON.toJSONString(getPaiXing()));
+
+        baseRoomInfoMap.put(RedisConstant.GAME_STATUS ,"1");
+        baseRoomInfoMap.put(RedisConstant.RUNING_NUM ,"0");
+
+        return baseRoomInfoMap;
+    }
 }

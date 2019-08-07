@@ -2,25 +2,28 @@ package com.trevor.play.service;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.trevor.common.bo.*;
+import com.trevor.common.bo.PaiXing;
+import com.trevor.common.bo.RedisConstant;
+import com.trevor.common.bo.SocketResult;
 import com.trevor.common.dao.mongo.PlayerResultMapper;
 import com.trevor.common.domain.mongo.PlayerResult;
 import com.trevor.common.domain.mysql.User;
 import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.enums.NiuNiuPaiXingEnum;
-import com.trevor.common.service.RoomParamService;
-import com.trevor.common.service.RoomService;
+import com.trevor.common.service.RedisService;
 import com.trevor.common.service.UserService;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.PokeUtil;
 import com.trevor.common.util.RandomUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.*;
+import org.springframework.data.redis.core.BoundHashOperations;
+import org.springframework.data.redis.core.BoundSetOperations;
+import org.springframework.data.redis.core.BoundValueOperations;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -31,11 +34,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class NiuniuPlayService {
 
-    @Resource
-    private RoomService roomService;
-
-    @Resource
-    private RoomParamService roomParamService;
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
@@ -45,6 +43,9 @@ public class NiuniuPlayService {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private RedisService redisService;
 
 
     /**
@@ -66,9 +67,12 @@ public class NiuniuPlayService {
     }
 
     private void play(String roomIdStr){
-        BoundHashOperations<String, String, String> roomBaseInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomIdStr);
+        Integer rule = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.RULE));
+        List<Integer> paiXing = JsonUtil.parseJavaList(
+                redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.PAIXING) ,Integer.class);
+        Integer basePoint = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.BASE_POINT));
         //发4张牌
-        fapai_4(roomIdStr ,JsonUtil.parse(roomBaseInfoOps.get(RedisConstant.PAIXING) ,new ArrayList<>()));
+        fapai_4(roomIdStr ,paiXing);
         //开始抢庄倒计时
         countDown(1005 ,GameStatusEnum.BEFORE_SELECT_ZHUANGJIA.getCode() ,roomIdStr);
         //选取庄家
@@ -87,9 +91,9 @@ public class NiuniuPlayService {
         Map<String ,PaiXing> paiXingMap = new HashMap<>();
         Map<String ,Integer> scoreMap = new HashMap<>(2<<4);
         setScore(roomIdStr
-                ,JsonUtil.parse(roomBaseInfoOps.get(RedisConstant.PAIXING) ,new ArrayList<>())
-                ,Integer.valueOf(roomBaseInfoOps.get(RedisConstant.RULE))
-                ,Integer.valueOf(roomBaseInfoOps.get(RedisConstant.BASE_POINT))
+                ,paiXing
+                ,rule
+                ,basePoint
                 ,scoreMap
                 ,paiXingMap);
         //保存结果
@@ -108,8 +112,7 @@ public class NiuniuPlayService {
      * @param gameStatus
      */
     private void countDown(Integer head ,String gameStatus ,String roomIdStr){
-        BoundHashOperations<String, String, String> roomBaseInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomIdStr);
-        roomBaseInfoOps.put(RedisConstant.GAME_STATUS , gameStatus);
+        redisService.put(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.GAME_STATUS , gameStatus);
         for (int i = 5; i > 0 ; i--) {
             SocketResult socketResult = new SocketResult(head ,i);
             broadcast(socketResult ,roomIdStr);
@@ -136,7 +139,7 @@ public class NiuniuPlayService {
         Boolean twoWuXiaoNiu = true;
         while (twoWuXiaoNiu) {
             lists = RandomUtils.getSplitListByMax(rootPokes.size() ,
-                    stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId).members().size() * 5);
+                    redisService.getSetSize(RedisConstant.READY_PLAYER + roomId) * 5);
             //生成牌
             pokesList = Lists.newArrayList();
             for (List<Integer> integers : lists) {
@@ -159,13 +162,11 @@ public class NiuniuPlayService {
         }
         //设置每个人的牌
         Map<String ,List<String>> userPokeMap = new HashMap<>(2<<4);
-        BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
-        BoundSetOperations<String, String> readyPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId);
-        Set<String> readyPlayerUserIds = readyPlayerOps.members();
+        Set<String> readyPlayerUserIds = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
         int num = 0;
         for (String s : readyPlayerUserIds) {
             userPokeMap.put(s ,pokesList.get(num).subList(0 ,4));
-            pokesOps.put(s ,JsonUtil.toJsonString(pokesList.get(num)));
+            redisService.put(RedisConstant.POKES + roomId ,s ,JsonUtil.toJsonString(pokesList.get(num)));
             num ++;
         }
         //改变状态
@@ -185,7 +186,7 @@ public class NiuniuPlayService {
         Map<String, String> qiangZhuangMap = qiangZhuangUserIds.entries();
         Integer randNum = 0;
         BoundValueOperations<String, String> zhuangJiaOps = stringRedisTemplate.boundValueOps(RedisConstant.ZHUANGJIA + roomId);
-        String zhuangJiaUserId = "";
+        String zhuangJiaUserId;
         //没人抢庄
         if (qiangZhuangMap.isEmpty()) {
             BoundSetOperations<String, String> readyPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId);
@@ -294,7 +295,7 @@ public class NiuniuPlayService {
             //设置总分
             playerResult.setTotalScore(Integer.valueOf(totalScoreMap.get(userIdStr)));
             //设置牌
-            playerResult.setPokes(JsonUtil.parse(pokesMap.get(userIdStr) ,new ArrayList<String>()));
+            playerResult.setPokes(JsonUtil.parseJavaList(pokesMap.get(userIdStr) ,String.class));
             //设置牌型
             PaiXing paiXing = JsonUtil.parseJavaObject(paiXingMap.get(userIdStr) ,PaiXing.class);
             playerResult.setPaiXing(paiXing.getPaixing());
@@ -357,14 +358,14 @@ public class NiuniuPlayService {
         BoundHashOperations<String, String, String> scoreOps = stringRedisTemplate.boundHashOps(RedisConstant.SCORE + roomId);
         BoundHashOperations<String, String, String> totalScoreOps = stringRedisTemplate.boundHashOps(RedisConstant.TOTAL_SCORE + roomId);
         BoundHashOperations<String, String, String> paiXingOps = stringRedisTemplate.boundHashOps(RedisConstant.PAI_XING + roomId);
-        List<String> zhuangJiaPokes = JsonUtil.parse(pokes.get(zhuangJiaUserId) ,new ArrayList<String>());
+        List<String> zhuangJiaPokes = JsonUtil.parseJavaList(pokes.get(zhuangJiaUserId) ,String.class);
         PaiXing zhuangJiaPaiXing = PokeUtil.isNiuNiu(zhuangJiaPokes , paiXing ,rule);
         Integer zhuangJiaScore = 0;
         paiXingMap.put(zhuangJiaUserId ,zhuangJiaPaiXing);
         Integer zhuangJiaQiangZhuang = qiangZhuangOps.get(zhuangJiaUserId) == null ? 1 : Integer.valueOf(qiangZhuangOps.get(zhuangJiaUserId));
         for (Map.Entry<String ,String> entry : pokes.entries().entrySet()) {
             if (!Objects.equals(entry.getKey() ,zhuangJiaUserId)) {
-                List<String> xianJiaPokes = JsonUtil.parse(entry.getValue() ,new ArrayList<String>());
+                List<String> xianJiaPokes = JsonUtil.parseJavaList(entry.getValue() ,String.class);
                 PaiXing xianJiaPaiXing = PokeUtil.isNiuNiu(xianJiaPokes ,paiXing ,rule);
                 paiXingOps.put(entry.getKey() ,JsonUtil.toJsonString(xianJiaPaiXing));
                 paiXingMap.put(entry.getKey() ,xianJiaPaiXing);
@@ -464,12 +465,11 @@ public class NiuniuPlayService {
      */
     private void broadcast(SocketResult socketResult ,String roomIdStr){
         BoundSetOperations<String, String> roomPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.ROOM_PLAYER + roomIdStr);
-        //if (roomPlayerOps != null && roomPlayerOps.size() > 0) {
-            Set<String> playerIds = roomPlayerOps.members();
-            for (String playerId : playerIds) {
-                stringRedisTemplate.boundListOps(RedisConstant.MESSAGES_QUEUE + playerId).rightPush(JsonUtil.toJsonString(socketResult));
-            }
-        //}
+        Set<String> playerIds = roomPlayerOps.members();
+        for (String playerId : playerIds) {
+            stringRedisTemplate.boundListOps(RedisConstant.MESSAGES_QUEUE + playerId).rightPush(JsonUtil.toJsonString(socketResult));
+        }
+
     }
 
 }
