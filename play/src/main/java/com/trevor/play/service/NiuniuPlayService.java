@@ -257,22 +257,15 @@ public class NiuniuPlayService {
 
     private List<PlayerResult> generatePlayerResults(String roomId){
         Long entryDatetime = System.currentTimeMillis();
-        BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
-        Map<String ,String> baseRoomInfoMap = baseRoomInfoOps.entries();
-        BoundHashOperations<String, String, String> scoreOps = stringRedisTemplate.boundHashOps(RedisConstant.SCORE + roomId);
-        Map<String ,String> scoreMap = scoreOps.entries();
-        BoundSetOperations<String, String> readyPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId);
-        Set<String> readyPlayerStr = readyPlayerOps.members();
+        Map<String ,String> baseRoomInfoMap = redisService.getMap(RedisConstant.BASE_ROOM_INFO + roomId);
+        Map<String ,String> scoreMap = redisService.getMap(RedisConstant.SCORE + roomId);
+        Set<String> readyPlayerStr = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
         List<Long> readyPlayerLong = readyPlayerStr.stream().map(s -> Long.valueOf(s)).collect(Collectors.toList());
         List<User> users = userService.findUsersByIds(readyPlayerLong);
-        BoundValueOperations<String, String> zhuangJiaOps = stringRedisTemplate.boundValueOps(RedisConstant.ZHUANGJIA + roomId);
-        String zhuangJiaId = zhuangJiaOps.get();
-        BoundHashOperations<String, String, String> totalSocreOps = stringRedisTemplate.boundHashOps(RedisConstant.TOTAL_SCORE + roomId);
-        Map<String ,String> totalScoreMap = totalSocreOps.entries();
-        BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
-        Map<String ,String> pokesMap = pokesOps.entries();
-        BoundHashOperations<String, String, String> paiXingOps = stringRedisTemplate.boundHashOps(RedisConstant.PAI_XING + roomId);
-        Map<String ,String> paiXingMap = paiXingOps.entries();
+        String zhuangJiaId = redisService.getValue(RedisConstant.ZHUANGJIA + roomId);
+        Map<String ,String> totalScoreMap = redisService.getMap(RedisConstant.TOTAL_SCORE + roomId);
+        Map<String ,String> pokesMap = redisService.getMap(RedisConstant.POKES + roomId);
+        Map<String ,String> paiXingMap = redisService.getMap(RedisConstant.PAI_XING + roomId);
         List<PlayerResult> playerResults = new ArrayList<>();
         for (User user : users) {
             PlayerResult playerResult = new PlayerResult();
@@ -309,7 +302,7 @@ public class NiuniuPlayService {
     }
 
     private void deleteKeys(String roomId){
-        stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId).put(RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_DELETE_KEYS.getCode());
+        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_DELETE_KEYS.getCode());
         List<String> keys = new ArrayList<>();
         keys.add(RedisConstant.POKES + roomId);
         keys.add(RedisConstant.READY_PLAYER + roomId);
@@ -326,17 +319,16 @@ public class NiuniuPlayService {
      * 继续开始或者停止
      */
     private void continueOrStop(String roomId){
-        BoundHashOperations<String, String, String> baseRoomInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
-        Integer runingNum = Integer.valueOf(baseRoomInfoOps.get(RedisConstant.RUNING_NUM));
-        Integer totalNum = Integer.valueOf(baseRoomInfoOps.get(RedisConstant.TOTAL_NUM));
-        stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId).put(RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_READY.getCode());
+        Integer runingNum = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.RUNING_NUM));
+        Integer totalNum = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.TOTAL_NUM));
+        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_READY.getCode());
         //结束
         if (Objects.equals(runingNum ,totalNum)) {
             SocketResult socketResult = new SocketResult(1013);
             broadcast(socketResult ,roomId);
         }else {
             Integer next = runingNum + 1;
-            baseRoomInfoOps.put(RedisConstant.RUNING_NUM ,String.valueOf(next));
+            redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.RUNING_NUM ,String.valueOf(next));
             SocketResult socketResult = new SocketResult();
             socketResult.setHead(1016);
             socketResult.setRuningAndTotal(next + "/" + totalNum);
@@ -351,7 +343,7 @@ public class NiuniuPlayService {
 
     private void setScore(String roomId ,List<Integer> paiXing ,Integer rule ,Integer basePoint
             ,Map<String ,Integer> scoreMap ,Map<String ,PaiXing> paiXingMap){
-        String zhuangJiaUserId = stringRedisTemplate.boundValueOps(RedisConstant.ZHUANGJIA + roomId).get();
+        String zhuangJiaUserId = redisService.getValue(RedisConstant.ZHUANGJIA + roomId);
         BoundHashOperations<String, String, String> qiangZhuangOps = stringRedisTemplate.boundHashOps(RedisConstant.QIANGZHAUNG + roomId);
         BoundHashOperations<String, String, String> xianJiaXiaZhuOps = stringRedisTemplate.boundHashOps(RedisConstant.XIANJIA_XIAZHU + roomId);
         BoundHashOperations<String, String ,String> pokes = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
