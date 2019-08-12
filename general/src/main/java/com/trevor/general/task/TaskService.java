@@ -12,8 +12,6 @@ import com.trevor.common.domain.mysql.PersonalCard;
 import com.trevor.common.domain.mysql.Room;
 import com.trevor.common.service.RedisService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.BoundValueOperations;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,9 +40,6 @@ public class TaskService{
 
     @Resource
     private NiuniuRoomParamMapper niuniuRoomParamMapper;
-
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
 
     @Resource
     private RedisService redisService;

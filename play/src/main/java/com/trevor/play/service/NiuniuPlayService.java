@@ -16,10 +16,6 @@ import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.PokeUtil;
 import com.trevor.common.util.RandomUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.BoundHashOperations;
-import org.springframework.data.redis.core.BoundSetOperations;
-import org.springframework.data.redis.core.BoundValueOperations;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -33,10 +29,6 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class NiuniuPlayService {
-
-
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
 
     @Resource
     private PlayerResultMapper playerResultMapper;
@@ -170,8 +162,7 @@ public class NiuniuPlayService {
             num ++;
         }
         //改变状态
-        BoundHashOperations<String, String, String> roomBaseInfoOps = stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId);
-        roomBaseInfoOps.put(RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_QIANGZHUANG_COUNTDOWN.getCode());
+        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_QIANGZHUANG_COUNTDOWN.getCode());
         //给每个人发牌
         SocketResult socketResult = new SocketResult(1004 ,userPokeMap ,null);
         broadcast(socketResult ,roomId);
@@ -182,44 +173,40 @@ public class NiuniuPlayService {
      * @param roomId
      */
     private void selectZhaungJia(String roomId){
-        BoundHashOperations<String, String, String> qiangZhuangUserIds = stringRedisTemplate.boundHashOps(RedisConstant.QIANGZHAUNG + roomId);
-        Map<String, String> qiangZhuangMap = qiangZhuangUserIds.entries();
+        Map<String, String> qiangZhuangMap = redisService.getMap(RedisConstant.QIANGZHAUNG + roomId);
         Integer randNum = 0;
-        BoundValueOperations<String, String> zhuangJiaOps = stringRedisTemplate.boundValueOps(RedisConstant.ZHUANGJIA + roomId);
         String zhuangJiaUserId;
         //没人抢庄
         if (qiangZhuangMap.isEmpty()) {
-            BoundSetOperations<String, String> readyPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.READY_PLAYER + roomId);
-            randNum = RandomUtils.getRandNumMax(readyPlayerOps.size().intValue());
+            randNum = RandomUtils.getRandNumMax(redisService.getSetSize(RedisConstant.READY_PLAYER + roomId));
             List<String> playerIds = Lists.newArrayList();
-            Set<String> members = readyPlayerOps.members();
+            Set<String> members = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
             for (String s : members) {
                 playerIds.add(s);
             }
             zhuangJiaUserId = playerIds.get(randNum);
-            qiangZhuangUserIds.put(zhuangJiaUserId ,"1");
-            zhuangJiaOps.set(zhuangJiaUserId);
+            redisService.put(RedisConstant.QIANGZHAUNG + roomId ,zhuangJiaUserId ,"1");
+            redisService.setValue(RedisConstant.ZHUANGJIA + roomId ,zhuangJiaUserId);
         }else {
-            randNum = RandomUtils.getRandNumMax(qiangZhuangUserIds.size().intValue());
-            List<String> userIds = new ArrayList<>(qiangZhuangUserIds.keys());
+            randNum = RandomUtils.getRandNumMax(redisService.getMapSize(RedisConstant.QIANGZHAUNG + roomId));
+            List<String> userIds = new ArrayList<>(redisService.getMapKeys(RedisConstant.QIANGZHAUNG + roomId));
             zhuangJiaUserId = userIds.get(randNum);
-            zhuangJiaOps.set(zhuangJiaUserId);
+            redisService.setValue(RedisConstant.ZHUANGJIA + roomId ,zhuangJiaUserId);
         }
 
         SocketResult socketResult = new SocketResult(1006 ,zhuangJiaUserId);
         broadcast(socketResult ,roomId);
         //改变状态
-        stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId).put(RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_XIANJIA_XIAZHU.getCode());
+        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_XIANJIA_XIAZHU.getCode());
     }
 
     /**
      * 发一张牌
      */
     private void fapai_1(String roomId){
-        stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId).put(RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_TABPAI_COUNTDOWN.getCode());
-        BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
+        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_TABPAI_COUNTDOWN.getCode());
         Map<String ,List<String>> userPokeMap = new HashMap<>(2<<4);
-        Map<String, String> map = pokesOps.entries();
+        Map<String, String> map = redisService.getMap(RedisConstant.POKES + roomId);
         for (Map.Entry<String ,String> entry : map.entrySet()) {
             userPokeMap.put(entry.getKey() ,JsonUtil.parseJavaList(entry.getValue() ,String.class).subList(4,5));
         }
@@ -231,16 +218,14 @@ public class NiuniuPlayService {
      * 給玩家返回得分和最后一张牌
      */
     private void sendResultToUser(String roomId ,Map<String ,Integer> scoreMap ,Map<String ,PaiXing> paiXingMap){
-        stringRedisTemplate.boundHashOps(RedisConstant.BASE_ROOM_INFO + roomId).put(RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_RETURN_RESULT.getCode());
+        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_RETURN_RESULT.getCode());
         SocketResult socketResult = new SocketResult();
         socketResult.setHead(1012);
         socketResult.setScoreMap(scoreMap);
-        BoundSetOperations<String, String> tanPaiOps = stringRedisTemplate.boundSetOps(RedisConstant.TANPAI + roomId);
-        BoundHashOperations<String, String, String> pokesOps = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
-        Set<String> tanPaiPlayers = tanPaiOps.members();
+        Set<String> tanPaiPlayers = redisService.getSetMembers(RedisConstant.TANPAI + roomId);
 
         Map<String ,List<String>> userPokeMap_1 = new HashMap<>();
-        Map<String, String> userPokeStrMap = pokesOps.entries();
+        Map<String, String> userPokeStrMap = redisService.getMap(RedisConstant.POKES + roomId);
         for (Map.Entry<String ,String> entry : userPokeStrMap.entrySet()) {
             if (!tanPaiPlayers.contains(entry.getKey())) {
                 userPokeMap_1.put(entry.getKey() ,JsonUtil.parseJavaList(entry.getValue() ,String.class).subList(4 ,5));
@@ -312,7 +297,7 @@ public class NiuniuPlayService {
         keys.add(RedisConstant.XIANJIA_XIAZHU + roomId);
         keys.add(RedisConstant.SCORE + roomId);
         keys.add(RedisConstant.PAI_XING + roomId);
-        stringRedisTemplate.delete(keys);
+        redisService.deletes(keys);
     }
 
     /**
@@ -343,42 +328,51 @@ public class NiuniuPlayService {
 
     private void setScore(String roomId ,List<Integer> paiXing ,Integer rule ,Integer basePoint
             ,Map<String ,Integer> scoreMap ,Map<String ,PaiXing> paiXingMap){
+        //庄家id
         String zhuangJiaUserId = redisService.getValue(RedisConstant.ZHUANGJIA + roomId);
-        BoundHashOperations<String, String, String> qiangZhuangOps = stringRedisTemplate.boundHashOps(RedisConstant.QIANGZHAUNG + roomId);
-        BoundHashOperations<String, String, String> xianJiaXiaZhuOps = stringRedisTemplate.boundHashOps(RedisConstant.XIANJIA_XIAZHU + roomId);
-        BoundHashOperations<String, String ,String> pokes = stringRedisTemplate.boundHashOps(RedisConstant.POKES + roomId);
-        BoundHashOperations<String, String, String> scoreOps = stringRedisTemplate.boundHashOps(RedisConstant.SCORE + roomId);
-        BoundHashOperations<String, String, String> totalScoreOps = stringRedisTemplate.boundHashOps(RedisConstant.TOTAL_SCORE + roomId);
-        BoundHashOperations<String, String, String> paiXingOps = stringRedisTemplate.boundHashOps(RedisConstant.PAI_XING + roomId);
-        List<String> zhuangJiaPokes = JsonUtil.parseJavaList(pokes.get(zhuangJiaUserId) ,String.class);
+        //抢庄的map
+        Map<String, String> qiangZhuangMap = redisService.getMap(RedisConstant.QIANGZHAUNG + roomId);
+        //下注的map
+        Map<String, String> xianJiaXiaZhuMap = redisService.getMap(RedisConstant.XIANJIA_XIAZHU + roomId);
+        //每个玩家的牌
+        Map<String ,String> pokesMap = redisService.getMap(RedisConstant.POKES + roomId);
+        //庄家的牌
+        List<String> zhuangJiaPokes = JsonUtil.parseJavaList(pokesMap.get(zhuangJiaUserId) ,String.class);
+        //庄家的牌型
         PaiXing zhuangJiaPaiXing = PokeUtil.isNiuNiu(zhuangJiaPokes , paiXing ,rule);
         Integer zhuangJiaScore = 0;
         paiXingMap.put(zhuangJiaUserId ,zhuangJiaPaiXing);
-        Integer zhuangJiaQiangZhuang = qiangZhuangOps.get(zhuangJiaUserId) == null ? 1 : Integer.valueOf(qiangZhuangOps.get(zhuangJiaUserId));
-        for (Map.Entry<String ,String> entry : pokes.entries().entrySet()) {
-            if (!Objects.equals(entry.getKey() ,zhuangJiaUserId)) {
-                List<String> xianJiaPokes = JsonUtil.parseJavaList(entry.getValue() ,String.class);
+        //庄家的抢庄倍数
+        Integer zhuangJiaQiangZhuang = qiangZhuangMap.get(zhuangJiaUserId) == null ? 1 : Integer.valueOf(qiangZhuangMap.get(zhuangJiaUserId));
+        for (Map.Entry<String ,String> entry : pokesMap.entrySet()) {
+            String xianJiaUserId = entry.getKey();
+            String xianJiaPaiXingStr = entry.getValue();
+            if (!Objects.equals(xianJiaUserId ,zhuangJiaUserId)) {
+                List<String> xianJiaPokes = JsonUtil.parseJavaList(xianJiaPaiXingStr ,String.class);
                 PaiXing xianJiaPaiXing = PokeUtil.isNiuNiu(xianJiaPokes ,paiXing ,rule);
-                paiXingOps.put(entry.getKey() ,JsonUtil.toJsonString(xianJiaPaiXing));
-                paiXingMap.put(entry.getKey() ,xianJiaPaiXing);
-                Integer xianJiaQiangZhuang = xianJiaXiaZhuOps.get(entry.getKey()) == null ? 1 : Integer.valueOf(xianJiaXiaZhuOps.get(entry.getKey()));
-                Integer score = zhuangJiaQiangZhuang * xianJiaQiangZhuang * basePoint;
-                Integer xianJiaTotalScore = totalScoreOps.get(entry.getKey()) == null ? 0 : Integer.valueOf(totalScoreOps.get(entry.getKey()));
+                redisService.put(RedisConstant.PAI_XING + roomId ,xianJiaUserId ,JsonUtil.toJsonString(xianJiaPaiXing));
+                paiXingMap.put(xianJiaUserId ,xianJiaPaiXing);
+                //玩家的下注倍数
+                Integer xianJiaQiangZhu = xianJiaXiaZhuMap.get(xianJiaUserId) == null ? 1 : Integer.valueOf(xianJiaXiaZhuMap.get(xianJiaUserId));
+                //基本分数
+                Integer score = zhuangJiaQiangZhuang * xianJiaQiangZhu * basePoint;
+                //闲家的总分
+                Integer xianJiaTotalScore = redisService.getHashValue(RedisConstant.TOTAL_SCORE + roomId ,xianJiaUserId) == null ?
+                        0 : Integer.valueOf(redisService.getHashValue(RedisConstant.TOTAL_SCORE + roomId ,xianJiaUserId));
                 //庄家大于闲家
                 if (zhuangJiaPaiXing.getPaixing() > xianJiaPaiXing.getPaixing()) {
                     score = score * zhuangJiaPaiXing.getMultiple();
                     zhuangJiaScore += score;
-                    scoreOps.put(entry.getKey() ,String.valueOf(-score));
-
-                    totalScoreOps.put(entry.getKey() ,String.valueOf(xianJiaTotalScore - score));
-                    scoreMap.put(entry.getKey() ,-score);
+                    redisService.put(RedisConstant.SCORE + roomId ,xianJiaUserId ,String.valueOf(-score));
+                    redisService.put(RedisConstant.TOTAL_SCORE + roomId ,xianJiaUserId ,String.valueOf(xianJiaTotalScore - score));
+                    scoreMap.put(xianJiaUserId ,-score);
                     //庄家小于闲家
                 }else if (zhuangJiaPaiXing.getPaixing() < xianJiaPaiXing.getPaixing()) {
                     score = score * xianJiaPaiXing.getMultiple();
                     zhuangJiaScore -= score;
-                    scoreOps.put(entry.getKey() ,String.valueOf(-score));
-                    totalScoreOps.put(entry.getKey() ,String.valueOf(xianJiaTotalScore + score));
-                    scoreMap.put(entry.getKey() ,score);
+                    redisService.put(RedisConstant.SCORE + roomId ,xianJiaUserId ,String.valueOf(-score));
+                    redisService.put(RedisConstant.TOTAL_SCORE + roomId ,xianJiaUserId ,String.valueOf(xianJiaTotalScore + score));
+                    scoreMap.put(xianJiaUserId ,score);
                 }else{
                     boolean zhuangJiaDa = true;
                     //炸弹牛，比炸弹大小(已经设置不可能出现两个五小牛)
@@ -405,14 +399,12 @@ public class NiuniuPlayService {
                         }else if (Objects.equals(-1 ,paiZhi)) {
                             zhuangJiaDa = false;
                         }else {
-                            List<Integer> zhuangJiaNums = zhuangJiaPokes.stream().map(str -> PokeUtil.changePai(str.substring(1 ,2))
-                            ).collect(Collectors.toList());
+                            List<Integer> zhuangJiaNums = zhuangJiaPokes.stream().map(str -> PokeUtil.changePai(str.substring(1 ,2))).collect(Collectors.toList());
                             Map<String ,String> zhuangJiaMap = Maps.newHashMap();
                             for (String zhuang : zhuangJiaPokes) {
                                 zhuangJiaMap.put(zhuang.substring(1 ,2) ,zhuang.substring(0 ,1));
                             }
-                            List<Integer> xianJiaNums = xianJiaPokes.stream().map(str -> PokeUtil.changePai(str.substring(1 ,2))
-                            ).collect(Collectors.toList());
+                            List<Integer> xianJiaNums = xianJiaPokes.stream().map(str -> PokeUtil.changePai(str.substring(1 ,2))).collect(Collectors.toList());
                             Map<String ,String> xianJiaMap = Maps.newHashMap();
                             for (String xian : xianJiaPokes) {
                                 xianJiaMap.put(xian.substring(1 ,2) ,xian.substring(0 ,1));
@@ -429,26 +421,29 @@ public class NiuniuPlayService {
                     if (zhuangJiaDa) {
                         score = score * zhuangJiaPaiXing.getMultiple();
                         zhuangJiaScore += score;
-                        scoreOps.put(entry.getKey() ,String.valueOf(-score));
-                        scoreMap.put(entry.getKey() ,-score);
-                        totalScoreOps.put(entry.getKey() ,String.valueOf(xianJiaTotalScore - score));
+                        redisService.put(RedisConstant.SCORE + roomId ,xianJiaUserId ,String.valueOf(-score));
+                        scoreMap.put(xianJiaUserId ,-score);
+                        redisService.put(RedisConstant.TOTAL_SCORE + roomId ,xianJiaUserId ,String.valueOf(xianJiaTotalScore - score));
                     }else {
                         score = score * xianJiaPaiXing.getMultiple();
-                        zhuangJiaScore += score;
-                        scoreOps.put(entry.getKey() ,String.valueOf(score));
-                        totalScoreOps.put(entry.getKey() ,String.valueOf(xianJiaTotalScore + score));
-                        scoreMap.put(entry.getKey() ,score);
+                        zhuangJiaScore -= score;
+                        redisService.put(RedisConstant.SCORE + roomId ,xianJiaUserId ,String.valueOf(score));
+                        redisService.put(RedisConstant.TOTAL_SCORE + roomId ,xianJiaUserId ,String.valueOf(xianJiaTotalScore + score));
+                        scoreMap.put(xianJiaUserId ,score);
                     }
                 }
 
             }
         }
-        Integer zhuangJiaTotalScore = totalScoreOps.get(zhuangJiaUserId) == null ? 0 : Integer.valueOf(totalScoreOps.get(zhuangJiaUserId));
-        paiXingOps.put(zhuangJiaUserId ,JsonUtil.toJsonString(zhuangJiaPaiXing));
-        scoreOps.put(zhuangJiaUserId ,String.valueOf(zhuangJiaScore));
+        //设置庄家的分数
+        Map<String, String> totalScoreMap = redisService.getMap(RedisConstant.TOTAL_SCORE + roomId);
+        Integer zhuangJiaTotalScore = totalScoreMap.get(zhuangJiaUserId) == null ? 0 : Integer.valueOf(totalScoreMap.get(zhuangJiaUserId));
+        redisService.put(RedisConstant.PAI_XING + roomId ,zhuangJiaUserId ,JsonUtil.toJsonString(zhuangJiaPaiXing));
+        redisService.put(RedisConstant.SCORE + roomId ,zhuangJiaUserId ,String.valueOf(zhuangJiaScore));
         scoreMap.put(zhuangJiaUserId ,zhuangJiaScore);
-        totalScoreOps.put(zhuangJiaUserId ,String.valueOf(zhuangJiaTotalScore + zhuangJiaScore));
+        redisService.put(RedisConstant.TOTAL_SCORE + roomId ,zhuangJiaUserId ,String.valueOf(zhuangJiaTotalScore + zhuangJiaScore));
     }
+
 
     /**
      * 广播消息
@@ -456,10 +451,9 @@ public class NiuniuPlayService {
      * @param roomIdStr
      */
     private void broadcast(SocketResult socketResult ,String roomIdStr){
-        BoundSetOperations<String, String> roomPlayerOps = stringRedisTemplate.boundSetOps(RedisConstant.ROOM_PLAYER + roomIdStr);
-        Set<String> playerIds = roomPlayerOps.members();
+        Set<String> playerIds = redisService.getSetMembers(RedisConstant.ROOM_PLAYER + roomIdStr);
         for (String playerId : playerIds) {
-            stringRedisTemplate.boundListOps(RedisConstant.MESSAGES_QUEUE + playerId).rightPush(JsonUtil.toJsonString(socketResult));
+            redisService.listRightPush(RedisConstant.MESSAGES_QUEUE + playerId ,JsonUtil.toJsonString(socketResult));
         }
 
     }

@@ -1,6 +1,5 @@
 package com.trevor.message.service;
 
-import com.trevor.common.bo.JsonEntity;
 import com.trevor.common.bo.PaiXing;
 import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
@@ -11,12 +10,13 @@ import com.trevor.common.util.PokeUtil;
 import com.trevor.message.bo.SocketMessage;
 import com.trevor.message.feign.PlayFeign;
 import com.trevor.message.socket.NiuniuSocket;
-import io.swagger.models.auth.In;
-import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author trevor
@@ -24,9 +24,6 @@ import java.util.*;
  */
 @Service
 public class PlayService {
-
-    @Resource
-    private  StringRedisTemplate stringRedisTemplate;
 
     @Resource
     private RoomSocketService roomSocketService;

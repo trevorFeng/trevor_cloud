@@ -6,12 +6,12 @@ import com.trevor.common.bo.JsonEntity;
 import com.trevor.common.bo.ResponseHelper;
 import com.trevor.common.domain.mysql.User;
 import com.trevor.common.enums.MessageCodeEnum;
+import com.trevor.common.service.RedisService;
 import com.trevor.common.util.TokenUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -47,7 +47,7 @@ BrowserLoginController {
     private HttpServletResponse response;
 
     @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    private RedisService redisService;
 
     @ApiOperation("生成验证码,给用户发送验证码")
     @ApiImplicitParams({@ApiImplicitParam(paramType = "path", name = "phoneNum", dataType = "string", required = true, value = "phoneNum")})
@@ -58,7 +58,7 @@ BrowserLoginController {
 //            return stringJsonEntity;
 //        }
 //        String code = stringJsonEntity.getData();
-        stringRedisTemplate.boundValueOps(phoneNum).set("123456" ,60*5 , TimeUnit.SECONDS);
+        redisService.setValueWithExpire(phoneNum ,"123456" ,60*5L , TimeUnit.SECONDS);
         return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.SEND_MESSAGE);
     }
 
@@ -67,7 +67,7 @@ BrowserLoginController {
     @RequestMapping(value = "/front/phone/code/check", method = {RequestMethod.POST}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<String> submit(@RequestBody @Validated PhoneCode phoneCode){
         //校验验证码是否正确
-        String code = stringRedisTemplate.boundValueOps(phoneCode.getPhoneNum()).get();
+        String code = redisService.getValue(phoneCode.getPhoneNum());
         if (Objects.equals(code ,phoneCode.getCode())) {
             JsonEntity<User> result = browserLoginService.getUserHashAndOpenidByPhoneNum(phoneCode.getPhoneNum());
             User user = result.getData();

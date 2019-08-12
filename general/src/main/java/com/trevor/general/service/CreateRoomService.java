@@ -1,6 +1,5 @@
 package com.trevor.general.service;
 
-import com.alibaba.fastjson.JSON;
 import com.trevor.common.bo.JsonEntity;
 import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.ResponseHelper;
@@ -16,17 +15,12 @@ import com.trevor.common.enums.ConsumCardEnum;
 import com.trevor.common.enums.MessageCodeEnum;
 import com.trevor.common.service.RedisService;
 import com.trevor.general.exception.BizException;
-import org.springframework.data.redis.core.BoundHashOperations;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author trevor
@@ -43,9 +37,6 @@ public class CreateRoomService{
 
     @Resource
     private CardConsumRecordMapper cardConsumRecordMapper;
-
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
 
     @Resource
     private NiuniuRoomParamMapper niuniuRoomParamMapper;

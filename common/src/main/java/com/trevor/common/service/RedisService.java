@@ -26,6 +26,10 @@ public class RedisService {
         stringRedisTemplate.delete(key);
     }
 
+    public void deletes(List<String> keys){
+        stringRedisTemplate.delete(keys);
+    }
+
     /**
      * 得到value
      * @param key
@@ -165,6 +169,26 @@ public class RedisService {
     public void put(String redisKey ,String hashKey ,String hashValue){
         BoundHashOperations<String, String, String> bh = stringRedisTemplate.boundHashOps(redisKey);
         bh.put(hashKey ,hashValue);
+    }
+
+    /**
+     * map的大小
+     * @param redisKey
+     * @return
+     */
+    public Integer getMapSize(String redisKey){
+        BoundHashOperations<String, String, String> bh = stringRedisTemplate.boundHashOps(redisKey);
+        return Math.toIntExact(bh.size());
+    }
+
+    /**
+     * 得到map的key的集合
+     * @param redisKey
+     * @return
+     */
+    public Set<String> getMapKeys(String redisKey){
+        BoundHashOperations<String, String, String> bh = stringRedisTemplate.boundHashOps(redisKey);
+        return bh.keys();
     }
 
 

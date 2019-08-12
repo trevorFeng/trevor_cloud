@@ -9,9 +9,6 @@ import com.trevor.common.service.RedisService;
 import com.trevor.common.service.UserService;
 import com.trevor.message.socket.NiuniuSocket;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.BoundListOperations;
-import org.springframework.data.redis.core.BoundSetOperations;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -36,9 +33,6 @@ public class RoomSocketService {
 
     @Resource(name = "executor")
     private Executor executor;
-
-    @Resource
-    private  StringRedisTemplate stringRedisTemplate;
 
     @Resource
     private UserService userService;
