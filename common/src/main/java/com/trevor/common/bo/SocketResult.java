@@ -104,12 +104,12 @@ public class SocketResult {
     /**
      * 玩家的4张牌
      */
-    private Map<String ,List<String>> userPokeMap_4;
+    private List<String> userPokeList_4;
 
     /**
-     * 玩家的1张牌
+     * 玩家的5张牌
      */
-    private Map<String ,List<String>> userPokeMap_1;
+    private Map<String ,List<String>> userPokeMap_5;
 
     /**
      * 抢庄的玩家
@@ -147,6 +147,18 @@ public class SocketResult {
      */
     private String runingAndTotal;
 
+    /**
+     * 游戏状态
+     * 1-----进入房间-准备倒计时前或者倒计时-发4张牌前
+     * 2-----发4张牌-抢庄倒计时前
+     * 3-----抢庄倒计时-确定庄家前
+     * 4-----确定庄家-闲家下注倒计时前
+     * 5-----闲家下注倒计时-再发一张牌前
+     * 6-----再发一张牌-摊牌倒计时前
+     * 7-----摊牌倒计时-下一句开始前
+     */
+    private Integer gameStatus;
+
     public SocketResult(){}
 
 
@@ -164,15 +176,14 @@ public class SocketResult {
         this.userId = userId;
     }
 
-    public SocketResult(Integer head ,Map<String ,List<String>> userPokeMap_4 ,Map<String ,List<String>> userPokeMap_1) {
+    public SocketResult(Integer head ,List<String> userPokeList_4) {
         this.head = head;
-        if (userPokeMap_4 != null) {
-            this.userPokeMap_4 = userPokeMap_4;
-        }
-        if (userPokeMap_1 != null) {
-            this.userPokeMap_1 = userPokeMap_1;
-        }
+        this.userPokeList_4 = userPokeList_4;
+    }
 
+    public SocketResult(Integer head ,Map<String ,List<String>> userPokeMap_5) {
+        this.head = head;
+        this.userPokeMap_5 = userPokeMap_5;
     }
 
     public  SocketResult(Integer head ,String userId ,Integer qiangZhuangBeiShu){

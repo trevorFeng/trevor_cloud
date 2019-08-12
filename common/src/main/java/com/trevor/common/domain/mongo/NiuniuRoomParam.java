@@ -94,10 +94,7 @@ public class NiuniuRoomParam {
         baseRoomInfoMap.put(RedisConstant.XIAZHU ,String.valueOf(getXiazhu()));
         baseRoomInfoMap.put(RedisConstant.SPECIAL , JSON.toJSONString(getSpecial() == null ? new HashSet<>() : getSpecial()));
         baseRoomInfoMap.put(RedisConstant.PAIXING ,getPaiXing() == null ? JSON.toJSONString(new HashSet<Integer>()) : JSON.toJSONString(getPaiXing()));
-
         baseRoomInfoMap.put(RedisConstant.GAME_STATUS ,"1");
-        baseRoomInfoMap.put(RedisConstant.RUNING_NUM ,"0");
-
         return baseRoomInfoMap;
     }
 }

@@ -20,11 +20,20 @@
             #{id}
         </foreach>
     </update>
+
     <update id="updateRuningNum">
         update
         room
         set
         runing_num=#{runingNum}
+        WHERE
+        id=#{roomId}
+    </update>
+    <update id="updateStatus">
+        update
+        room
+        set
+        status=#{status}
         WHERE
         id=#{roomId}
     </update>
@@ -44,6 +53,7 @@
         where
         id=#{id}
     </select>
+
     <select id="findRoomAuthIdByRoomId" resultType="java.lang.Long">
         select
         room_auth
@@ -52,6 +62,7 @@
         where
         id=#{roomId}
     </select>
+
     <select id="findByGetRoomTimeAndState_1" resultType="java.lang.Long">
         select
         id id
@@ -62,6 +73,7 @@
         and
         state = 1
     </select>
+
     <select id="findByIds" resultType="com.trevor.common.domain.mysql.Room">
         select
         id id,
@@ -75,6 +87,7 @@
             #{id}
         </foreach>
     </select>
+
     <select id="findByEntryTimeAndStatus_0" resultType="java.lang.Long">
         select
         id id
@@ -85,7 +98,8 @@
         and
         entry_time &lt; #{entryTime}
     </select>
-    <select id="findStatus_0" resultType="com.trevor.common.domain.mysql.Room">
+
+    <select id="findStatus" resultType="com.trevor.common.domain.mysql.Room">
         select
         id id,
         entry_time entryTime,
@@ -97,6 +111,9 @@
         from
         `room`
         where
-        status=0
+        status in
+        <foreach collection="statusList" item="status"  open="(" separator="," close=")">
+            #{status}
+        </foreach>
     </select>
 </mapper>

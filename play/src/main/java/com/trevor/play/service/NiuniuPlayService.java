@@ -63,6 +63,7 @@ public class NiuniuPlayService {
     }
 
     private void play(String roomIdStr){
+        roomService.updateStatus(Long.valueOf(roomIdStr) ,1);
         Integer rule = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.RULE));
         List<Integer> paiXing = JsonUtil.parseJavaList(
                 redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.PAIXING) ,Integer.class);
@@ -79,10 +80,6 @@ public class NiuniuPlayService {
         //闲家下注倒计时
         countDown(1007 ,GameStatusEnum.BEFORE_LAST_POKE.getCode() ,roomIdStr);
         sleep(2000);
-        fapai_1(roomIdStr);
-        //准备摊牌倒计时
-        countDown(1009 ,GameStatusEnum.BEFORE_CALRESULT.getCode() ,roomIdStr);
-        sleep(2000);
         //设置分数
         Map<String ,PaiXing> paiXingMap = new HashMap<>();
         Map<String ,Integer> scoreMap = new HashMap<>(2<<4);
@@ -92,11 +89,16 @@ public class NiuniuPlayService {
                 ,basePoint
                 ,scoreMap
                 ,paiXingMap);
+        //再发一张牌
+        fapai_1(roomIdStr ,scoreMap ,paiXingMap);
+        //准备摊牌倒计时
+        countDown(1009 ,GameStatusEnum.BEFORE_CALRESULT.getCode() ,roomIdStr);
+        sleep(2000);
         //保存结果
         List<PlayerResult> playerResults = generatePlayerResults(roomIdStr);
         playerResultMapper.saveAll(playerResults);
         //给玩家发送分数、玩家发送其他人的最后一张牌,玩家的牌型
-        sendResultToUser(roomIdStr ,scoreMap ,paiXingMap);
+        //sendResultToUser(roomIdStr ,scoreMap ,paiXingMap);
         sleep(2000);
         //删除redis的键
         deleteKeys(roomIdStr);
@@ -169,19 +171,22 @@ public class NiuniuPlayService {
             }
         }
         //设置每个人的牌
-        Map<String ,List<String>> userPokeMap = new HashMap<>(2<<4);
         Set<String> readyPlayerUserIds = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
         int num = 0;
-        for (String s : readyPlayerUserIds) {
-            userPokeMap.put(s ,pokesList.get(num).subList(0 ,4));
-            redisService.put(RedisConstant.POKES + roomId ,s ,JsonUtil.toJsonString(pokesList.get(num)));
+        for (String playerId : readyPlayerUserIds) {
+            List<String> pokes = pokesList.get(num);
+            redisService.put(RedisConstant.POKES + roomId ,playerId ,JsonUtil.toJsonString(pokes));
             num ++;
         }
         //改变状态
         redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_QIANGZHUANG_COUNTDOWN.getCode());
         //给每个人发牌
-        SocketResult socketResult = new SocketResult(1004 ,userPokeMap ,null);
-        broadcast(socketResult ,roomId);
+        for (String playerId : readyPlayerUserIds) {
+            Map<String ,String> pokesMap = redisService.getMap(RedisConstant.POKES + roomId);
+            List<String> userPokeList_4 = JsonUtil.parseJavaList(pokesMap.get(playerId) ,String.class).subList(0 ,4);
+            SocketResult socketResult = new SocketResult(1004 ,userPokeList_4);
+            sendMessage(socketResult ,playerId);
+        }
     }
 
     /**
@@ -219,40 +224,23 @@ public class NiuniuPlayService {
     /**
      * 发一张牌
      */
-    private void fapai_1(String roomId){
+    private void fapai_1(String roomId ,Map<String ,Integer> scoreMap ,Map<String ,PaiXing> paiXingMap){
         redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_TABPAI_COUNTDOWN.getCode());
-        Map<String ,List<String>> userPokeMap = new HashMap<>(2<<4);
+        Map<String ,List<String>> userPokeMap_5 = new HashMap<>(2<<4);
         Map<String, String> map = redisService.getMap(RedisConstant.POKES + roomId);
         for (Map.Entry<String ,String> entry : map.entrySet()) {
-            userPokeMap.put(entry.getKey() ,JsonUtil.parseJavaList(entry.getValue() ,String.class).subList(4,5));
+            userPokeMap_5.put(entry.getKey() ,JsonUtil.parseJavaList(entry.getValue() ,String.class));
         }
-        SocketResult socketResult = new SocketResult(1008 , null,userPokeMap);
-        broadcast(socketResult ,roomId);
-    }
+        SocketResult socketResult = new SocketResult(1008 , userPokeMap_5);
 
-    /**
-     * 給玩家返回得分和最后一张牌
-     */
-    private void sendResultToUser(String roomId ,Map<String ,Integer> scoreMap ,Map<String ,PaiXing> paiXingMap){
-        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_RETURN_RESULT.getCode());
-        SocketResult socketResult = new SocketResult();
-        socketResult.setHead(1012);
         socketResult.setScoreMap(scoreMap);
-        Set<String> tanPaiPlayers = redisService.getSetMembers(RedisConstant.TANPAI + roomId);
 
-        Map<String ,List<String>> userPokeMap_1 = new HashMap<>();
-        Map<String, String> userPokeStrMap = redisService.getMap(RedisConstant.POKES + roomId);
-        for (Map.Entry<String ,String> entry : userPokeStrMap.entrySet()) {
-            if (!tanPaiPlayers.contains(entry.getKey())) {
-                userPokeMap_1.put(entry.getKey() ,JsonUtil.parseJavaList(entry.getValue() ,String.class).subList(4 ,5));
-            }
-        }
-        socketResult.setUserPokeMap_1(userPokeMap_1);
         Map<String ,Integer> paiXing = new HashMap<>();
         for (Map.Entry<String ,PaiXing> entry : paiXingMap.entrySet()) {
             paiXing.put(entry.getKey() ,entry.getValue().getPaixing());
         }
         socketResult.setPaiXing(paiXing);
+
         broadcast(socketResult ,roomId);
     }
 
@@ -322,18 +310,18 @@ public class NiuniuPlayService {
     private void continueOrStop(String roomId){
         Integer runingNum = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.RUNING_NUM));
         Integer totalNum = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.TOTAL_NUM));
-        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_READY.getCode());
         //结束
         if (Objects.equals(runingNum ,totalNum)) {
+            roomService.updateStatus(Long.valueOf(roomId) ,2);
             SocketResult socketResult = new SocketResult(1013);
             broadcast(socketResult ,roomId);
         }else {
             Integer next = runingNum + 1;
-            redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.RUNING_NUM ,String.valueOf(next));
             roomService.updateRuningNum(Long.valueOf(roomId) ,runingNum);
             SocketResult socketResult = new SocketResult();
             socketResult.setHead(1016);
             socketResult.setRuningAndTotal(next + "/" + totalNum);
+            redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.RUNING_NUM ,String.valueOf(next));
             broadcast(socketResult ,roomId);
         }
 
@@ -473,6 +461,15 @@ public class NiuniuPlayService {
             redisService.listRightPush(RedisConstant.MESSAGES_QUEUE + playerId ,JsonUtil.toJsonString(socketResult));
         }
 
+    }
+
+    /**
+     * 给玩家发消息
+     * @param socketResult
+     * @param playerId
+     */
+    private void sendMessage(SocketResult socketResult ,String playerId){
+        redisService.listRightPush(RedisConstant.MESSAGES_QUEUE + playerId ,JsonUtil.toJsonString(socketResult));
     }
 
 }

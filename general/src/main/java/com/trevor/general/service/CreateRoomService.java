@@ -85,6 +85,7 @@ public class CreateRoomService{
 
         //存入redis
         Map<String ,String> baseRoomInfoMap = niuniuRoomParam.generateBaseRoomInfoMap();
+        baseRoomInfoMap.put(RedisConstant.RUNING_NUM ,"0");
         baseRoomInfoMap.put(RedisConstant.TOTAL_NUM ,totalNum.toString());
         redisService.putAll(RedisConstant.BASE_ROOM_INFO + room.getId() ,baseRoomInfoMap);
 

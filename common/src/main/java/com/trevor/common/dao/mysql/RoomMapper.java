@@ -13,24 +13,21 @@ import java.util.List;
 @Repository
 public interface RoomMapper {
 
-    /**
-     * 查询状态为0的room
-     * @return
-     */
-    List<Room> findStatus_0();
+
+    List<Room> findStatus(@Param("statusList") List<Integer> statusList);
 
 
     /**
      * 查询状态为0的room
      * @return
      */
-    List<Long> findByEntryTimeAndStatus_0(Long entryTime);
+    List<Long> findByEntryTimeAndStatus_0(@Param("entryTime") Long entryTime);
 
     /**
      * 将状态改为3
      * @param roomIds
      */
-    void updateStatus_3(List<Long> roomIds);
+    void updateStatus_3(@Param("roomIds") List<Long> roomIds);
 
     /**
      * 根据主键查询一条记录
@@ -73,4 +70,6 @@ public interface RoomMapper {
     List<Room> findByIds(@Param("ids") List<Long> ids);
 
     void updateRuningNum(@Param("roomId") Long roomId ,@Param("runingNum") Integer runingNum);
+
+    void updateStatus(@Param("roomId") Long roomId ,@Param("status") Integer status);
 }

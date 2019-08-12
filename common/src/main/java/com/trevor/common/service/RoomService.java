@@ -38,4 +38,8 @@ public class RoomService  {
     public void updateRuningNum(Long roomId ,Integer runingNum){
         roomMapper.updateRuningNum(roomId ,runingNum);
     }
+
+    public void updateStatus(Long roomId ,Integer status){
+        roomMapper.updateStatus(roomId ,status);
+    }
 }

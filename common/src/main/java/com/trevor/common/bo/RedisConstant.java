@@ -111,4 +111,6 @@ public class RedisConstant {
     public final static String RUNING_NUM = "runingNum";
 
     public final static String TOTAL_NUM = "totalNum";
+
+    public final static String STATUS = "status";
 }

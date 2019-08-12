@@ -17,6 +17,9 @@ public class CheckRoomOverDateTask {
     @Resource
     private TaskService taskService;
 
+    /**
+     * 超过12小时未使用的房间会被自动关闭
+     */
     @Scheduled(initialDelay = 1000 * 60 * 60 ,fixedRate = 5000 * 60 * 30)
     public void checkRoom(){
         log.info("检查房间开始");
