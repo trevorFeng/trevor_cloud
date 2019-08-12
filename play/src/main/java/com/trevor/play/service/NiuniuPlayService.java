@@ -101,8 +101,7 @@ public class NiuniuPlayService {
         //sendResultToUser(roomIdStr ,scoreMap ,paiXingMap);
         sleep(2000);
         //删除redis的键
-        deleteKeys(roomIdStr);
-        continueOrStop(roomIdStr);
+        deleteKeysAndContinueOrStop(roomIdStr);
     }
 
     /**
@@ -290,7 +289,7 @@ public class NiuniuPlayService {
         return playerResults;
     }
 
-    private void deleteKeys(String roomId){
+    private void deleteKeysAndContinueOrStop(String roomId){
         redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_DELETE_KEYS.getCode());
         List<String> keys = new ArrayList<>();
         keys.add(RedisConstant.POKES + roomId);
@@ -302,12 +301,7 @@ public class NiuniuPlayService {
         keys.add(RedisConstant.SCORE + roomId);
         keys.add(RedisConstant.PAI_XING + roomId);
         redisService.deletes(keys);
-    }
 
-    /**
-     * 继续开始或者停止
-     */
-    private void continueOrStop(String roomId){
         Integer runingNum = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.RUNING_NUM));
         Integer totalNum = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.TOTAL_NUM));
         //结束
@@ -321,13 +315,10 @@ public class NiuniuPlayService {
             SocketResult socketResult = new SocketResult();
             socketResult.setHead(1016);
             socketResult.setRuningAndTotal(next + "/" + totalNum);
+            redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_READY.getCode());
             redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.RUNING_NUM ,String.valueOf(next));
             broadcast(socketResult ,roomId);
         }
-
-
-
-
     }
 
 

@@ -315,6 +315,11 @@ public class NiuniuSocket extends BaseServer {
             setPoke(socketResult);
             setScoreAndPaiXing(socketResult);
         }
+        //下一句准备
+        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_DELETE_KEYS.getCode())) {
+            socketResult.setGameStatus(1);
+            socketResult.setReadyPlayerIds(getReadyPlayers());
+        }
         sendMessage(socketResult);
         return;
     }
