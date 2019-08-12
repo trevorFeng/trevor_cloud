@@ -11,6 +11,7 @@ import com.trevor.common.domain.mysql.User;
 import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.enums.NiuNiuPaiXingEnum;
 import com.trevor.common.service.RedisService;
+import com.trevor.common.service.RoomService;
 import com.trevor.common.service.UserService;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.PokeUtil;
@@ -39,6 +40,9 @@ public class NiuniuPlayService {
     @Resource
     private RedisService redisService;
 
+    @Resource
+    private RoomService roomService;
+
 
     /**
      * 房间只有两个人打牌
@@ -65,20 +69,20 @@ public class NiuniuPlayService {
         Integer basePoint = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.BASE_POINT));
         //发4张牌
         fapai_4(roomIdStr ,paiXing);
+        sleep(2000);
         //开始抢庄倒计时
         countDown(1005 ,GameStatusEnum.BEFORE_SELECT_ZHUANGJIA.getCode() ,roomIdStr);
+        sleep(2000);
         //选取庄家
         selectZhaungJia(roomIdStr);
-        try {
-            Thread.sleep(2000);
-        }catch (Exception e) {
-            log.error(e.toString());
-        }
+        sleep(2000);
         //闲家下注倒计时
         countDown(1007 ,GameStatusEnum.BEFORE_LAST_POKE.getCode() ,roomIdStr);
+        sleep(2000);
         fapai_1(roomIdStr);
         //准备摊牌倒计时
         countDown(1009 ,GameStatusEnum.BEFORE_CALRESULT.getCode() ,roomIdStr);
+        sleep(2000);
         //设置分数
         Map<String ,PaiXing> paiXingMap = new HashMap<>();
         Map<String ,Integer> scoreMap = new HashMap<>(2<<4);
@@ -93,9 +97,21 @@ public class NiuniuPlayService {
         playerResultMapper.saveAll(playerResults);
         //给玩家发送分数、玩家发送其他人的最后一张牌,玩家的牌型
         sendResultToUser(roomIdStr ,scoreMap ,paiXingMap);
+        sleep(2000);
         //删除redis的键
         deleteKeys(roomIdStr);
         continueOrStop(roomIdStr);
+    }
+
+    /**
+     * 暂停
+     */
+    public void sleep(Integer millis){
+        try {
+            Thread.sleep(millis);
+        }catch (Exception e) {
+            log.error(e.toString());
+        }
     }
 
     /**
@@ -314,6 +330,7 @@ public class NiuniuPlayService {
         }else {
             Integer next = runingNum + 1;
             redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.RUNING_NUM ,String.valueOf(next));
+            roomService.updateRuningNum(Long.valueOf(roomId) ,runingNum);
             SocketResult socketResult = new SocketResult();
             socketResult.setHead(1016);
             socketResult.setRuningAndTotal(next + "/" + totalNum);

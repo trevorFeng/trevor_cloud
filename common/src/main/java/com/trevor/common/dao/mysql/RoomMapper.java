@@ -71,4 +71,6 @@ public interface RoomMapper {
      * @return
      */
     List<Room> findByIds(@Param("ids") List<Long> ids);
+
+    void updateRuningNum(@Param("roomId") Long roomId ,@Param("runingNum") Integer runingNum);
 }

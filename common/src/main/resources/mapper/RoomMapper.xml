@@ -20,6 +20,14 @@
             #{id}
         </foreach>
     </update>
+    <update id="updateRuningNum">
+        update
+        room
+        set
+        runing_num=#{runingNum}
+        WHERE
+        id=#{roomId}
+    </update>
 
     <!-- 根据主键查询一条记录 -->
     <select id="findOneById" resultType="com.trevor.common.domain.mysql.Room">

@@ -34,4 +34,8 @@ public class RoomService  {
     public Long findRoomAuthIdByRoomId(Long roomId) {
         return roomMapper.findRoomAuthIdByRoomId(roomId);
     }
+
+    public void updateRuningNum(Long roomId ,Integer runingNum){
+        roomMapper.updateRuningNum(roomId ,runingNum);
+    }
 }
