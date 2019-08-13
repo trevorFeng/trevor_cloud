@@ -94,12 +94,10 @@ public class NiuniuPlayService {
         //准备摊牌倒计时
         countDown(1009 ,GameStatusEnum.BEFORE_CALRESULT.getCode() ,roomIdStr);
         sleep(2000);
+        redisService.put(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_DELETE_KEYS.getCode());
         //保存结果
         List<PlayerResult> playerResults = generatePlayerResults(roomIdStr);
         playerResultMapper.saveAll(playerResults);
-        //给玩家发送分数、玩家发送其他人的最后一张牌,玩家的牌型
-        //sendResultToUser(roomIdStr ,scoreMap ,paiXingMap);
-        sleep(2000);
         //删除redis的键
         deleteKeysAndContinueOrStop(roomIdStr);
     }
@@ -290,7 +288,6 @@ public class NiuniuPlayService {
     }
 
     private void deleteKeysAndContinueOrStop(String roomId){
-        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_DELETE_KEYS.getCode());
         List<String> keys = new ArrayList<>();
         keys.add(RedisConstant.POKES + roomId);
         keys.add(RedisConstant.READY_PLAYER + roomId);
@@ -304,10 +301,16 @@ public class NiuniuPlayService {
 
         Integer runingNum = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.RUNING_NUM));
         Integer totalNum = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.TOTAL_NUM));
+        Boolean isOver = Objects.equals(runingNum ,totalNum);
         //结束
-        if (Objects.equals(runingNum ,totalNum)) {
+        if (isOver) {
             roomService.updateStatus(Long.valueOf(roomId) ,2);
             SocketResult socketResult = new SocketResult(1013);
+            List<String> keyList = new ArrayList<>();
+            keyList.add(RedisConstant.TOTAL_SCORE + roomId);
+            keyList.add(RedisConstant.BASE_ROOM_INFO + roomId);
+            keyList.add(RedisConstant.REAL_ROOM_PLAYER + roomId);
+            redisService.deletes(keyList);
             broadcast(socketResult ,roomId);
         }else {
             Integer next = runingNum + 1;
@@ -319,6 +322,7 @@ public class NiuniuPlayService {
             redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.RUNING_NUM ,String.valueOf(next));
             broadcast(socketResult ,roomId);
         }
+
     }
 
 

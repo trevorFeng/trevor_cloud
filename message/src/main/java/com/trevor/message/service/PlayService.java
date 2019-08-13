@@ -39,9 +39,14 @@ public class PlayService {
      * @param roomId
      */
     public void dealReadyMessage(String roomId , NiuniuSocket socket){
+        String gameStatus = getRoomStatus(roomId);
         //根据房间状态判断
-        if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.BEFORE_FAPAI_4.getCode())
-            && !Objects.equals(getRoomStatus(roomId) , GameStatusEnum.BEFORE_READY.getCode())) {
+        if (gameStatus == null) {
+            socket.sendMessage(new SocketResult(-501));
+            return;
+        }
+        if (!Objects.equals(gameStatus , GameStatusEnum.BEFORE_FAPAI_4.getCode())
+            && !Objects.equals(gameStatus , GameStatusEnum.BEFORE_READY.getCode())) {
             socket.sendMessage(new SocketResult(-501));
             return;
         }

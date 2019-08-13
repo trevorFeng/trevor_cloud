@@ -62,33 +62,34 @@ public class NiuniuSocket extends BaseServer {
         Long roomIdLong = Long.valueOf(roomId);
         Room room = roomService.findOneById(roomIdLong);
         if (room == null) {
-            sendMessage(new SocketResult(507));
+            directSendMessage(new SocketResult(507) ,session);
             close(session);
             return;
         }
+        //是否激活,0为未激活,1为激活，2为房间使用完成后关闭，3为房间未使用关闭
         if (!Objects.equals(room.getStatus() ,0) && !Objects.equals(room.getStatus() ,1)) {
-            sendMessage(new SocketResult(506));
+            directSendMessage(new SocketResult(506) ,session);
             close(session);
             return;
         }
         //token合法性检查
         List<String> params = session.getRequestParameterMap().get(WebKeys.TOKEN);
         if (ObjectUtil.isEmpty(params)) {
-            sendMessage(new SocketResult(400));
+            directSendMessage(new SocketResult(400) ,session);
             close(session);
             return;
         }
         String token = session.getRequestParameterMap().get(WebKeys.TOKEN).get(0);
         User user = userService.getUserByToken(token);
         if (ObjectUtil.isEmpty(user)) {
-            sendMessage(new SocketResult(404));
+            directSendMessage(new SocketResult(404) ,session);
             close(session);
             return;
         }
 
         SocketResult soc = checkRoom(room ,user);
         if (soc.getHead() != null) {
-            sendMessage(soc);
+            directSendMessage(soc ,session);
             close(session);
             return;
         }
@@ -157,6 +158,19 @@ public class NiuniuSocket extends BaseServer {
      */
     public void sendMessage(SocketResult pack) {
         redisService.listRightPush(RedisConstant.MESSAGES_QUEUE + userId ,JsonUtil.toJsonString(pack));
+    }
+
+    /**
+     * 向客户端发消息
+     * @param pack
+     */
+    public void directSendMessage(SocketResult pack ,Session s) {
+        RemoteEndpoint.Async async = s.getAsyncRemote();
+        if (s.isOpen()) {
+            async.sendObject(pack);
+        } else {
+            close(s);
+        }
     }
 
     /**
