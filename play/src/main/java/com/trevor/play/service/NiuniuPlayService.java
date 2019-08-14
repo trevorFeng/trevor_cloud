@@ -177,12 +177,18 @@ public class NiuniuPlayService {
         }
         //改变状态
         redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_QIANGZHUANG_COUNTDOWN.getCode());
+        Set<String> roomPlayer = redisService.getSetMembers(RedisConstant.ROOM_PLAYER + roomId);
         //给每个人发牌
-        for (String playerId : readyPlayerUserIds) {
-            Map<String ,String> pokesMap = redisService.getMap(RedisConstant.POKES + roomId);
-            List<String> userPokeList_4 = JsonUtil.parseJavaList(pokesMap.get(playerId) ,String.class).subList(0 ,4);
-            SocketResult socketResult = new SocketResult(1004 ,userPokeList_4);
-            sendMessage(socketResult ,playerId);
+        for (String playerId : roomPlayer) {
+            if (readyPlayerUserIds.contains(playerId)) {
+                Map<String ,String> pokesMap = redisService.getMap(RedisConstant.POKES + roomId);
+                List<String> userPokeList_4 = JsonUtil.parseJavaList(pokesMap.get(playerId) ,String.class).subList(0 ,4);
+                SocketResult socketResult = new SocketResult(1004 ,userPokeList_4);
+                sendMessage(socketResult ,playerId);
+            }else {
+                SocketResult socketResult = new SocketResult(1004);
+                sendMessage(socketResult ,playerId);
+            }
         }
     }
 

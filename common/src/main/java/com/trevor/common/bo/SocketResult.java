@@ -44,11 +44,14 @@ public class SocketResult {
      * 1014--摊牌的消息
      * 1015--玩家重新连接的消息
      * 1016--继续下一句
+     * 1017--说话
      * ****************************2000以上发给自己
      * 2002--房间内情况，发给新人，数据为其他人的得分，牌，是否抢庄等
      *
      */
     private Integer head;
+
+    private Integer shuoHuaCode;
 
 
     private String userId;

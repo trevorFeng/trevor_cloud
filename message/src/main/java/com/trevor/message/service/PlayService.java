@@ -142,6 +142,8 @@ public class PlayService {
         roomSocketService.broadcast(roomId ,socketResult);
     }
 
+
+
     /**
      * 校验玩家是否已经准备
      * @param roomId
