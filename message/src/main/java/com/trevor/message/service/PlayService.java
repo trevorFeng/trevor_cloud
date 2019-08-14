@@ -118,7 +118,7 @@ public class PlayService {
      * 处理摊牌的消息
      * @param roomId
      */
-    public void dealTanPaiMessage(String roomId , NiuniuSocket socket , SocketMessage socketMessage){
+    public void dealTanPaiMessage(String roomId , NiuniuSocket socket){
         //状态信息
         if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.BEFORE_CALRESULT.getCode())) {
             socket.sendMessage(new SocketResult(-501));
@@ -139,6 +139,17 @@ public class PlayService {
         Map<String ,Integer> map = new HashMap<>();
         map.put(socket.userId ,paiXing.getPaixing());
         socketResult.setPaiXing(map);
+        roomSocketService.broadcast(roomId ,socketResult);
+    }
+
+    /**
+     * 处理说话的消息
+     * @param roomId
+     * @param socketMessage
+     */
+    public void dealShuoHuaMessage(String roomId ,SocketMessage socketMessage){
+        SocketResult socketResult = new SocketResult(1017);
+        socketResult.setShuoHuaCode(socketMessage.getShuoHuaCode());
         roomSocketService.broadcast(roomId ,socketResult);
     }
 

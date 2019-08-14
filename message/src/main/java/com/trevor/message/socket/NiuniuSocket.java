@@ -124,7 +124,9 @@ public class NiuniuSocket extends BaseServer {
         }else if (Objects.equals(socketMessage.getMessageCode() ,3)) {
             playService.dealXiaZhuMessage(roomId ,this ,socketMessage);
         }else if (Objects.equals(socketMessage.getMessageCode() ,4)) {
-            playService.dealTanPaiMessage(roomId ,this ,socketMessage);
+            playService.dealTanPaiMessage(roomId ,this);
+        }else if (Objects.equals(socketMessage.getMessageCode() ,5)) {
+            playService.dealShuoHuaMessage(roomId ,socketMessage);
         }
     }
 
