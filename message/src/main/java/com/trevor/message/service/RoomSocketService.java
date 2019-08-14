@@ -107,9 +107,9 @@ public class RoomSocketService {
     public void join(String roomId , NiuniuSocket socket){
         if (sockets.containsKey(socket.userId)) {
             NiuniuSocket s = sockets.get(socket.userId);
+            sockets.remove(socket.userId);
             s.directSendMessage(new SocketResult(500) ,s.session);
             s.close(s.session);
-            sockets.remove(socket.userId);
         }
         redisService.setAdd(RedisConstant.ROOM_PLAYER + roomId ,socket.userId);
         sockets.put(socket.userId , socket);
