@@ -310,6 +310,7 @@ public class NiuniuPlayService {
             keyList.add(RedisConstant.TOTAL_SCORE + roomId);
             keyList.add(RedisConstant.BASE_ROOM_INFO + roomId);
             keyList.add(RedisConstant.REAL_ROOM_PLAYER + roomId);
+            keyList.add(RedisConstant.ROOM_PLAYER + roomId);
             redisService.deletes(keyList);
             broadcast(socketResult ,roomId);
         }else {
