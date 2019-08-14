@@ -61,11 +61,12 @@ public class PlayService {
 
         //准备的人数超过两人
         Integer readyPlayerSize = redisService.getSetSize(RedisConstant.READY_PLAYER + roomId);
-        if (readyPlayerSize >= 2) {
-            //判断房间里真正玩家的人数，如果只有两人，直接开始游戏，否则开始倒计时
-            if (Objects.equals(redisService.getSetSize(RedisConstant.REAL_ROOM_PLAYER + roomId) ,2)) {
+        Integer realPlayerSize = redisService.getSetSize(RedisConstant.REAL_ROOM_PLAYER + roomId);
+        //判断房间里真正玩家的人数，如果只有两人，直接开始游戏，否则开始倒计时
+        if (readyPlayerSize == 2) {
+            if (realPlayerSize == 2) {
                 playFeign.niuniuEqualsTwo(roomId);
-            }else if (readyPlayerSize > 3) {
+            }else if (realPlayerSize > 2) {
                 playFeign.niuniuOverTwo(roomId);
             }
         }
