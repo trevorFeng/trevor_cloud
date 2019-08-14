@@ -107,7 +107,7 @@ public class RoomSocketService {
     public void join(String roomId , NiuniuSocket socket){
         if (sockets.containsKey(socket.userId)) {
             NiuniuSocket s = sockets.get(socket.userId);
-            s.sendMessage(new SocketResult(500));
+            s.directSendMessage(new SocketResult(500) ,s.session);
             s.close(s.session);
             sockets.remove(socket.userId);
         }
