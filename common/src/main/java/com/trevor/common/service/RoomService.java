@@ -39,7 +39,7 @@ public class RoomService  {
         roomMapper.updateRuningNum(roomId ,runingNum);
     }
 
-    public void updateStatus(Long roomId ,Integer status){
-        roomMapper.updateStatus(roomId ,status);
+    public void updateStatus(Long roomId ,Integer status ,Integer runingNum){
+        roomMapper.updateStatus(roomId ,status ,runingNum);
     }
 }

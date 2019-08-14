@@ -38,7 +38,7 @@ import java.util.*;
  **/
 @ServerEndpoint(
         value = "/niuniu/{roomId}",
-        encoders = {MessageEncoder.class},
+        //encoders = {MessageEncoder.class},
         decoders = {MessageDecoder.class}
 )
 @Component
@@ -167,7 +167,7 @@ public class NiuniuSocket extends BaseServer {
     public void directSendMessage(SocketResult pack ,Session s) {
         RemoteEndpoint.Async async = s.getAsyncRemote();
         if (s.isOpen()) {
-            async.sendObject(pack);
+            async.sendText(JsonUtil.toJsonString(pack));
         } else {
             close(s);
         }

@@ -1,7 +1,7 @@
 package com.trevor.message.encoder;
 
-import com.alibaba.fastjson.JSON;
-import com.trevor.message.bo.ReturnMessage;
+import com.trevor.common.bo.SocketResult;
+import com.trevor.common.util.JsonUtil;
 
 import javax.websocket.EndpointConfig;
 
@@ -9,7 +9,7 @@ import javax.websocket.EndpointConfig;
  * @author trevor
  * @date 03/30/19 16:01
  */
-public class MessageEncoder implements javax.websocket.Encoder.Text<ReturnMessage> {
+public class MessageEncoder implements javax.websocket.Encoder.Text<SocketResult> {
 
 
     @Override
@@ -23,8 +23,8 @@ public class MessageEncoder implements javax.websocket.Encoder.Text<ReturnMessag
     }
 
     @Override
-    public String encode(ReturnMessage returnMessage){
-        return JSON.toJSONString(returnMessage);
+    public String encode(SocketResult s){
+        return JsonUtil.toJsonString(s);
     }
 
 }

@@ -63,7 +63,7 @@ public class NiuniuPlayService {
     }
 
     private void play(String roomIdStr){
-        roomService.updateStatus(Long.valueOf(roomIdStr) ,1);
+        roomService.updateStatus(Long.valueOf(roomIdStr) ,1 ,null);
         Integer rule = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.RULE));
         List<Integer> paiXing = JsonUtil.parseJavaList(
                 redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.PAIXING) ,Integer.class);
@@ -83,7 +83,7 @@ public class NiuniuPlayService {
         //设置分数
         Map<String ,PaiXing> paiXingMap = new HashMap<>();
         Map<String ,Integer> scoreMap = new HashMap<>(2<<4);
-        setScore(roomIdStr
+        calcScore(roomIdStr
                 ,paiXing
                 ,rule
                 ,basePoint
@@ -304,7 +304,7 @@ public class NiuniuPlayService {
         Boolean isOver = Objects.equals(runingNum ,totalNum);
         //结束
         if (isOver) {
-            roomService.updateStatus(Long.valueOf(roomId) ,2);
+            roomService.updateStatus(Long.valueOf(roomId) ,2 ,runingNum);
             SocketResult socketResult = new SocketResult(1013);
             List<String> keyList = new ArrayList<>();
             keyList.add(RedisConstant.TOTAL_SCORE + roomId);
@@ -326,7 +326,7 @@ public class NiuniuPlayService {
     }
 
 
-    private void setScore(String roomId ,List<Integer> paiXing ,Integer rule ,Integer basePoint
+    private void calcScore(String roomId ,List<Integer> paiXing ,Integer rule ,Integer basePoint
             ,Map<String ,Integer> scoreMap ,Map<String ,PaiXing> paiXingMap){
         //庄家id
         String zhuangJiaUserId = redisService.getValue(RedisConstant.ZHUANGJIA + roomId);

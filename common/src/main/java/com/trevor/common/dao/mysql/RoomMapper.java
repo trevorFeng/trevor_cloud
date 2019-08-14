@@ -71,5 +71,5 @@ public interface RoomMapper {
 
     void updateRuningNum(@Param("roomId") Long roomId ,@Param("runingNum") Integer runingNum);
 
-    void updateStatus(@Param("roomId") Long roomId ,@Param("status") Integer status);
+    void updateStatus(@Param("roomId") Long roomId ,@Param("status") Integer status ,@Param("runingNum") Integer runingNum);
 }

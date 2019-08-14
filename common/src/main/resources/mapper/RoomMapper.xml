@@ -34,6 +34,9 @@
         room
         set
         status=#{status}
+        <if test="runingNum != null">
+            ,runing_num=#{runingNum}
+        </if>
         WHERE
         id=#{roomId}
     </update>

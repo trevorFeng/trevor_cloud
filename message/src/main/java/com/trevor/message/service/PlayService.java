@@ -88,7 +88,7 @@ public class PlayService {
         redisService.put(RedisConstant.QIANGZHAUNG + roomId ,socket.userId ,socketMessage.getQiangZhuangMultiple().toString());
 
         //广播抢庄的消息
-        roomSocketService.broadcast(roomId ,new SocketResult(1003 ,socket.userId ,socketMessage.getQiangZhuangMultiple()));
+        roomSocketService.broadcast(roomId ,new SocketResult(1010 ,socket.userId ,socketMessage.getQiangZhuangMultiple()));
     }
 
     /**
@@ -110,7 +110,7 @@ public class PlayService {
         }
         redisService.put(RedisConstant.XIANJIA_XIAZHU + roomId ,socket.userId ,socketMessage.getXianJiaMultiple().toString());
         //广播下注的消息
-        roomSocketService.broadcast(roomId ,new SocketResult(1003 ,socket.userId ,socketMessage.getXianJiaMultiple(), Boolean.TRUE));
+        roomSocketService.broadcast(roomId ,new SocketResult(1011 ,socket.userId ,socketMessage.getXianJiaMultiple(), Boolean.TRUE));
     }
 
     /**
