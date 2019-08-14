@@ -145,11 +145,11 @@ public class PlayService {
     /**
      * 处理说话的消息
      * @param roomId
-     * @param socketMessage
      */
-    public void dealShuoHuaMessage(String roomId ,SocketMessage socketMessage){
+    public void dealShuoHuaMessage(String roomId ,NiuniuSocket niuniuSocket ,SocketMessage socketMessage){
         SocketResult socketResult = new SocketResult(1017);
         socketResult.setShuoHuaCode(socketMessage.getShuoHuaCode());
+        socketResult.setUserId(niuniuSocket.userId);
         roomSocketService.broadcast(roomId ,socketResult);
     }
 

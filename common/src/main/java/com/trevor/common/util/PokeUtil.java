@@ -128,12 +128,13 @@ public class PokeUtil {
         int jj = 0;
         int kk = 0;
         boolean isNiu = Boolean.FALSE;
-        for (int i = 0; i < pokes.size(); i++) {
+        Integer pokeSize = pokes.size();
+        for (int i = 0; i < pokeSize; i++) {
             if (i >= 3) {
                 break;
             }
-            for (int j = i+1; j < pokes.size(); j++) {
-                for (int k = j+1; k < pokes.size(); k++) {
+            for (int j = i+1; j < pokeSize; j++) {
+                for (int k = j+1; k < pokeSize; k++) {
                     int num = changePai_10(pokes.get(i).substring(1,2)) +
                             changePai_10(pokes.get(j).substring(1 ,2)) +
                             changePai_10(pokes.get(k).substring(1 ,2));
@@ -145,16 +146,21 @@ public class PokeUtil {
                         break;
                     }
                 }
+                if (isNiu) {
+                    break;
+                }
+            }
+            if (isNiu) {
+                break;
             }
         }
+        paiXing = new PaiXing();
         //没牛
         if (!isNiu) {
-            paiXing = new PaiXing();
             paiXing.setMultiple(1);
             paiXing.setPaixing(NiuNiuPaiXingEnum.NIU_0.getPaiXingCode());
             return paiXing;
         }else {
-            paiXing = new PaiXing();
             int num = 0;
             for (int i = 0; i < pokes.size(); i++) {
                 if (i != ii && i != jj && i != kk) {
