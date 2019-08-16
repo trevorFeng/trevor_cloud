@@ -183,7 +183,11 @@ public class PokeUtil {
                     return paiXing;
                 }else {
                     paiXing.setMultiple(1);
-                    paiXing.setPaixing(num);
+                    if (num <= 10) {
+                        paiXing.setPaixing(num);
+                    }else {
+                        paiXing.setPaixing(num-10);
+                    }
                     return paiXing;
                 }
                 //2---牛牛x4，牛九x3，牛八x2，牛7x2
@@ -206,7 +210,11 @@ public class PokeUtil {
                     return paiXing;
                 }else {
                     paiXing.setMultiple(1);
-                    paiXing.setPaixing(num);
+                    if (num <= 10) {
+                        paiXing.setPaixing(num);
+                    }else{
+                        paiXing.setPaixing(num-10);
+                    }
                     return paiXing;
                 }
             }
