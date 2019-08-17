@@ -79,6 +79,9 @@ public class NiuniuPlayService {
         sleep(2000);
         //闲家下注倒计时
         countDown(1007 ,GameStatusEnum.BEFORE_LAST_POKE.getCode() ,roomIdStr);
+        //设置默认下注
+
+
         sleep(2000);
         //设置分数
         Map<String ,PaiXing> paiXingMap = new HashMap<>();
@@ -100,6 +103,22 @@ public class NiuniuPlayService {
         playerResultMapper.saveAll(playerResults);
         //删除redis的键
         deleteKeysAndContinueOrStop(roomIdStr);
+    }
+
+    /**
+     * 发不抢庄的消息
+     * @param roomIdStr
+     */
+    public void setDefualtNotQiangZhuang(String roomIdStr){
+        List<String> notQiangZhuang = Lists.newArrayList();
+        Set<String> qiangZhuangUserIds = redisService.getMapKeys(RedisConstant.QIANGZHAUNG + roomIdStr);
+        Set<String> readyPlayers = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomIdStr);
+        for (String readyPlayerId : readyPlayers) {
+            if (qiangZhuangUserIds.contains(readyPlayerId)) {
+                //notQiangZhuang.
+            }
+        }
+
     }
 
     /**

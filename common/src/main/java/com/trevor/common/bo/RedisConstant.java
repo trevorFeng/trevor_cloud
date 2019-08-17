@@ -23,6 +23,8 @@ public class RedisConstant {
      */
     public static final String ROOM_PLAYER = "roomPlayer_";
 
+    public static final String DIS_CONNECTION = "disConnection_";
+
     /**
      * 真正的玩家，不包括观众
      */

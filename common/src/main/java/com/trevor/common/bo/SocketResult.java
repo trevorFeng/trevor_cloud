@@ -100,6 +100,11 @@ public class SocketResult {
     private List<Player> players;
 
     /**
+     * 已经掉线的玩家
+     */
+    private Set<String> disConnectionPlayerIds;
+
+    /**
      * 已经点击准备的玩家
      */
     private Set<String> readyPlayerIds;
@@ -153,12 +158,11 @@ public class SocketResult {
     /**
      * 游戏状态
      * 1-----进入房间-准备倒计时前或者倒计时-发4张牌前
-     * 2-----发4张牌-抢庄倒计时前
-     * 3-----抢庄倒计时-确定庄家前
-     * 4-----确定庄家-闲家下注倒计时前
-     * 5-----闲家下注倒计时-再发一张牌前
-     * 6-----再发一张牌-摊牌倒计时前
-     * 7-----摊牌倒计时-摊牌倒计时结束
+     * 2-----发4张牌-确定庄家前
+     * 3-----确定庄家-再发一张牌前
+     * 4-----再发一张牌前-
+     * 5-----再发一张牌-摊牌倒计时前
+     * 6-----摊牌倒计时-摊牌倒计时结束
      */
     private Integer gameStatus;
 

@@ -16,6 +16,7 @@ import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -70,7 +71,7 @@ public class RoomSocketService {
      * @param res
      */
     public void broadcast(String roomId , SocketResult res){
-        executor.execute(() -> {
+        //executor.execute(() -> {
             Set<String> playerIds = redisService.getSetMembers(RedisConstant.ROOM_PLAYER + roomId);
             for (String playId : playerIds) {
                 NiuniuSocket socket = sockets.get(playId);
@@ -82,7 +83,7 @@ public class RoomSocketService {
                     }
                 }
             }
-        });
+        //});
     }
 
     /**
@@ -139,6 +140,7 @@ public class RoomSocketService {
         List<User> realPlayerUsers = userService.findUsersByIds(realUserIdsLong);
 
         Set<String> guanZhongUserIds = redisService.getSetMembers(RedisConstant.GUANZHONG + roomId);
+        Map<String ,String> totalScoreMap = redisService.getMap(RedisConstant.TOTAL_SCORE + roomId);
         List<Player> players = Lists.newArrayList();
         for (User user : realPlayerUsers) {
             Player player = new Player();
@@ -149,6 +151,7 @@ public class RoomSocketService {
                 player.setIsGuanZhong(Boolean.TRUE);
             }
             players.add(player);
+            player.setTotalScore(totalScoreMap.get(user.getId().toString()) == null ? "0" : totalScoreMap.get(user.getId()));
         }
         return players;
     }

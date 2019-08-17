@@ -86,7 +86,9 @@ public class PlayService {
         if (!checkAlreadyReady(roomId ,socket ,-503)) {
             return;
         }
-        redisService.put(RedisConstant.QIANGZHAUNG + roomId ,socket.userId ,socketMessage.getQiangZhuangMultiple().toString());
+        if (!Objects.equals(socketMessage.getQiangZhuangMultiple() , 0)) {
+            redisService.put(RedisConstant.QIANGZHAUNG + roomId ,socket.userId ,socketMessage.getQiangZhuangMultiple().toString());
+        }
 
         //广播抢庄的消息
         roomSocketService.broadcast(roomId ,new SocketResult(1010 ,socket.userId ,socketMessage.getQiangZhuangMultiple()));

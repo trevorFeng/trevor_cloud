@@ -102,6 +102,12 @@ public class NiuniuSocket extends BaseServer {
         redisService.delete(RedisConstant.MESSAGES_QUEUE + userId);
 
         soc.setHead(1000);
+        Integer runingNum = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.RUNING_NUM));
+        Integer totalNum = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.TOTAL_NUM));
+        soc.setRuningAndTotal((runingNum + 1) + "/" + totalNum);
+        redisService.setDeleteMember(RedisConstant.DIS_CONNECTION + roomId ,userId);
+        soc.setDisConnectionPlayerIds(redisService.getSetMembers(RedisConstant.DIS_CONNECTION + roomId));
+
         if (!soc.getIsChiGuaPeople()) {
             redisService.setAdd(RedisConstant.REAL_ROOM_PLAYER + roomId ,userId);
         }
@@ -139,6 +145,7 @@ public class NiuniuSocket extends BaseServer {
             roomSocketService.leave(roomId ,this);
             //如果是真正的玩家则广播消息
             if (redisService.getSetMembers(RedisConstant.REAL_ROOM_PLAYER + roomId).contains(userId)) {
+                redisService.setAdd(RedisConstant.DIS_CONNECTION + roomId ,userId);
                 SocketResult res = new SocketResult(1001 ,userId);
                 roomSocketService.broadcast(roomId ,res);
             }
@@ -297,42 +304,88 @@ public class NiuniuSocket extends BaseServer {
             socketResult.setReadyPlayerIds(getReadyPlayers());
         }
         //设置玩家先发的4张牌
-        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_QIANGZHUANG_COUNTDOWN.getCode())) {
+        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_QIANGZHUANG_COUNTDOWN.getCode())
+                || Objects.equals(gameStatus ,GameStatusEnum.BEFORE_SELECT_ZHUANGJIA.getCode())) {
+//            socketResult.setGameStatus(2);
+//            Set<String> readyPlayers = getReadyPlayers();
+//            socketResult.setReadyPlayerIds(readyPlayers);
+//            if (readyPlayers.contains(userId)) {
+//                setPoke_4(socketResult ,userId);
+//            }
             socketResult.setGameStatus(2);
-        }
-        //设置抢庄的玩家
-        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_SELECT_ZHUANGJIA.getCode())) {
-            socketResult.setGameStatus(3);
+            Set<String> readyPlayers = getReadyPlayers();
+            socketResult.setReadyPlayerIds(readyPlayers);
+            if (readyPlayers.contains(userId)) {
+                setPoke_4(socketResult ,userId);
+            }
             socketResult.setQiangZhuangMap(getQiangZhuangPlayers());
         }
+//        //设置抢庄的玩家
+//        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_SELECT_ZHUANGJIA.getCode())) {
+//            socketResult.setGameStatus(3);
+//            Set<String> readyPlayers = getReadyPlayers();
+//            socketResult.setReadyPlayerIds(readyPlayers);
+//            if (readyPlayers.contains(userId)) {
+//                setPoke_4(socketResult ,userId);
+//            }
+//            socketResult.setQiangZhuangMap(getQiangZhuangPlayers());
+//        }
         //设置庄家
-        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_XIANJIA_XIAZHU.getCode())) {
-            socketResult.setGameStatus(4);
-            socketResult.setZhuangJiaUserId(getZhuangJia());
-        }
-        //设置闲家下注
-        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_LAST_POKE.getCode())) {
-            socketResult.setGameStatus(5);
+        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_XIANJIA_XIAZHU.getCode())
+                || Objects.equals(gameStatus ,GameStatusEnum.BEFORE_LAST_POKE.getCode())) {
+//            socketResult.setGameStatus(3);
+//            Set<String> readyPlayers = getReadyPlayers();
+//            socketResult.setReadyPlayerIds(readyPlayers);
+//            if (readyPlayers.contains(userId)) {
+//                setPoke_4(socketResult ,userId);
+//            }
+//            socketResult.setZhuangJiaUserId(getZhuangJia());
+            socketResult.setGameStatus(3);
+            Set<String> readyPlayers = getReadyPlayers();
+            socketResult.setReadyPlayerIds(readyPlayers);
+            if (readyPlayers.contains(userId)) {
+                setPoke_4(socketResult ,userId);
+            }
             socketResult.setZhuangJiaUserId(getZhuangJia());
             socketResult.setXianJiaXiaZhuMap(getXianJiaXiaZhu());
         }
+//        //设置闲家下注
+//        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_LAST_POKE.getCode())) {
+//            socketResult.setGameStatus(5);
+//            Set<String> readyPlayers = getReadyPlayers();
+//            socketResult.setReadyPlayerIds(readyPlayers);
+//            if (readyPlayers.contains(userId)) {
+//                setPoke_4(socketResult ,userId);
+//            }
+//            socketResult.setZhuangJiaUserId(getZhuangJia());
+//            socketResult.setXianJiaXiaZhuMap(getXianJiaXiaZhu());
+//        }
         //设置玩家发的最后一张牌
-        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_TABPAI_COUNTDOWN.getCode())) {
-            socketResult.setGameStatus(6);
+        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_TABPAI_COUNTDOWN.getCode())
+                || Objects.equals(gameStatus ,GameStatusEnum.BEFORE_CALRESULT.getCode())) {
+            socketResult.setGameStatus(4);
+            //Set<String> readyPlayers = getReadyPlayers();
+            //socketResult.setReadyPlayerIds(readyPlayers);
             socketResult.setZhuangJiaUserId(getZhuangJia());
-            setPoke(socketResult);
-            setScoreAndPaiXing(socketResult);
-        }
-        //设置谁摊牌了
-        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_CALRESULT.getCode())) {
-            socketResult.setGameStatus(7);
-            socketResult.setZhuangJiaUserId(getZhuangJia());
+            setPoke_5(socketResult);
             socketResult.setTanPaiPlayerUserIds(getTanPaiPlayer());
-            setPoke(socketResult);
             setScoreAndPaiXing(socketResult);
         }
+//        //设置谁摊牌了
+//        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_CALRESULT.getCode())) {
+//            socketResult.setGameStatus(7);
+//            socketResult.setZhuangJiaUserId(getZhuangJia());
+//            socketResult.setTanPaiPlayerUserIds(getTanPaiPlayer());
+//            setPoke_5(socketResult);
+//            setScoreAndPaiXing(socketResult);
+//        }
         //下一句准备
         else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_DELETE_KEYS.getCode())) {
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             socketResult.setGameStatus(1);
             socketResult.setReadyPlayerIds(getReadyPlayers());
         }
@@ -409,10 +462,23 @@ public class NiuniuSocket extends BaseServer {
     }
 
     /**
-     * 设置牌
+     * 设置4张牌
      * @param socketResult
      */
-    public void setPoke(SocketResult socketResult){
+    public void setPoke_4(SocketResult socketResult ,String userId){
+        Map<String, String> map = redisService.getMap(RedisConstant.POKES + roomId);
+        Map<String ,List<String>> userPokeMap_5 = new HashMap<>(2<<4);
+        List<String> pokeList_4 = JsonUtil.parseJavaList(map.get(userId) ,String.class).subList(0 ,4);
+        socketResult.setUserPokeList_4(pokeList_4);
+    }
+
+
+
+    /**
+     * 设置5张牌
+     * @param socketResult
+     */
+    public void setPoke_5(SocketResult socketResult){
         Map<String, String> map = redisService.getMap(RedisConstant.POKES + roomId);
         Map<String ,List<String>> userPokeMap_5 = new HashMap<>(2<<4);
         for (Map.Entry<String ,String> entry : map.entrySet()) {
