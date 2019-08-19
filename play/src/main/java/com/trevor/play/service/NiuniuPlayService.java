@@ -50,8 +50,6 @@ public class NiuniuPlayService {
      * @param roomIdStr
      */
     public void playEqualTwo(String roomIdStr){
-        //改变房间状态为发4张牌前
-        redisService.put(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_FAPAI_4.getCode());
         play(roomIdStr);
     }
 
@@ -60,10 +58,8 @@ public class NiuniuPlayService {
      * @param roomIdStr
      */
     public void playOverTwo(String roomIdStr){
-        //改变房间状态为发4张牌前
-        redisService.put(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_FAPAI_4.getCode());
         //准备的倒计时
-        countDown(1002 ,roomIdStr);
+        countDown(1002 ,roomIdStr ,"ready");
         play(roomIdStr);
     }
 
@@ -138,12 +134,24 @@ public class NiuniuPlayService {
     }
 
     /**
-     * 倒计时
+     * 准备的倒计时
      * @param head
-     * @param gameStatus
      */
-    private void countDown(Integer head ,String roomIdStr){
+    private void countDown(Integer head ,String roomIdStr ,String flag){
         for (int i = 5; i > 0 ; i--) {
+            if (Objects.equals(flag ,"ready")) {
+                //如果所有人准备完毕，则直接开始进入下一个阶段
+                if (Objects.equals(redisService.getSetSize(RedisConstant.REAL_ROOM_PLAYER) ,)){
+
+                }
+            }else if (Objects.equals(flag ,"qiangZhuang")) {
+
+            }else if (Objects.equals(flag ,"xiaZhu")){
+
+            //摊牌倒计时
+            }else {
+
+            }
             SocketResult socketResult = new SocketResult(head ,i);
             broadcast(socketResult ,roomIdStr);
             try {

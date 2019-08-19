@@ -108,6 +108,9 @@ public class NiuniuSocket extends BaseServer {
             soc.setTotalScore(totalScoreMap.get(userId) == null ? "0" : totalScoreMap.get(userId));
             roomSocketService.broadcast(roomId ,soc);
         }
+        //删除自己的消息队列
+        redisService.delete(RedisConstant.MESSAGES_QUEUE + userId);
+        //加入到广播的集合中
         roomSocketService.join(roomId ,this);
         /**
          * 给自己发消息
@@ -115,20 +118,21 @@ public class NiuniuSocket extends BaseServer {
         Map<String ,String> baseRoomInfoMap = redisService.getMap(RedisConstant.BASE_ROOM_INFO + roomId);
         Integer runingNum = NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.RUNING_NUM));
         Integer totalNum =  NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.TOTAL_NUM));
-        //得到房间正在运行的局数
+        //设置房间正在运行的局数
         soc.setRuningAndTotal((runingNum + 1) + "/" + totalNum);
+        //不是吃瓜群众则加入到真正的玩家集合中并且删除自己的掉线状态
         if (!soc.getIsChiGuaPeople()) {
             //加入到真正的玩家中
             redisService.setAdd(RedisConstant.REAL_ROOM_PLAYER + roomId ,userId);
             //删除自己掉线状态
             redisService.setDeleteMember(RedisConstant.DIS_CONNECTION + roomId ,userId);
         }
+        //设置掉线的玩家
         soc.setDisConnectionPlayerIds(redisService.getSetMembers(RedisConstant.DIS_CONNECTION + roomId));
+        //设置真正的玩家
         soc.setPlayers(roomSocketService.getRealRoomPlayerCount(this.roomId));
-
-        redisService.delete(RedisConstant.MESSAGES_QUEUE + userId);
         //发送房间状态消息
-        welcome(roomId);
+        welcome(roomId ,soc);
     }
 
     /**
@@ -309,7 +313,7 @@ public class NiuniuSocket extends BaseServer {
     /**
      * 欢迎玩家加入，发送房间状态信息
      */
-    private void welcome(String roomId){
+    private void welcome(String roomId ,SocketResult soc){
         SocketResult socketResult = new SocketResult();
         socketResult.setHead(2002);
         String gameStatus = redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS);

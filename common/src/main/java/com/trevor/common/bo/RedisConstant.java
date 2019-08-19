@@ -41,8 +41,12 @@ public class RedisConstant {
     public static final String TOTAL_SCORE = "totalScore_";
 
 
-
     /**    从这里开始每局清理     **/
+
+    /**
+     * 准备截止
+     */
+    public static final String READY_END = "readyEnd_";
 
     /**
      * 玩家的牌
