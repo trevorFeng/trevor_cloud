@@ -45,6 +45,7 @@ public class SocketResult {
      * 1015--玩家重新连接的消息
      * 1016--继续下一句
      * 1017--说话
+     * 1018--切换为观战
      * ****************************2000以上发给自己
      * 2002--房间内情况，发给新人，数据为其他人的得分，牌，是否抢庄等
      *
@@ -65,7 +66,7 @@ public class SocketResult {
     /**
      * 分数
      */
-    private Integer score;
+    private String totalScore;
 
     /**
      * 观众，玩家可以参与打牌
@@ -92,6 +93,12 @@ public class SocketResult {
      * 下注倍数
      */
     private Integer xiaZhuBeiShu;
+
+
+    /**
+     * 用于控制前端抢庄的转圈的显示效果
+     */
+    private Set<String> zhuanQuanPlayers;
 
 
     /**

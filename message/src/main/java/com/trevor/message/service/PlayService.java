@@ -155,6 +155,24 @@ public class PlayService {
         roomSocketService.broadcast(roomId ,socketResult);
     }
 
+    /**
+     * 处理为切换为观战的消息
+     * @param roomId
+     * @param niuniuSocket
+     */
+    public void dealChangeToGuanZhan(String roomId ,NiuniuSocket niuniuSocket){
+        if (redisService.jugeSetMember(RedisConstant.REAL_ROOM_PLAYER + roomId ,niuniuSocket.userId)) {
+            redisService.setAdd(RedisConstant.GUANZHONG + roomId ,niuniuSocket.userId);
+            SocketResult socketResult = new SocketResult();
+            socketResult.setHead(1018);
+            socketResult.setUserId(niuniuSocket.userId);
+            roomSocketService.broadcast(roomId ,socketResult);
+            return;
+        }
+        niuniuSocket.sendMessage(new SocketResult(-501));
+        return;
+    }
+
 
 
     /**

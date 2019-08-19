@@ -71,19 +71,17 @@ public class RoomSocketService {
      * @param res
      */
     public void broadcast(String roomId , SocketResult res){
-        //executor.execute(() -> {
-            Set<String> playerIds = redisService.getSetMembers(RedisConstant.ROOM_PLAYER + roomId);
-            for (String playId : playerIds) {
-                NiuniuSocket socket = sockets.get(playId);
-                if (socket != null && socket.session != null && socket.session.isOpen()) {
-                    socket.sendMessage(res);
-                }else {
-                    if (socket != null) {
-                        leave(roomId ,socket);
-                    }
+        Set<String> playerIds = redisService.getSetMembers(RedisConstant.ROOM_PLAYER + roomId);
+        for (String playId : playerIds) {
+            NiuniuSocket socket = sockets.get(playId);
+            if (socket != null && socket.session != null && socket.session.isOpen()) {
+                socket.sendMessage(res);
+            }else {
+                if (socket != null) {
+                    leave(roomId ,socket);
                 }
             }
-        //});
+        }
     }
 
     /**

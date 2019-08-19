@@ -72,6 +72,16 @@ public class RedisService {
     }
 
     /**
+     * 是否是set成员
+     * @param key
+     * @param value
+     * @return
+     */
+    public Boolean jugeSetMember(String key ,String value){
+        return stringRedisTemplate.boundSetOps(key).isMember(value);
+    }
+
+    /**
      *  添加set元素
      * @param key
      * @param value

@@ -16,6 +16,7 @@ public class SocketMessage {
      * 3-闲家下注
      * 4-摊牌的消息
      * 5-说话
+     * 6-切换为观战模式
      */
     private Integer messageCode;
 

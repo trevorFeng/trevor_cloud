@@ -2,6 +2,7 @@ package com.trevor.play.service;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.trevor.common.bo.PaiXing;
 import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
@@ -49,6 +50,8 @@ public class NiuniuPlayService {
      * @param roomIdStr
      */
     public void playEqualTwo(String roomIdStr){
+        //改变房间状态为发4张牌前
+        redisService.put(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_FAPAI_4.getCode());
         play(roomIdStr);
     }
 
@@ -57,8 +60,10 @@ public class NiuniuPlayService {
      * @param roomIdStr
      */
     public void playOverTwo(String roomIdStr){
+        //改变房间状态为发4张牌前
+        redisService.put(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_FAPAI_4.getCode());
         //准备的倒计时
-        countDown(1002 ,GameStatusEnum.BEFORE_FAPAI_4.getCode() ,roomIdStr);
+        countDown(1002 ,roomIdStr);
         play(roomIdStr);
     }
 
@@ -137,8 +142,7 @@ public class NiuniuPlayService {
      * @param head
      * @param gameStatus
      */
-    private void countDown(Integer head ,String gameStatus ,String roomIdStr){
-        redisService.put(RedisConstant.BASE_ROOM_INFO + roomIdStr ,RedisConstant.GAME_STATUS , gameStatus);
+    private void countDown(Integer head ,String roomIdStr){
         for (int i = 5; i > 0 ; i--) {
             SocketResult socketResult = new SocketResult(head ,i);
             broadcast(socketResult ,roomIdStr);
@@ -195,7 +199,7 @@ public class NiuniuPlayService {
             num ++;
         }
         //改变状态
-        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_QIANGZHUANG_COUNTDOWN.getCode());
+        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_SELECT_ZHUANGJIA.getCode());
         Set<String> roomPlayer = redisService.getSetMembers(RedisConstant.ROOM_PLAYER + roomId);
         //给每个人发牌
         for (String playerId : roomPlayer) {
@@ -219,6 +223,7 @@ public class NiuniuPlayService {
         Map<String, String> qiangZhuangMap = redisService.getMap(RedisConstant.QIANGZHAUNG + roomId);
         Integer randNum = 0;
         String zhuangJiaUserId;
+        Set<String> zhuanQuanPlayerIds = Sets.newHashSet();
         //没人抢庄
         if (qiangZhuangMap.isEmpty()) {
             randNum = RandomUtils.getRandNumMax(redisService.getSetSize(RedisConstant.READY_PLAYER + roomId));
@@ -227,17 +232,42 @@ public class NiuniuPlayService {
             for (String s : members) {
                 playerIds.add(s);
             }
+            zhuanQuanPlayerIds.addAll(members);
             zhuangJiaUserId = playerIds.get(randNum);
             redisService.put(RedisConstant.QIANGZHAUNG + roomId ,zhuangJiaUserId ,"1");
             redisService.setValue(RedisConstant.ZHUANGJIA + roomId ,zhuangJiaUserId);
         }else {
-            randNum = RandomUtils.getRandNumMax(redisService.getMapSize(RedisConstant.QIANGZHAUNG + roomId));
-            List<String> userIds = new ArrayList<>(redisService.getMapKeys(RedisConstant.QIANGZHAUNG + roomId));
-            zhuangJiaUserId = userIds.get(randNum);
-            redisService.setValue(RedisConstant.ZHUANGJIA + roomId ,zhuangJiaUserId);
+            if (qiangZhuangMap.size() == 1) {
+            }
+            //抢庄倍数大的才能抢到庄，若一样，则随机选择
+            Boolean isEqualsQiangZhuangBeiShu = Boolean.TRUE;
+            String qiangZhuangBeiShu = null;
+            for (String str : qiangZhuangMap.values()) {
+                if (qiangZhuangBeiShu == null) {
+                    qiangZhuangBeiShu = str;
+                }else if (!Objects.equals(qiangZhuangBeiShu ,str)) {
+                    isEqualsQiangZhuangBeiShu = Boolean.FALSE;
+                    break;
+                }
+            }
+            if (isEqualsQiangZhuangBeiShu) {
+                randNum = RandomUtils.getRandNumMax(redisService.getMapSize(RedisConstant.QIANGZHAUNG + roomId));
+                List<String> userIds = new ArrayList<>(redisService.getMapKeys(RedisConstant.QIANGZHAUNG + roomId));
+                zhuangJiaUserId = userIds.get(randNum);
+                redisService.setValue(RedisConstant.ZHUANGJIA + roomId ,zhuangJiaUserId);
+            }else {
+                List<Integer> qiangZhungBeiShus = Lists.newArrayList();
+                for (String str : qiangZhuangMap.values()) {
+                    qiangZhungBeiShus.add(Integer.valueOf(str));
+                }
+                //升序排列
+                Collections.sort(qiangZhungBeiShus);
+
+            }
         }
 
         SocketResult socketResult = new SocketResult(1006 ,zhuangJiaUserId);
+
         broadcast(socketResult ,roomId);
         //改变状态
         redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS ,GameStatusEnum.BEFORE_XIANJIA_XIAZHU.getCode());

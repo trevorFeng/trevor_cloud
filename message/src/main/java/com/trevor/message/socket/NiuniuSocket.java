@@ -12,6 +12,7 @@ import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.enums.RoomTypeEnum;
 import com.trevor.common.enums.SpecialEnum;
 import com.trevor.common.util.JsonUtil;
+import com.trevor.common.util.NumberUtil;
 import com.trevor.common.util.ObjectUtil;
 import com.trevor.message.bo.SocketMessage;
 import com.trevor.message.decoder.MessageDecoder;
@@ -93,27 +94,39 @@ public class NiuniuSocket extends BaseServer {
             close(session);
             return;
         }
-
-        this.roomId = roomId;
-        this.userId = String.valueOf(user.getId());
-        roomSocketService.join(roomId ,this);
+        //设置最大不活跃时间
         session.setMaxIdleTimeout(1000 * 60 * 45);
+        this.roomId = roomId;
+        this.userId = NumberUtil.formatString(user.getId());
         this.session = session;
-        redisService.delete(RedisConstant.MESSAGES_QUEUE + userId);
-
         soc.setHead(1000);
-        Integer runingNum = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.RUNING_NUM));
-        Integer totalNum = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.TOTAL_NUM));
-        soc.setRuningAndTotal((runingNum + 1) + "/" + totalNum);
-        redisService.setDeleteMember(RedisConstant.DIS_CONNECTION + roomId ,userId);
-        soc.setDisConnectionPlayerIds(redisService.getSetMembers(RedisConstant.DIS_CONNECTION + roomId));
-
+        /**
+         * 广播新人加入
+         */
         if (!soc.getIsChiGuaPeople()) {
-            redisService.setAdd(RedisConstant.REAL_ROOM_PLAYER + roomId ,userId);
+            Map<String ,String> totalScoreMap = redisService.getMap(RedisConstant.TOTAL_SCORE + roomId);
+            soc.setTotalScore(totalScoreMap.get(userId) == null ? "0" : totalScoreMap.get(userId));
+            roomSocketService.broadcast(roomId ,soc);
         }
+        roomSocketService.join(roomId ,this);
+        /**
+         * 给自己发消息
+         */
+        Map<String ,String> baseRoomInfoMap = redisService.getMap(RedisConstant.BASE_ROOM_INFO + roomId);
+        Integer runingNum = NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.RUNING_NUM));
+        Integer totalNum =  NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.TOTAL_NUM));
+        //得到房间正在运行的局数
+        soc.setRuningAndTotal((runingNum + 1) + "/" + totalNum);
+        if (!soc.getIsChiGuaPeople()) {
+            //加入到真正的玩家中
+            redisService.setAdd(RedisConstant.REAL_ROOM_PLAYER + roomId ,userId);
+            //删除自己掉线状态
+            redisService.setDeleteMember(RedisConstant.DIS_CONNECTION + roomId ,userId);
+        }
+        soc.setDisConnectionPlayerIds(redisService.getSetMembers(RedisConstant.DIS_CONNECTION + roomId));
         soc.setPlayers(roomSocketService.getRealRoomPlayerCount(this.roomId));
-        //广播新人加入，前端需要比较useId是否与断线的玩家id（断线重连，断线时会给玩家一个消息谁断线了）、网络不好的玩家是否相等（网络不好重连），不相等则未新加入的玩家
-        roomSocketService.broadcast(roomId ,soc);
+
+        redisService.delete(RedisConstant.MESSAGES_QUEUE + userId);
         //发送房间状态消息
         welcome(roomId);
     }
@@ -133,6 +146,8 @@ public class NiuniuSocket extends BaseServer {
             playService.dealTanPaiMessage(roomId ,this);
         }else if (Objects.equals(socketMessage.getMessageCode() ,5)) {
             playService.dealShuoHuaMessage(roomId ,this ,socketMessage);
+        }else if (Objects.equals(socketMessage.getMessageCode() ,6)) {
+            playService.dealChangeToGuanZhan(roomId ,this);
         }
     }
 
@@ -142,7 +157,7 @@ public class NiuniuSocket extends BaseServer {
     @OnClose
     public void onClose(){
         if (!ObjectUtil.isEmpty(userId)) {
-            roomSocketService.leave(roomId ,this);
+            redisService.delete(RedisConstant.MESSAGES_QUEUE + userId);
             //如果是真正的玩家则广播消息
             if (redisService.getSetMembers(RedisConstant.REAL_ROOM_PLAYER + roomId).contains(userId)) {
                 redisService.setAdd(RedisConstant.DIS_CONNECTION + roomId ,userId);
@@ -306,12 +321,6 @@ public class NiuniuSocket extends BaseServer {
         //设置玩家先发的4张牌
         else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_QIANGZHUANG_COUNTDOWN.getCode())
                 || Objects.equals(gameStatus ,GameStatusEnum.BEFORE_SELECT_ZHUANGJIA.getCode())) {
-//            socketResult.setGameStatus(2);
-//            Set<String> readyPlayers = getReadyPlayers();
-//            socketResult.setReadyPlayerIds(readyPlayers);
-//            if (readyPlayers.contains(userId)) {
-//                setPoke_4(socketResult ,userId);
-//            }
             socketResult.setGameStatus(2);
             Set<String> readyPlayers = getReadyPlayers();
             socketResult.setReadyPlayerIds(readyPlayers);
@@ -320,26 +329,9 @@ public class NiuniuSocket extends BaseServer {
             }
             socketResult.setQiangZhuangMap(getQiangZhuangPlayers());
         }
-//        //设置抢庄的玩家
-//        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_SELECT_ZHUANGJIA.getCode())) {
-//            socketResult.setGameStatus(3);
-//            Set<String> readyPlayers = getReadyPlayers();
-//            socketResult.setReadyPlayerIds(readyPlayers);
-//            if (readyPlayers.contains(userId)) {
-//                setPoke_4(socketResult ,userId);
-//            }
-//            socketResult.setQiangZhuangMap(getQiangZhuangPlayers());
-//        }
         //设置庄家
         else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_XIANJIA_XIAZHU.getCode())
                 || Objects.equals(gameStatus ,GameStatusEnum.BEFORE_LAST_POKE.getCode())) {
-//            socketResult.setGameStatus(3);
-//            Set<String> readyPlayers = getReadyPlayers();
-//            socketResult.setReadyPlayerIds(readyPlayers);
-//            if (readyPlayers.contains(userId)) {
-//                setPoke_4(socketResult ,userId);
-//            }
-//            socketResult.setZhuangJiaUserId(getZhuangJia());
             socketResult.setGameStatus(3);
             Set<String> readyPlayers = getReadyPlayers();
             socketResult.setReadyPlayerIds(readyPlayers);
@@ -349,36 +341,15 @@ public class NiuniuSocket extends BaseServer {
             socketResult.setZhuangJiaUserId(getZhuangJia());
             socketResult.setXianJiaXiaZhuMap(getXianJiaXiaZhu());
         }
-//        //设置闲家下注
-//        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_LAST_POKE.getCode())) {
-//            socketResult.setGameStatus(5);
-//            Set<String> readyPlayers = getReadyPlayers();
-//            socketResult.setReadyPlayerIds(readyPlayers);
-//            if (readyPlayers.contains(userId)) {
-//                setPoke_4(socketResult ,userId);
-//            }
-//            socketResult.setZhuangJiaUserId(getZhuangJia());
-//            socketResult.setXianJiaXiaZhuMap(getXianJiaXiaZhu());
-//        }
         //设置玩家发的最后一张牌
         else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_TABPAI_COUNTDOWN.getCode())
                 || Objects.equals(gameStatus ,GameStatusEnum.BEFORE_CALRESULT.getCode())) {
             socketResult.setGameStatus(4);
-            //Set<String> readyPlayers = getReadyPlayers();
-            //socketResult.setReadyPlayerIds(readyPlayers);
             socketResult.setZhuangJiaUserId(getZhuangJia());
             setPoke_5(socketResult);
             socketResult.setTanPaiPlayerUserIds(getTanPaiPlayer());
             setScoreAndPaiXing(socketResult);
         }
-//        //设置谁摊牌了
-//        else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_CALRESULT.getCode())) {
-//            socketResult.setGameStatus(7);
-//            socketResult.setZhuangJiaUserId(getZhuangJia());
-//            socketResult.setTanPaiPlayerUserIds(getTanPaiPlayer());
-//            setPoke_5(socketResult);
-//            setScoreAndPaiXing(socketResult);
-//        }
         //下一句准备
         else if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_DELETE_KEYS.getCode())) {
             try {
