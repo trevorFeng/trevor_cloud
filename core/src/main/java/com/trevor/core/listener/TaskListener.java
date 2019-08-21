@@ -8,7 +8,7 @@ public interface TaskListener {
      * 事件
      */
     @Async
-    public void onCountDown();
+    public void  executeEvent();
 
     public String getKey();
 
