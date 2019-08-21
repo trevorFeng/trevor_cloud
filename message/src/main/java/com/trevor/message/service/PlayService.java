@@ -45,8 +45,7 @@ public class PlayService {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
-        if (!Objects.equals(gameStatus , GameStatusEnum.BEFORE_FAPAI_4.getCode())
-            && !Objects.equals(gameStatus , GameStatusEnum.BEFORE_READY.getCode())) {
+        if (!Objects.equals(gameStatus , GameStatusEnum.BEFORE_FAPAI_4.getCode())) {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
