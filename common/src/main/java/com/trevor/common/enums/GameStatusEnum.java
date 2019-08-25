@@ -2,19 +2,25 @@ package com.trevor.common.enums;
 
 public enum GameStatusEnum {
 
-    /**
-     * 可以准备
-     */
-    BEFORE_FAPAI_4("1" ,"进入房间-准备倒计时前-准备倒计时结束发4张牌前"),
+    READY("1" ,"准备"),
 
-    BEFORE_SELECT_ZHUANGJIA("2" ,"发4张牌-抢庄倒计时-抢庄倒计时确定庄家前"),
+    READY_COUNT_DOWN("2" ,"准备倒计时开始"),
 
-    BEFORE_LAST_POKE("3" ,"确定庄家-闲家下注倒计时-闲家下注倒计时结束再发一张牌前"),
+    FA_FOUR_PAI("3" ,"发4张牌开始"),
 
-    BEFORE_CALRESULT("4","再发一张牌-摊牌倒计时-摊牌倒计时结束删除redis键前"),
+    QIANG_ZHUANG_COUNT_DOWN("4" ,"抢庄倒计时"),
 
-    BEFORE_DELETE_KEYS("5" ,"删除redis键-下一局开始前");
+    QIANG_ZHUANG_ZHUAN_QUAN("5" ,"抢庄转圈"),
 
+    XIA_ZHU_COUNT_DOWN("6" ,"闲家下注倒计时"),
+
+    FA_ONE_PAI("7" ,"发一张牌"),
+
+    TAN_PAI_COUNT_DOWN("8" ,"摊牌倒计时"),
+
+    JIE_SUAN("9" ,"本局结算"),
+
+    STOP_OR_CONTINUE("10" ,"下一局或者结束");
 
     private String code ;
 

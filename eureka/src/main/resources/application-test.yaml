@@ -3,7 +3,7 @@ server:
 
 eureka:
   instance:
-    hostname: localhost
+    hostname: 127.79.184.105
   client:
     #registerWithEureka，说明了不需要想eureka注册eureka，就是不注册自己
     registerWithEureka: false

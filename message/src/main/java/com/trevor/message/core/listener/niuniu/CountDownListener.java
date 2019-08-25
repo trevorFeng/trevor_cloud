@@ -23,7 +23,7 @@ public class CountDownListener extends AbstractTaskListener {
 
     @Override
     public void onCountDown() {
-        actuator.addEvent(new CountDownEvent(5 ,getRoomIdByKey()));
+        actuator.addEvent(new CountDownEvent(5 ,getRoomIdByKey(),key));
     }
 
     @Override
