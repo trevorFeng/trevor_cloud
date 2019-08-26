@@ -27,6 +27,9 @@ public class CountDownEvent extends Event {
 
     @Override
     protected void executeEvent() {
+        if (time == 5) {
+
+        }
         if (time != 0) {
             sendCountDown();
             this.time--;
@@ -39,30 +42,45 @@ public class CountDownEvent extends Event {
         }
     }
 
+
     private void sendCountDown(){
-        Integer head = 0;
+        SocketResult soc = new SocketResult();
+        //准备的倒计时
         if (Objects.equals(listenerKey , ListenerKey.READY)) {
-            head = 1002;
+            soc.setHead(1002);
+            soc.setCountDown(time);
+            if (time == 5) {
+                messageHandle.changeGameStatus(roomId ,GameStatusEnum.READY_COUNT_DOWN_START.getCode());
+                soc.setGameStatus(GameStatusEnum.READY_COUNT_DOWN_START.getCode());
+            }
+            if (time == 1) {
+                soc.setGameStatus(GameStatusEnum.READY_COUNT_DOWN_END.getCode());
+                messageHandle.changeGameStatus(roomId ,GameStatusEnum.READY_COUNT_DOWN_END.getCode());
+            }
+         //抢庄的倒计时
         }else if (Objects.equals(listenerKey , ListenerKey.QIANG_ZHAUNG)) {
-            head = 1020;
+            soc.setHead(1020);
+            soc.setCountDown(time);
+            if (time == 5) {
+                messageHandle.changeGameStatus(roomId ,GameStatusEnum.QIANG_ZHUANG_COUNT_DOWN_START.getCode());
+                soc.setGameStatus(GameStatusEnum.READY_COUNT_DOWN_START.getCode());
+            }
+            if (time == 1) {
+                soc.setGameStatus(GameStatusEnum.READY_COUNT_DOWN_END.getCode());
+                messageHandle.changeGameStatus(roomId ,GameStatusEnum.QIANG_ZHUANG_COUNT_DOWN_END.getCode());
+            }
         }
-        SocketResult socketResult = new SocketResult(head ,time);
-        if (time == 5) {
-            messageHandle.changeGameStatus(roomId ,GameStatusEnum.READY_COUNT_DOWN_START.getCode());
-            socketResult.setGameStatus(GameStatusEnum.READY_COUNT_DOWN_START.getCode());
-        }
-        if (time == 1) {
-            socketResult.setGameStatus(GameStatusEnum.READY_COUNT_DOWN_END.getCode());
-            messageHandle.changeGameStatus(roomId ,GameStatusEnum.READY_COUNT_DOWN_END.getCode());
-        }
-        messageHandle.broadcast(socketResult ,roomId);
+
+        messageHandle.broadcast(soc ,roomId);
     }
 
     private void addEvent(){
+        //准备的倒计时
         if (Objects.equals(listenerKey , ListenerKey.READY)) {
             actuator.addEvent(new FaPai4Event(roomId));
+        //抢庄的倒计时
         }else if (Objects.equals(listenerKey , ListenerKey.QIANG_ZHAUNG)) {
-
+            actuator.addEvent(new SelectZhuangJiaEvent(roomId));
         }
     }
 }

@@ -82,8 +82,6 @@ public class PlayService {
         soc.setReadyPlayerIds(redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId + "_" + runingNum));
         roomSocketService.broadcast(roomId ,soc);
 
-
-
         //准备的人数超过两人
         Integer readyPlayerSize = redisService.getSetSize(RedisConstant.READY_PLAYER + roomId);
         Integer realPlayerSize = redisService.getSetSize(RedisConstant.REAL_ROOM_PLAYER + roomId);

@@ -31,14 +31,21 @@ public class FaPai4Event extends Event {
         List<List<String>> pokesList = getPokesList();
         //设置每个人的牌
         setPlayersPoke(pokesList);
-        //发送房间状态
-        super.sendGameStatus(GameStatusEnum.FA_FOUR_PAI.getCode() ,roomId);
+        //改变房间状态
+        redisService.put(RedisConstant.BASE_ROOM_INFO, RedisConstant.GAME_STATUS, GameStatusEnum.FA_FOUR_PAI.getCode());
         //发牌
         faPai();
-        //改变房间状态
-
         //注册抢庄倒计时
         scheduleDispatch.addListener(new CountDownListener(ListenerKey.QIANG_ZHAUNG));
+    }
+
+    private void sendGameStatus(String gameStatus ,String roomId) {
+
+        //给玩家发状态信息
+        SocketResult socketResult = new SocketResult();
+        socketResult.setHead(1019);
+
+        messageHandle.broadcast(socketResult, roomId);
     }
 
     private void faPai(){
@@ -50,9 +57,11 @@ public class FaPai4Event extends Event {
             if (readyPlayerUserIds.contains(playerId)) {
                 List<String> userPokeList_4 = JsonUtil.parseJavaList(pokesMap.get(playerId), String.class).subList(0, 4);
                 SocketResult soc = new SocketResult(1004, userPokeList_4);
+                soc.setGameStatus(GameStatusEnum.FA_FOUR_PAI.getCode());
                 messageHandle.sendMessage(soc, playerId);
             } else {
                 SocketResult soc = new SocketResult(1004);
+                soc.setGameStatus(GameStatusEnum.FA_FOUR_PAI.getCode());
                 messageHandle.sendMessage(soc, playerId);
             }
         }

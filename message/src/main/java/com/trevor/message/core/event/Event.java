@@ -27,13 +27,5 @@ public abstract class Event implements Runnable{
         executeEvent();
     }
 
-    protected void sendGameStatus(String gameStatus ,String roomId) {
-        //改变房间状态
-        redisService.put(RedisConstant.BASE_ROOM_INFO, RedisConstant.GAME_STATUS, gameStatus);
-        //给玩家发状态信息
-        SocketResult socketResult = new SocketResult();
-        socketResult.setHead(1019);
-        socketResult.setGameStatus(gameStatus);
-        messageHandle.broadcast(socketResult, roomId);
-    }
+
 }
