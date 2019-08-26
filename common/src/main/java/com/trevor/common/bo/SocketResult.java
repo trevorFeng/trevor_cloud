@@ -101,13 +101,6 @@ public class SocketResult {
      */
     private Integer xiaZhuBeiShu;
 
-
-    /**
-     * 用于控制前端抢庄的转圈的显示效果
-     */
-    private Set<String> zhuanQuanPlayers;
-
-
     /**
      * 玩家列表
      */
@@ -137,6 +130,11 @@ public class SocketResult {
      * 抢庄的玩家
      */
     private Map<String ,String> qiangZhuangMap;
+
+    /**
+     * 用于控制前端抢庄的转圈的显示效果,有2个以上的值就转圈
+     */
+    private List<String> zhuanQuanPlayers;
 
     /**
      * 庄家的id

@@ -33,19 +33,10 @@ public class FaPai4Event extends Event {
         setPlayersPoke(pokesList);
         //改变房间状态
         redisService.put(RedisConstant.BASE_ROOM_INFO, RedisConstant.GAME_STATUS, GameStatusEnum.FA_FOUR_PAI.getCode());
-        //发牌
+        //发牌并发送房间状态
         faPai();
         //注册抢庄倒计时
         scheduleDispatch.addListener(new CountDownListener(ListenerKey.QIANG_ZHAUNG));
-    }
-
-    private void sendGameStatus(String gameStatus ,String roomId) {
-
-        //给玩家发状态信息
-        SocketResult socketResult = new SocketResult();
-        socketResult.setHead(1019);
-
-        messageHandle.broadcast(socketResult, roomId);
     }
 
     private void faPai(){

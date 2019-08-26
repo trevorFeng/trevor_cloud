@@ -7,14 +7,17 @@ import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.util.NumberUtil;
 import com.trevor.common.util.RandomUtils;
+import com.trevor.message.core.ListenerKey;
 import com.trevor.message.core.event.Event;
+import com.trevor.message.core.listener.niuniu.CountDownListener;
 
 import java.util.*;
 
 /**
  * 发送庄家事件
  */
-public class SelectZhuangJiaEvent extends Event {
+public class
+SelectZhuangJiaEvent extends Event {
 
     public SelectZhuangJiaEvent(String roomId) {
         super.roomId = roomId;
@@ -25,28 +28,54 @@ public class SelectZhuangJiaEvent extends Event {
         Map<String, String> qiangZhuangMap = redisService.getMap(RedisConstant.QIANGZHAUNG + roomId);
 
         String zhuangJiaUserId;
-        Boolean isZhuanQuan = Boolean.FALSE;
+        List<String> qiangZhuangZhuanQuanList = Lists.newArrayList();
         //没人抢庄
         if (qiangZhuangMap.isEmpty()) {
             zhuangJiaUserId = noPeopleQiangZhuang();
-            isZhuanQuan = Boolean.TRUE;
         }else {
+            //一个人抢庄
             if (qiangZhuangMap.size() == 1) {
                 zhuangJiaUserId = onePeopleQiangZhuang(qiangZhuangMap);
-                isZhuanQuan = Boolean.FALSE;
+            //多人抢庄
             }else {
-
+                List<Integer> beiShus = Lists.newArrayList();
+                for (String beiShuStr : qiangZhuangMap.values()) {
+                    beiShus.add(NumberUtil.stringFormatInteger(beiShuStr));
+                }
+                //升序排列
+                Collections.reverse(beiShus);
+                List<String> maxBeiShuPlayerIds = Lists.newArrayList();
+                Integer maxBeiShu = beiShus.get(0);
+                for (Map.Entry<String ,String> entry : qiangZhuangMap.entrySet()) {
+                    if (Objects.equals(NumberUtil.stringFormatInteger(entry.getValue()) ,maxBeiShu)) {
+                        maxBeiShuPlayerIds.add(entry.getKey());
+                    }
+                }
+                Integer maxPlayerNum = maxBeiShuPlayerIds.size();
+                if (maxPlayerNum == 1) {
+                    zhuangJiaUserId = maxBeiShuPlayerIds.get(0);
+                }else {
+                    Integer randNum = RandomUtils.getRandNumMax(maxPlayerNum);
+                    zhuangJiaUserId = maxBeiShuPlayerIds.get(randNum);
+                    qiangZhuangZhuanQuanList = maxBeiShuPlayerIds;
+                }
             }
-
         }
-
+        //设置庄家
         redisService.setValue(RedisConstant.ZHUANGJIA + roomId ,zhuangJiaUserId);
-
-        SocketResult socketResult = new SocketResult(1006 ,zhuangJiaUserId);
-
-        messageHandle.broadcast(socketResult ,roomId);
         //改变状态
-        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS , GameStatusEnum.BEFORE_XIANJIA_XIAZHU.getCode());
+        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS , GameStatusEnum.QIANG_ZHUANG_ZHUAN_QUAN.getCode());
+        SocketResult socketResult = new SocketResult(1006 ,zhuangJiaUserId);
+        Boolean noZhuanQuan = qiangZhuangZhuanQuanList.isEmpty();
+        if (!noZhuanQuan) {
+            socketResult.setZhuanQuanPlayers(qiangZhuangZhuanQuanList);
+        }
+        socketResult.setGameStatus(GameStatusEnum.QIANG_ZHUANG_ZHUAN_QUAN.getCode());
+        messageHandle.broadcast(socketResult ,roomId);
+        //注册转圈倒计时
+        if (!noZhuanQuan) {
+            scheduleDispatch.addListener(new CountDownListener(ListenerKey.ZHUAN_QUAN + ListenerKey.SPLIT + ListenerKey.TIME_TWO));
+        }
     }
 
     /**
@@ -56,11 +85,9 @@ public class SelectZhuangJiaEvent extends Event {
         Integer randNum = RandomUtils.getRandNumMax(redisService.getSetSize(RedisConstant.READY_PLAYER + roomId));
         List<String> playerIds = Lists.newArrayList();
         Set<String> members = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
-        //Set<String> zhuanQuanPlayerIds = Sets.newHashSet();
         for (String s : members) {
             playerIds.add(s);
         }
-        //zhuanQuanPlayerIds.addAll(members);
         return playerIds.get(randNum);
 
     }
@@ -78,31 +105,4 @@ public class SelectZhuangJiaEvent extends Event {
         return null;
     }
 
-    private String manyPeopleQiangZhuang(Map<String, String> qiangZhuangMap){
-        //抢庄倍数大的才能抢到庄，若一样，则随机选择
-        String qiangZhuangBeiShu = null;
-        //是否是同样的
-        Boolean isEqualsQiangZhuangBeiShu = Boolean.TRUE;
-        for (String str : qiangZhuangMap.values()) {
-            if (qiangZhuangBeiShu == null) {
-                qiangZhuangBeiShu = str;
-            }else if (!Objects.equals(qiangZhuangBeiShu ,str)) {
-                isEqualsQiangZhuangBeiShu = Boolean.FALSE;
-                break;
-            }
-        }
-        if (isEqualsQiangZhuangBeiShu) {
-            Integer randNum = RandomUtils.getRandNumMax(redisService.getMapSize(RedisConstant.QIANGZHAUNG + roomId));
-            List<String> userIds = new ArrayList<>(redisService.getMapKeys(RedisConstant.QIANGZHAUNG + roomId));
-            return userIds.get(randNum);
-        }else {
-            List<Integer> qiangZhungBeiShus = Lists.newArrayList();
-            for (String str : qiangZhuangMap.values()) {
-                qiangZhungBeiShus.add(NumberUtil.stringFormatInteger(str));
-            }
-            //升序排列
-            Collections.sort(qiangZhungBeiShus);
-
-        }
-    }
 }

@@ -9,10 +9,11 @@ import com.trevor.message.core.listener.AbstractTaskListener;
 public class CountDownListener extends AbstractTaskListener {
 
     /**
-     * ready_roomId
-     * qiangZhung_roomId
-     * xiaZhu_roomId
-     * tanPai_roomId
+     * ready_roomId_time
+     * qiangZhung_roomId_time
+     * xiaZhu_roomId_time
+     * tanPai_roomId_time
+     * zhaunQuan_roomId_time
      */
     private String key;
 
@@ -22,7 +23,7 @@ public class CountDownListener extends AbstractTaskListener {
 
     @Override
     public void onCountDown() {
-        actuator.addEvent(new CountDownEvent(5 ,getRoomIdByKey(),key));
+        actuator.addEvent(new CountDownEvent(getTimeByKey() ,getRoomIdByKey(),key));
     }
 
     @Override

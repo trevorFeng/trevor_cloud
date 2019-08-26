@@ -1,5 +1,7 @@
 package com.trevor.message.core.listener;
 
+import com.trevor.common.util.NumberUtil;
+import com.trevor.message.core.ListenerKey;
 import com.trevor.message.core.actuator.Actuator;
 
 public abstract class AbstractTaskListener implements TaskListener{
@@ -11,8 +13,17 @@ public abstract class AbstractTaskListener implements TaskListener{
      * @return
      */
     protected String getRoomIdByKey(){
-        String str[] = getKey().split("_");
-        return str[str.length-1];
+        String str[] = getKey().split(ListenerKey.SPLIT);
+        return str[str.length-2];
+    }
+
+    /**
+     * 得到time
+     * @return
+     */
+    protected Integer getTimeByKey(){
+        String str[] = getKey().split(ListenerKey.SPLIT);
+        return NumberUtil.stringFormatInteger(str[str.length-1]);
     }
 
 }

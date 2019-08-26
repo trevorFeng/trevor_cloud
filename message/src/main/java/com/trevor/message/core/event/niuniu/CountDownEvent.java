@@ -2,8 +2,10 @@ package com.trevor.message.core.event.niuniu;
 
 import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;
+import com.trevor.common.util.NumberUtil;
 import com.trevor.message.core.ListenerKey;
 import com.trevor.message.core.event.Event;
+import com.trevor.message.core.listener.niuniu.CountDownListener;
 
 import java.util.Objects;
 
@@ -27,11 +29,11 @@ public class CountDownEvent extends Event {
 
     @Override
     protected void executeEvent() {
-        if (time == 5) {
-
-        }
         if (time != 0) {
-            sendCountDown();
+            //前端转圈效果不发送倒计时
+            if (!listenerKey.startsWith(ListenerKey.ZHUAN_QUAN)) {
+                sendCountDown();
+            }
             this.time--;
             if (time == 0) {
                 //移除监听器
@@ -44,12 +46,13 @@ public class CountDownEvent extends Event {
 
 
     private void sendCountDown(){
+        Integer keyTime = getTimeByKey();
         SocketResult soc = new SocketResult();
         //准备的倒计时
-        if (Objects.equals(listenerKey , ListenerKey.READY)) {
+        if (listenerKey.startsWith(ListenerKey.READY)) {
             soc.setHead(1002);
             soc.setCountDown(time);
-            if (time == 5) {
+            if (Objects.equals(time ,keyTime)) {
                 messageHandle.changeGameStatus(roomId ,GameStatusEnum.READY_COUNT_DOWN_START.getCode());
                 soc.setGameStatus(GameStatusEnum.READY_COUNT_DOWN_START.getCode());
             }
@@ -58,10 +61,10 @@ public class CountDownEvent extends Event {
                 messageHandle.changeGameStatus(roomId ,GameStatusEnum.READY_COUNT_DOWN_END.getCode());
             }
          //抢庄的倒计时
-        }else if (Objects.equals(listenerKey , ListenerKey.QIANG_ZHAUNG)) {
+        }else if (listenerKey.startsWith(ListenerKey.QIANG_ZHAUNG)) {
             soc.setHead(1020);
             soc.setCountDown(time);
-            if (time == 5) {
+            if (Objects.equals(time ,keyTime)) {
                 messageHandle.changeGameStatus(roomId ,GameStatusEnum.QIANG_ZHUANG_COUNT_DOWN_START.getCode());
                 soc.setGameStatus(GameStatusEnum.READY_COUNT_DOWN_START.getCode());
             }
@@ -76,11 +79,23 @@ public class CountDownEvent extends Event {
 
     private void addEvent(){
         //准备的倒计时
-        if (Objects.equals(listenerKey , ListenerKey.READY)) {
+        if (listenerKey.startsWith(ListenerKey.READY)) {
             actuator.addEvent(new FaPai4Event(roomId));
         //抢庄的倒计时
-        }else if (Objects.equals(listenerKey , ListenerKey.QIANG_ZHAUNG)) {
+        }else if (listenerKey.startsWith(ListenerKey.QIANG_ZHAUNG)) {
             actuator.addEvent(new SelectZhuangJiaEvent(roomId));
+        //转圈
+        }else if (listenerKey.startsWith(ListenerKey.ZHUAN_QUAN)) {
+            scheduleDispatch.addListener(new CountDownListener(ListenerKey.XIA_ZHU + ListenerKey.SPLIT + ListenerKey.TIME_FIVE));
         }
+    }
+
+    /**
+     * 得到time
+     * @return
+     */
+    protected Integer getTimeByKey(){
+        String str[] = listenerKey.split(ListenerKey.SPLIT);
+        return NumberUtil.stringFormatInteger(str[str.length-1]);
     }
 }
