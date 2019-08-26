@@ -47,6 +47,7 @@ public class SocketResult {
      * 1017--说话
      * 1018--切换为观战
      * 1019--房间的状态信息
+     * 1020--抢庄得倒计时
      * ****************************2000以上发给自己
      * 2002--房间内情况，发给新人，数据为其他人的得分，牌，是否抢庄等
      *
@@ -78,6 +79,11 @@ public class SocketResult {
      * 吃瓜群众，全程不能参与打牌
      */
     private Boolean isChiGuaPeople;
+
+    /**
+     * 刚进入房间是否有准备按钮
+     */
+    private Boolean readyButton;
 
     /**
      * 倒计时
@@ -172,7 +178,7 @@ public class SocketResult {
      * 5-----再发一张牌-摊牌倒计时前
      * 6-----摊牌倒计时-摊牌倒计时结束
      */
-    private Integer gameStatus;
+    private String gameStatus;
 
     public SocketResult(){}
 

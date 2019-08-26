@@ -317,8 +317,8 @@ public class NiuniuSocket extends BaseServer {
         socketResult.setHead(2002);
         String gameStatus = redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS);
         //设置准备的玩家
-        if (Objects.equals(gameStatus ,GameStatusEnum.BEFORE_FAPAI_4.getCode())) {
-            socketResult.setGameStatus(1);
+        if (Objects.equals(gameStatus ,GameStatusEnum.READY.getCode())) {
+            socketResult.setGameStatus(GameStatusEnum.READY.getCode());
             socketResult.setReadyPlayerIds(getReadyPlayers());
         }
         //设置玩家先发的4张牌

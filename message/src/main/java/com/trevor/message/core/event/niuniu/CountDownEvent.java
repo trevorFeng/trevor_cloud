@@ -1,10 +1,11 @@
 package com.trevor.message.core.event.niuniu;
 
-import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;
-import com.trevor.common.util.NumberUtil;
+import com.trevor.message.core.ListenerKey;
 import com.trevor.message.core.event.Event;
+
+import java.util.Objects;
 
 public class CountDownEvent extends Event {
 
@@ -18,33 +19,50 @@ public class CountDownEvent extends Event {
      */
     private Integer time;
 
-    private String roomId;
-
     public CountDownEvent(Integer time ,String roomId ,String listenerKey) {
         this.time = time;
-        this.roomId = roomId;
+        super.roomId = roomId;
         this.listenerKey = listenerKey;
     }
 
     @Override
     protected void executeEvent() {
         if (time != 0) {
-            SocketResult socketResult = new SocketResult(1002 ,time);
-            messageHandle.broadcast(socketResult ,roomId);
+            sendCountDown();
             this.time--;
             if (time == 0) {
                 //移除监听器
                 scheduleDispatch.removeListener(listenerKey);
-                //改变房间状态
-                redisService.put(RedisConstant.BASE_ROOM_INFO ,RedisConstant.GAME_STATUS , GameStatusEnum.FA_FOUR_PAI.getCode());
-                //给玩家发状态信息
-                socketResult = new SocketResult();
-                socketResult.setHead(1019);
-                socketResult.setGameStatus(NumberUtil.stringFormatInteger(GameStatusEnum.FA_FOUR_PAI.getCode()));
-                messageHandle.broadcast(socketResult ,roomId);
-                //添加发4张牌事件
-                actuator.addEvent(new FaPai4Event(roomId));
+                //添加事件
+                addEvent();
             }
+        }
+    }
+
+    private void sendCountDown(){
+        Integer head = 0;
+        if (Objects.equals(listenerKey , ListenerKey.READY)) {
+            head = 1002;
+        }else if (Objects.equals(listenerKey , ListenerKey.QIANG_ZHAUNG)) {
+            head = 1020;
+        }
+        SocketResult socketResult = new SocketResult(head ,time);
+        if (time == 5) {
+            messageHandle.changeGameStatus(roomId ,GameStatusEnum.READY_COUNT_DOWN_START.getCode());
+            socketResult.setGameStatus(GameStatusEnum.READY_COUNT_DOWN_START.getCode());
+        }
+        if (time == 1) {
+            socketResult.setGameStatus(GameStatusEnum.READY_COUNT_DOWN_END.getCode());
+            messageHandle.changeGameStatus(roomId ,GameStatusEnum.READY_COUNT_DOWN_END.getCode());
+        }
+        messageHandle.broadcast(socketResult ,roomId);
+    }
+
+    private void addEvent(){
+        if (Objects.equals(listenerKey , ListenerKey.READY)) {
+            actuator.addEvent(new FaPai4Event(roomId));
+        }else if (Objects.equals(listenerKey , ListenerKey.QIANG_ZHAUNG)) {
+
         }
     }
 }

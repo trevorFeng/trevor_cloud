@@ -68,6 +68,7 @@ public class RedisService {
      */
     public Set<String> getSetMembers(String key) {
         BoundSetOperations<String, String> bo = stringRedisTemplate.boundSetOps(key);
+
         return bo.members();
     }
 

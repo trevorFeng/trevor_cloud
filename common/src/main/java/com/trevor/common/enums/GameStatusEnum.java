@@ -4,23 +4,31 @@ public enum GameStatusEnum {
 
     READY("1" ,"准备"),
 
-    READY_COUNT_DOWN("2" ,"准备倒计时开始"),
+    READY_COUNT_DOWN_START("2" ,"准备倒计时开始"),
 
-    FA_FOUR_PAI("3" ,"发4张牌开始"),
+    READY_COUNT_DOWN_END("3" ,"准备倒计时结束"),
 
-    QIANG_ZHUANG_COUNT_DOWN("4" ,"抢庄倒计时"),
+    FA_FOUR_PAI("4" ,"发4张牌"),
 
-    QIANG_ZHUANG_ZHUAN_QUAN("5" ,"抢庄转圈"),
+    QIANG_ZHUANG_COUNT_DOWN_START("5" ,"抢庄倒计时开始"),
 
-    XIA_ZHU_COUNT_DOWN("6" ,"闲家下注倒计时"),
+    QIANG_ZHUANG_COUNT_DOWN_END("6" ,"抢庄倒计时结束"),
 
-    FA_ONE_PAI("7" ,"发一张牌"),
+    QIANG_ZHUANG_ZHUAN_QUAN("7" ,"选择庄家，加一个转圈得按钮和转圈得玩家id集合"),
 
-    TAN_PAI_COUNT_DOWN("8" ,"摊牌倒计时"),
+    XIA_ZHU_COUNT_DOWN_START("8" ,"闲家下注倒计时开始"),
 
-    JIE_SUAN("9" ,"本局结算"),
+    XIA_ZHU_COUNT_DOWN_END("9" ,"闲家下注倒计时结束"),
 
-    STOP_OR_CONTINUE("10" ,"下一局或者结束");
+    FA_ONE_PAI("10" ,"发一张牌"),
+
+    TAN_PAI_COUNT_DOWN_START("11" ,"摊牌倒计时开始"),
+
+    TAN_PAI_COUNT_DOWN_END("12" ,"摊牌倒计时结束"),
+
+    JIE_SUAN("13" ,"本局结算"),
+
+    STOP_OR_CONTINUE("14" ,"下一局或者结束");
 
     private String code ;
 

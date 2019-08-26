@@ -1,6 +1,5 @@
 package com.trevor.message.core.listener.niuniu;
 
-import com.trevor.message.core.event.Event;
 import com.trevor.message.core.event.niuniu.CountDownEvent;
 import com.trevor.message.core.listener.AbstractTaskListener;
 

@@ -37,7 +37,7 @@ public class ScheduleDispatch {
      * @param listener
      */
     public void removeListener(TaskListener listener){
-        listeners.remove(listener.getKey());
+        removeListener(listener.getKey());
     }
 
     /**

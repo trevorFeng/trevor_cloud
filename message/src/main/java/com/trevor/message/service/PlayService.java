@@ -6,8 +6,14 @@ import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.service.RedisService;
 import com.trevor.common.util.JsonUtil;
+import com.trevor.common.util.NumberUtil;
 import com.trevor.common.util.PokeUtil;
 import com.trevor.message.bo.SocketMessage;
+import com.trevor.message.core.ListenerKey;
+import com.trevor.message.core.actuator.Actuator;
+import com.trevor.message.core.event.niuniu.FaPai4Event;
+import com.trevor.message.core.listener.niuniu.CountDownListener;
+import com.trevor.message.core.schedule.ScheduleDispatch;
 import com.trevor.message.feign.PlayFeign;
 import com.trevor.message.socket.NiuniuSocket;
 import org.springframework.stereotype.Service;
@@ -34,39 +40,68 @@ public class PlayService {
     @Resource
     private RedisService redisService;
 
+    @Resource
+    private ScheduleDispatch scheduleDispatch;
+
+    @Resource
+    private Actuator actuator;
+
     /**
      * 处理准备的消息
      * @param roomId
      */
     public void dealReadyMessage(String roomId , NiuniuSocket socket){
-        String gameStatus = getRoomStatus(roomId);
-        //根据房间状态判断
-        if (gameStatus == null) {
-            socket.sendMessage(new SocketResult(-501));
-            return;
-        }
-        if (!Objects.equals(gameStatus , GameStatusEnum.BEFORE_FAPAI_4.getCode())) {
-            socket.sendMessage(new SocketResult(-501));
-            return;
+        Map<String ,String> map = redisService.getMap(RedisConstant.BASE_ROOM_INFO + roomId);
+        String runingNum = map.get(RedisConstant.RUNING_NUM);
+        //房间状态对不对
+        if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.READY.getCode())) {
+            //判断是否是最后一局，不是得话就准备下一局
+            if (Objects.equals(map.get(RedisConstant.RUNING_NUM) ,map.get(RedisConstant.TOTAL_NUM))) {
+                socket.sendMessage(new SocketResult(-501));
+                return;
+            }else {
+                //准备的人是否是真正的玩家
+                if (!redisService.jugeSetMember(RedisConstant.REAL_ROOM_PLAYER + roomId ,socket.userId)) {
+                    socket.sendMessage(new SocketResult(-502));
+                    return;
+                }
+                String nextRuningNum = NumberUtil.stringFormatInteger(runingNum) + 1 + "";
+                redisService.setAdd(RedisConstant.READY_PLAYER + roomId + "_" + nextRuningNum ,socket.userId);
+            }
+
         }
         //准备的人是否是真正的玩家
-        if (!redisService.getSetMembers(RedisConstant.REAL_ROOM_PLAYER + roomId).contains(socket.userId)) {
+        if (!redisService.jugeSetMember(RedisConstant.REAL_ROOM_PLAYER + roomId ,socket.userId)) {
             socket.sendMessage(new SocketResult(-502));
             return;
         }
-        redisService.setAdd(RedisConstant.READY_PLAYER + roomId ,socket.userId);
+        redisService.setAdd(RedisConstant.READY_PLAYER + roomId + "_" + runingNum,socket.userId);
         //广播准备的消息
-        roomSocketService.broadcast(roomId ,new SocketResult(1003 ,socket.userId));
+        SocketResult soc = new SocketResult();
+        soc.setHead(1003);
+        soc.setReadyPlayerIds(redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId + "_" + runingNum));
+        roomSocketService.broadcast(roomId ,soc);
+
+
 
         //准备的人数超过两人
         Integer readyPlayerSize = redisService.getSetSize(RedisConstant.READY_PLAYER + roomId);
         Integer realPlayerSize = redisService.getSetSize(RedisConstant.REAL_ROOM_PLAYER + roomId);
+
+        //如果准备得玩家等于真正玩家得人数，则移除监听器,直接开始发牌
+        if (Objects.equals(readyPlayerSize ,realPlayerSize)) {
+            scheduleDispatch.removeListener(ListenerKey.READY + roomId);
+            actuator.addEvent(new FaPai4Event(roomId));
+        }
+
         //判断房间里真正玩家的人数，如果只有两人，直接开始游戏，否则开始倒计时
         if (readyPlayerSize == 2) {
             if (realPlayerSize == 2) {
-                playFeign.niuniuEqualsTwo(roomId);
+                //执行发牌事件
+                actuator.addEvent(new FaPai4Event(roomId));
             }else if (realPlayerSize > 2) {
-                playFeign.niuniuOverTwo(roomId);
+                //注册准备倒计时监听器
+                scheduleDispatch.addListener(new CountDownListener(ListenerKey.READY + roomId));
             }
         }
     }
