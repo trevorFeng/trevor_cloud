@@ -18,5 +18,7 @@ public class ListenerKey {
 
     public static String TAI_PAI = "tanPai";
 
+    public static String SETTLE = "settle";
+
 
 }

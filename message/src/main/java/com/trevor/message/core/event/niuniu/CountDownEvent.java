@@ -31,7 +31,7 @@ public class CountDownEvent extends Event {
     protected void executeEvent() {
         if (time != 0) {
             //前端转圈效果不发送倒计时
-            if (!listenerKey.startsWith(ListenerKey.ZHUAN_QUAN)) {
+            if (!listenerKey.startsWith(ListenerKey.ZHUAN_QUAN) && !listenerKey.startsWith(ListenerKey.SETTLE)) {
                 sendCountDown();
             }
             this.time--;
@@ -94,6 +94,21 @@ public class CountDownEvent extends Event {
                 messageHandle.broadcast(soc ,roomId);
                 messageHandle.changeGameStatus(roomId ,GameStatusEnum.XIA_ZHU_COUNT_DOWN_END.getCode());
             }
+        //摊牌的倒计时
+        }else if (listenerKey.startsWith(ListenerKey.TAI_PAI)) {
+            if (Objects.equals(time ,keyTime)) {
+                soc.setHead(1009);
+                soc.setGameStatus(GameStatusEnum.TAN_PAI_COUNT_DOWN_START.getCode());
+
+                messageHandle.changeGameStatus(roomId ,GameStatusEnum.TAN_PAI_COUNT_DOWN_START.getCode());
+                messageHandle.broadcast(soc ,roomId);
+            }else if (time == 1) {
+                soc.setHead(1008);
+                soc.setGameStatus(GameStatusEnum.TAN_PAI_COUNT_DOWN_END.getCode());
+
+                messageHandle.broadcast(soc ,roomId);
+                messageHandle.changeGameStatus(roomId ,GameStatusEnum.TAN_PAI_COUNT_DOWN_END.getCode());
+            }
         }
 
     }
@@ -108,11 +123,14 @@ public class CountDownEvent extends Event {
             actuator.addEvent(new SelectZhuangJiaEvent(roomId));
         //转圈
         }else if (listenerKey.startsWith(ListenerKey.ZHUAN_QUAN)) {
-            scheduleDispatch.addListener(new CountDownListener(ListenerKey.XIA_ZHU + ListenerKey.SPLIT + ListenerKey.TIME_FIVE));
+            scheduleDispatch.addListener(new CountDownListener(ListenerKey.XIA_ZHU + ListenerKey.SPLIT + roomId + ListenerKey.SPLIT +ListenerKey.TIME_FIVE));
         //下注
         }else if (listenerKey.startsWith(ListenerKey.XIA_ZHU)) {
             actuator.addEvent(new DefaultXiaZhuEvent(roomId));
-        }
+        //摊牌倒计时
+        }else if (listenerKey.startsWith(ListenerKey.TAI_PAI)) {
+            scheduleDispatch.addListener(new CountDownListener(ListenerKey.SETTLE + ListenerKey.SPLIT + roomId + ListenerKey.SPLIT + ListenerKey.TIME_TWO));
+        }else if ()
     }
 
     /**

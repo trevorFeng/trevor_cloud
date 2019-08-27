@@ -12,6 +12,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * 默认下注事件
+ */
 public class DefaultXiaZhuEvent extends Event {
 
     public DefaultXiaZhuEvent(String roomId) {
@@ -36,9 +39,7 @@ public class DefaultXiaZhuEvent extends Event {
             soc.setXianJiaXiaZhuMap(map);
             soc.setGameStatus(GameStatusEnum.DEFAULT_XIA_ZHU.getCode());
             messageHandle.broadcast(soc ,roomId);
-            actuator.addEvent(new FaPai4Event(roomId));
-//            scheduleDispatch.addListener(new CountDownListener(ListenerKey.TAI_PAI + ListenerKey.SPLIT + roomId
-//                    + ListenerKey.SPLIT + ListenerKey.TIME_FIVE));
+            actuator.addEvent(new FaPai1Event(roomId));
         }
     }
 }

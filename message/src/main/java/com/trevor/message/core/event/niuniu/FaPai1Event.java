@@ -9,7 +9,9 @@ import com.trevor.common.enums.NiuNiuPaiXingEnum;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.NumberUtil;
 import com.trevor.common.util.PokeUtil;
+import com.trevor.message.core.ListenerKey;
 import com.trevor.message.core.event.Event;
+import com.trevor.message.core.listener.niuniu.CountDownListener;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -56,6 +58,8 @@ public class FaPai1Event extends Event {
         socketResult.setGameStatus(GameStatusEnum.FA_ONE_PAI.getCode());
 
         messageHandle.broadcast(socketResult ,roomId);
+        //注册摊牌倒计时事件
+        scheduleDispatch.addListener(new CountDownListener(ListenerKey.TAI_PAI + ListenerKey.SPLIT + roomId + ListenerKey.SPLIT + ListenerKey.TIME_FIVE));
     }
 
     private void calcScore(String roomId ,List<Integer> paiXing ,Integer rule ,Integer basePoint
