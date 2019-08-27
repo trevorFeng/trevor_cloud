@@ -26,25 +26,26 @@ public class FaPai1Event extends Event {
     @Override
     protected void executeEvent() {
         Map<String ,String> baseRoomInfoMap = redisService.getMap(RedisConstant.BASE_ROOM_INFO + roomId);
-        List<Integer> paiXing = JsonUtil.parseJavaList(baseRoomInfoMap.get(RedisConstant.PAI_XING) ,Integer.class);
+        List<Integer> paiXingList = JsonUtil.parseJavaList(baseRoomInfoMap.get(RedisConstant.PAI_XING) ,Integer.class);
         Integer rule = NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.RULE));
         Integer basePoint = NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.BASE_POINT));
         Map<String ,PaiXing> paiXingMap = new HashMap<>();
         Map<String ,Integer> scoreMap = new HashMap<>(2<<4);
         calcScore(roomId
-                ,paiXing
+                ,paiXingList
                 ,rule
                 ,basePoint
                 ,scoreMap
                 ,paiXingMap);
-        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS , GameStatusEnum.BEFORE_TABPAI_COUNTDOWN.getCode());
+
+        messageHandle.changeGameStatus(roomId ,GameStatusEnum.FA_ONE_PAI.getCode());
+
         Map<String , List<String>> userPokeMap_5 = new HashMap<>(2<<4);
         Map<String, String> map = redisService.getMap(RedisConstant.POKES + roomId);
         for (Map.Entry<String ,String> entry : map.entrySet()) {
             userPokeMap_5.put(entry.getKey() , JsonUtil.parseJavaList(entry.getValue() ,String.class));
         }
         SocketResult socketResult = new SocketResult(1008 , userPokeMap_5);
-
         socketResult.setScoreMap(scoreMap);
 
         Map<String ,Integer> paiXing = new HashMap<>();
@@ -52,8 +53,9 @@ public class FaPai1Event extends Event {
             paiXing.put(entry.getKey() ,entry.getValue().getPaixing());
         }
         socketResult.setPaiXing(paiXing);
+        socketResult.setGameStatus(GameStatusEnum.FA_ONE_PAI.getCode());
 
-        broadcast(socketResult ,roomId);
+        messageHandle.broadcast(socketResult ,roomId);
     }
 
     private void calcScore(String roomId ,List<Integer> paiXing ,Integer rule ,Integer basePoint

@@ -16,5 +16,7 @@ public class ListenerKey {
 
     public static String XIA_ZHU = "xiaZhu";
 
+    public static String TAI_PAI = "tanPai";
+
 
 }

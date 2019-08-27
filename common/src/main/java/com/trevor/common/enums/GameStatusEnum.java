@@ -14,11 +14,13 @@ public enum GameStatusEnum {
 
     QIANG_ZHUANG_COUNT_DOWN_END("6" ,"抢庄倒计时结束"),
 
-    QIANG_ZHUANG_ZHUAN_QUAN("7" ,"选择庄家，加转圈得玩家id集合"),
+    QIANG_ZHUANG_ZHUAN_QUAN("7" ,"选择庄家，转圈得玩家id集合"),
 
     XIA_ZHU_COUNT_DOWN_START("8" ,"闲家下注倒计时开始"),
 
     XIA_ZHU_COUNT_DOWN_END("9" ,"闲家下注倒计时结束"),
+
+    DEFAULT_XIA_ZHU("10" ,"默认下注"),
 
     FA_ONE_PAI("10" ,"发一张牌"),
 

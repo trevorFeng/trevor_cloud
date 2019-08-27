@@ -74,7 +74,9 @@ SelectZhuangJiaEvent extends Event {
         messageHandle.broadcast(socketResult ,roomId);
         //注册转圈倒计时
         if (!noZhuanQuan) {
-            scheduleDispatch.addListener(new CountDownListener(ListenerKey.ZHUAN_QUAN + ListenerKey.SPLIT + ListenerKey.TIME_TWO));
+            scheduleDispatch.addListener(new CountDownListener(ListenerKey.ZHUAN_QUAN + ListenerKey.SPLIT + roomId + ListenerKey.SPLIT + ListenerKey.TIME_TWO));
+        }else {
+            scheduleDispatch.addListener(new CountDownListener(ListenerKey.XIA_ZHU + ListenerKey.SPLIT + roomId + ListenerKey.SPLIT + ListenerKey.TIME_FIVE));
         }
     }
 
