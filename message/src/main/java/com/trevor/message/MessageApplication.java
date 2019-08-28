@@ -18,7 +18,6 @@ import java.util.concurrent.Executor;
 @SpringBootApplication
 @ComponentScan(basePackages = {"com.trevor.common","com.trevor.message"})
 @EnableEurekaClient
-@EnableFeignClients
 @MapperScan("com.trevor.common.dao.mysql")
 @Configuration
 @EnableScheduling

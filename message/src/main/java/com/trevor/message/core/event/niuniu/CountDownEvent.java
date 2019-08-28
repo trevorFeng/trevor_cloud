@@ -34,6 +34,9 @@ public class CountDownEvent extends Event {
             if (!listenerKey.startsWith(ListenerKey.ZHUAN_QUAN) && !listenerKey.startsWith(ListenerKey.SETTLE)) {
                 sendCountDown();
             }
+            if (listenerKey.startsWith(ListenerKey.SETTLE)) {
+
+            }
             this.time--;
             if (time == 0) {
                 //移除监听器
@@ -114,31 +117,33 @@ public class CountDownEvent extends Event {
     }
 
 
-    private void addEvent(){
+    private void addEvent() {
         //准备的倒计时
         if (listenerKey.startsWith(ListenerKey.READY)) {
             actuator.addEvent(new FaPai4Event(roomId));
-        //抢庄的倒计时
-        }else if (listenerKey.startsWith(ListenerKey.QIANG_ZHAUNG)) {
+            //抢庄的倒计时
+        } else if (listenerKey.startsWith(ListenerKey.QIANG_ZHAUNG)) {
             actuator.addEvent(new SelectZhuangJiaEvent(roomId));
-        //转圈
-        }else if (listenerKey.startsWith(ListenerKey.ZHUAN_QUAN)) {
-            scheduleDispatch.addListener(new CountDownListener(ListenerKey.XIA_ZHU + ListenerKey.SPLIT + roomId + ListenerKey.SPLIT +ListenerKey.TIME_FIVE));
-        //下注
-        }else if (listenerKey.startsWith(ListenerKey.XIA_ZHU)) {
+            //转圈
+        } else if (listenerKey.startsWith(ListenerKey.ZHUAN_QUAN)) {
+            scheduleDispatch.addListener(new CountDownListener(ListenerKey.XIA_ZHU + ListenerKey.SPLIT + roomId + ListenerKey.SPLIT + ListenerKey.TIME_FIVE));
+            //下注
+        } else if (listenerKey.startsWith(ListenerKey.XIA_ZHU)) {
             actuator.addEvent(new DefaultXiaZhuEvent(roomId));
-        //摊牌倒计时
-        }else if (listenerKey.startsWith(ListenerKey.TAI_PAI)) {
-            scheduleDispatch.addListener(new CountDownListener(ListenerKey.SETTLE + ListenerKey.SPLIT + roomId + ListenerKey.SPLIT + ListenerKey.TIME_TWO));
-        }else if ()
+            //摊牌倒计时
+        } else if (listenerKey.startsWith(ListenerKey.TAI_PAI)) {
+            actuator.addEvent(new StopOrContinueEvent(roomId));
+        }
     }
 
     /**
      * 得到time
      * @return
      */
-    protected Integer getTimeByKey(){
+    private Integer getTimeByKey(){
         String str[] = listenerKey.split(ListenerKey.SPLIT);
         return NumberUtil.stringFormatInteger(str[str.length-1]);
     }
+
+
 }

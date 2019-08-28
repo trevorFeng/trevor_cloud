@@ -1,7 +1,6 @@
 package com.trevor.message.core.event.niuniu;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;

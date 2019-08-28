@@ -18,7 +18,14 @@ public class ListenerKey {
 
     public static String TAI_PAI = "tanPai";
 
+    /**
+     *  结算
+     */
     public static String SETTLE = "settle";
+
+    public static String getListenerKey(String key ,String roomId ,String time){
+        return key + SPLIT + roomId + SPLIT + time;
+    }
 
 
 }

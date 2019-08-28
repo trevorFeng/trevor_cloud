@@ -14,7 +14,6 @@ import com.trevor.message.core.actuator.Actuator;
 import com.trevor.message.core.event.niuniu.FaPai4Event;
 import com.trevor.message.core.listener.niuniu.CountDownListener;
 import com.trevor.message.core.schedule.ScheduleDispatch;
-import com.trevor.message.feign.PlayFeign;
 import com.trevor.message.socket.NiuniuSocket;
 import org.springframework.stereotype.Service;
 
@@ -34,8 +33,6 @@ public class PlayService {
     @Resource
     private RoomSocketService roomSocketService;
 
-    @Resource
-    private PlayFeign playFeign;
 
     @Resource
     private RedisService redisService;
@@ -111,7 +108,7 @@ public class PlayService {
      */
     public void dealQiangZhuangMessage(String roomId , NiuniuSocket socket , SocketMessage socketMessage){
         //验证状态
-        if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.BEFORE_SELECT_ZHUANGJIA.getCode())) {
+        if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.QIANG_ZHUANG_COUNT_DOWN_START.getCode())) {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
@@ -124,6 +121,19 @@ public class PlayService {
 
         //广播抢庄的消息
         roomSocketService.broadcast(roomId ,new SocketResult(1010 ,socket.userId ,socketMessage.getQiangZhuangMultiple()));
+
+        //准备的人数超过两人
+        Integer readyPlayerSize = redisService.getSetSize(RedisConstant.READY_PLAYER + roomId);
+        Integer qiangZhuangSize = redisService.getMapSize(RedisConstant.QIANGZHAUNG + roomId);
+
+        if (Objects.equals(readyPlayerSize ,qiangZhuangSize)) {
+            //删除抢庄倒计时监听器
+            scheduleDispatch.removeListener(ListenerKey.getListenerKey(ListenerKey.QIANG_ZHAUNG ,roomId ,ListenerKey.TIME_FIVE));
+            //添加事件
+
+        }
+
+
     }
 
     /**
@@ -131,7 +141,7 @@ public class PlayService {
      * @param roomId
      */
     public void dealXiaZhuMessage(String roomId , NiuniuSocket socket , SocketMessage socketMessage){
-        if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.BEFORE_LAST_POKE.getCode())) {
+        if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.XIA_ZHU_COUNT_DOWN_START.getCode())) {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
@@ -154,7 +164,7 @@ public class PlayService {
      */
     public void dealTanPaiMessage(String roomId , NiuniuSocket socket){
         //状态信息
-        if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.BEFORE_CALRESULT.getCode())) {
+        if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.TAN_PAI_COUNT_DOWN_START.getCode())) {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
