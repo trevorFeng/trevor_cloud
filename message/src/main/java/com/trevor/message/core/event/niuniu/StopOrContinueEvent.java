@@ -21,6 +21,7 @@ public class StopOrContinueEvent extends Event {
 
     @Override
     protected void executeEvent() {
+
         Map<String, String> baseRoomInfoMap = redisService.getMap(RedisConstant.BASE_ROOM_INFO + roomId);
         //保存结果
         List<PlayerResult> playerResults = generatePlayerResults(roomId, baseRoomInfoMap);

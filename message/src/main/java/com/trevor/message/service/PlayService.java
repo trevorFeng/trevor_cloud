@@ -11,17 +11,16 @@ import com.trevor.common.util.PokeUtil;
 import com.trevor.message.bo.SocketMessage;
 import com.trevor.message.core.ListenerKey;
 import com.trevor.message.core.actuator.Actuator;
+import com.trevor.message.core.event.niuniu.FaPai1Event;
 import com.trevor.message.core.event.niuniu.FaPai4Event;
+import com.trevor.message.core.event.niuniu.SelectZhuangJiaEvent;
 import com.trevor.message.core.listener.niuniu.CountDownListener;
 import com.trevor.message.core.schedule.ScheduleDispatch;
 import com.trevor.message.socket.NiuniuSocket;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author trevor
@@ -112,28 +111,25 @@ public class PlayService {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
+        Set<String> readyPlayers = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
         if (!checkAlreadyReady(roomId ,socket ,-503)) {
             return;
         }
         if (!Objects.equals(socketMessage.getQiangZhuangMultiple() , 0)) {
             redisService.put(RedisConstant.QIANGZHAUNG + roomId ,socket.userId ,socketMessage.getQiangZhuangMultiple().toString());
         }
-
         //广播抢庄的消息
         roomSocketService.broadcast(roomId ,new SocketResult(1010 ,socket.userId ,socketMessage.getQiangZhuangMultiple()));
 
-        //准备的人数超过两人
-        Integer readyPlayerSize = redisService.getSetSize(RedisConstant.READY_PLAYER + roomId);
+        Integer readyPlayerSize = readyPlayers.size();
         Integer qiangZhuangSize = redisService.getMapSize(RedisConstant.QIANGZHAUNG + roomId);
 
         if (Objects.equals(readyPlayerSize ,qiangZhuangSize)) {
             //删除抢庄倒计时监听器
             scheduleDispatch.removeListener(ListenerKey.getListenerKey(ListenerKey.QIANG_ZHAUNG ,roomId ,ListenerKey.TIME_FIVE));
-            //添加事件
-
+            //添加选择庄家事件事件
+            actuator.addEvent(new SelectZhuangJiaEvent(roomId));
         }
-
-
     }
 
     /**
@@ -145,6 +141,7 @@ public class PlayService {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
+        Set<String> readyPlayers = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
         if (!checkAlreadyReady(roomId ,socket ,-504)) {
             return;
         }
@@ -156,6 +153,15 @@ public class PlayService {
         redisService.put(RedisConstant.XIANJIA_XIAZHU + roomId ,socket.userId ,socketMessage.getXianJiaMultiple().toString());
         //广播下注的消息
         roomSocketService.broadcast(roomId ,new SocketResult(1011 ,socket.userId ,socketMessage.getXianJiaMultiple(), Boolean.TRUE));
+
+        Integer readyPlayerSize = readyPlayers.size();
+        Integer xiaZhuSize = redisService.getMapSize(RedisConstant.XIANJIA_XIAZHU + roomId);
+        if (Objects.equals(readyPlayerSize - 1 ,xiaZhuSize)) {
+            //删除下注倒计时监听器
+            scheduleDispatch.removeListener(ListenerKey.getListenerKey(ListenerKey.XIA_ZHU ,roomId ,ListenerKey.TIME_FIVE));
+            //添加发一张牌事件
+            actuator.addEvent(new FaPai1Event(roomId));
+        }
     }
 
     /**
@@ -168,6 +174,7 @@ public class PlayService {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
+        Set<String> readyPlayers = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
         if (!checkAlreadyReady(roomId ,socket ,-503)) {
             return;
         }
@@ -176,14 +183,18 @@ public class PlayService {
         SocketResult socketResult = new SocketResult();
         socketResult.setHead(1014);
         socketResult.setUserId(socket.userId);
-        List<String> pokes = JsonUtil.parseJavaList(redisService.getHashValue(RedisConstant.POKES + socket.roomId ,socket.userId) ,String.class);
-        List<Integer> paiXingSet = JsonUtil.parseJavaList(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.PAIXING) , Integer.class);
-        Integer rule = Integer.valueOf(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.RULE));
-        PaiXing paiXing = PokeUtil.isNiuNiu(pokes ,paiXingSet ,rule);
-        Map<String ,Integer> map = new HashMap<>();
-        map.put(socket.userId ,paiXing.getPaixing());
-        socketResult.setPaiXing(map);
         roomSocketService.broadcast(roomId ,socketResult);
+
+        Integer readyPlayerSize = readyPlayers.size();
+        Integer tanPaiSize = redisService.getMapSize(RedisConstant.TANPAI + roomId);
+
+        if (Objects.equals(readyPlayerSize ,tanPaiSize)) {
+            //删除摊牌倒计时监听器
+            scheduleDispatch.removeListener(ListenerKey.getListenerKey(ListenerKey.TAI_PAI ,roomId ,ListenerKey.TIME_FIVE));
+            //添加发一张牌事件
+            actuator.addEvent(new FaPai1Event(roomId));
+        }
+
     }
 
     /**
