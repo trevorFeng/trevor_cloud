@@ -21,7 +21,9 @@ public class ScheduleDispatch {
      * @param listener
      */
     public void addListener(TaskListener listener) {
-        listeners.put(listener.getKey() ,listener);
+        if (!listeners.containsKey(listener)) {
+            listeners.put(listener.getKey() ,listener);
+        }
     }
 
     /**
