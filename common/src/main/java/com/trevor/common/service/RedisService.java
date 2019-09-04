@@ -16,6 +16,10 @@ public class RedisService {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
+    public Boolean hasKey(String redisKey){
+        return stringRedisTemplate.hasKey(redisKey);
+    }
+
     /**
      * 删除键值对
      * @param key

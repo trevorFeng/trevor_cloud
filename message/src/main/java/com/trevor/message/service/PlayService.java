@@ -47,12 +47,14 @@ public class PlayService {
      * @param roomId
      */
     public void dealReadyMessage(String roomId , NiuniuSocket socket){
-        Map<String ,String> map = redisService.getMap(RedisConstant.BASE_ROOM_INFO + roomId);
-        String runingNum = map.get(RedisConstant.RUNING_NUM);
-        //房间状态对不对
-        if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.READY.getCode())) {
+        String runingNum = redisService.getValue(RedisConstant.getRuningNum(roomId));
+        String gameStatus = redisService.getValue(RedisConstant.getGameStatus(roomId ,runingNum));
+        //房间状态不是准备状态，可以准备下一局
+        if (!Objects.equals(gameStatus , GameStatusEnum.READY.getCode())) {
             //判断是否是最后一局，不是得话就准备下一局
-            if (Objects.equals(map.get(RedisConstant.RUNING_NUM) ,map.get(RedisConstant.TOTAL_NUM))) {
+            String runingNum = redisService.getValue(RedisConstant.getRedisConstant(RedisConstant.RUNING_NUM, roomId, null));
+            if (Objects.equals(runingNum ,redisService.getHashValue(
+                    RedisConstant.getRedisConstant(RedisConstant.BASE_ROOM_INFO ,roomId ,null) ,RedisConstant.TOTAL_NUM))) {
                 socket.sendMessage(new SocketResult(-501));
                 return;
             }else {
@@ -64,38 +66,38 @@ public class PlayService {
                 String nextRuningNum = NumberUtil.stringFormatInteger(runingNum) + 1 + "";
                 redisService.setAdd(RedisConstant.READY_PLAYER + roomId + "_" + nextRuningNum ,socket.userId);
             }
+        }else {
+            //准备的人是否是真正的玩家
+            if (!redisService.jugeSetMember(RedisConstant.REAL_ROOM_PLAYER + roomId ,socket.userId)) {
+                socket.sendMessage(new SocketResult(-502));
+                return;
+            }
+            redisService.setAdd(RedisConstant.READY_PLAYER + roomId + "_" + runingNum,socket.userId);
+            //广播准备的消息
+            SocketResult soc = new SocketResult();
+            soc.setHead(1003);
+            soc.setReadyPlayerIds(redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId + "_" + runingNum));
+            roomSocketService.broadcast(roomId ,soc);
 
-        }
-        //准备的人是否是真正的玩家
-        if (!redisService.jugeSetMember(RedisConstant.REAL_ROOM_PLAYER + roomId ,socket.userId)) {
-            socket.sendMessage(new SocketResult(-502));
-            return;
-        }
-        redisService.setAdd(RedisConstant.READY_PLAYER + roomId + "_" + runingNum,socket.userId);
-        //广播准备的消息
-        SocketResult soc = new SocketResult();
-        soc.setHead(1003);
-        soc.setReadyPlayerIds(redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId + "_" + runingNum));
-        roomSocketService.broadcast(roomId ,soc);
+            //准备的人数超过两人
+            Integer readyPlayerSize = redisService.getSetSize(RedisConstant.READY_PLAYER + roomId);
+            Integer realPlayerSize = redisService.getSetSize(RedisConstant.REAL_ROOM_PLAYER + roomId);
 
-        //准备的人数超过两人
-        Integer readyPlayerSize = redisService.getSetSize(RedisConstant.READY_PLAYER + roomId);
-        Integer realPlayerSize = redisService.getSetSize(RedisConstant.REAL_ROOM_PLAYER + roomId);
-
-        //如果准备得玩家等于真正玩家得人数，则移除监听器,直接开始发牌
-        if (Objects.equals(readyPlayerSize ,realPlayerSize)) {
-            scheduleDispatch.removeListener(ListenerKey.READY + roomId);
-            actuator.addEvent(new FaPai4Event(roomId));
-        }
-
-        //判断房间里真正玩家的人数，如果只有两人，直接开始游戏，否则开始倒计时
-        if (readyPlayerSize == 2) {
-            if (realPlayerSize == 2) {
-                //执行发牌事件
+            //如果准备得玩家等于真正玩家得人数，则移除监听器,直接开始发牌
+            if (Objects.equals(readyPlayerSize ,realPlayerSize)) {
+                scheduleDispatch.removeListener(ListenerKey.READY + roomId);
                 actuator.addEvent(new FaPai4Event(roomId));
-            }else if (realPlayerSize > 2) {
-                //注册准备倒计时监听器
-                scheduleDispatch.addListener(new CountDownListener(ListenerKey.READY + roomId));
+            }
+
+            //判断房间里真正玩家的人数，如果只有两人，直接开始游戏，否则开始倒计时
+            if (readyPlayerSize == 2) {
+                if (realPlayerSize == 2) {
+                    //执行发牌事件
+                    actuator.addEvent(new FaPai4Event(roomId));
+                }else if (realPlayerSize > 2) {
+                    //注册准备倒计时监听器
+                    scheduleDispatch.addListener(new CountDownListener(ListenerKey.READY + roomId));
+                }
             }
         }
     }
@@ -241,15 +243,5 @@ public class PlayService {
             return false;
         }
         return true;
-    }
-
-    /**
-     * 得到房间状态
-     * @param roomId
-     * @return
-     */
-    private String getRoomStatus(String roomId){
-        String gameStatus = redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS);
-        return gameStatus;
     }
 }
