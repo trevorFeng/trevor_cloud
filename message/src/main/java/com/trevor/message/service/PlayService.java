@@ -83,7 +83,8 @@ public class PlayService {
             //如果准备得玩家等于真正玩家得人数，则移除监听器,直接开始发牌
             if (Objects.equals(readyPlayerSize ,realPlayerSize)) {
                 scheduleDispatch.removeListener(ListenerKey.READY + roomId);
-                actuator.addEvent(new FaPai4Event(roomId));
+                actuator.addEvent(new FaPai4Event(roomId ,runingNum));
+
             }
 
             //判断房间里真正玩家的人数，如果只有两人，直接开始游戏，否则开始倒计时
@@ -100,29 +101,34 @@ public class PlayService {
      * @param roomId
      */
     public void dealQiangZhuangMessage(String roomId , NiuniuSocket socket , SocketMessage socketMessage){
+        //当前局数
+        String runingNum = redisService.getValue(RedisConstant.getRuningNum(roomId));
+        //当前的房间状态
+        String gameStatus = redisService.getValue(RedisConstant.getGameStatus(roomId ,runingNum));
         //验证状态
-        if (!Objects.equals(getRoomStatus(roomId) , GameStatusEnum.QIANG_ZHUANG_COUNT_DOWN_START.getCode())) {
+        if (!Objects.equals(gameStatus , GameStatusEnum.QIANG_ZHUANG_COUNT_DOWN_START.getCode())) {
             socket.sendMessage(new SocketResult(-501));
             return;
         }
-        Set<String> readyPlayers = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
+        Set<String> readyPlayers = redisService.getSetMembers(RedisConstant.getReadyPlayer(roomId ,runingNum));
         if (!checkAlreadyReady(roomId ,socket ,-503)) {
             return;
         }
-        if (!Objects.equals(socketMessage.getQiangZhuangMultiple() , 0)) {
-            redisService.put(RedisConstant.QIANGZHAUNG + roomId ,socket.userId ,socketMessage.getQiangZhuangMultiple().toString());
-        }
+
+        Integer multiple = socketMessage.getQiangZhuangMultiple() == 0 ? 1 : socketMessage.getQiangZhuangMultiple();
+        redisService.put(RedisConstant.getQiangZhuang(roomId ,runingNum) ,socket.userId ,multiple.toString());
+
         //广播抢庄的消息
         roomSocketService.broadcast(roomId ,new SocketResult(1010 ,socket.userId ,socketMessage.getQiangZhuangMultiple()));
 
         Integer readyPlayerSize = readyPlayers.size();
-        Integer qiangZhuangSize = redisService.getMapSize(RedisConstant.QIANGZHAUNG + roomId);
+        Integer qiangZhuangSize = redisService.getMapSize(RedisConstant.getQiangZhuang(roomId ,runingNum));
 
         if (Objects.equals(readyPlayerSize ,qiangZhuangSize)) {
             //删除抢庄倒计时监听器
-            scheduleDispatch.removeListener(ListenerKey.getListenerKey(ListenerKey.QIANG_ZHAUNG ,roomId ,ListenerKey.TIME_FIVE));
+            scheduleDispatch.removeListener(ListenerKey.getQiangZhaungKey(roomId ,runingNum ,ListenerKey.TIME_FIVE));
             //添加选择庄家事件事件
-            actuator.addEvent(new SelectZhuangJiaEvent(roomId));
+            actuator.addEvent(new SelectZhuangJiaEvent(roomId ,runingNum));
         }
     }
 

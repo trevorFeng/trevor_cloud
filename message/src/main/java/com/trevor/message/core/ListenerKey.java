@@ -37,7 +37,7 @@ public class ListenerKey {
 
     public static String getReadyKey(String roomId , String runingNum ,Integer time){return READY + SPLIT + roomId + SPLIT + runingNum + SPLIT + time;}
 
-    public static String getQiangZhaungKey(String roomId , String runingNum ,Integer time){return QIANG_ZHAUNG + SPLIT + roomId + SPLIT + runingNum + SPLIT + time;}
+    public static String getQiangZhaungKey(String roomId , String runingNum ,String time){return QIANG_ZHAUNG + SPLIT + roomId + SPLIT + runingNum + SPLIT + time;}
 
 
 }
