@@ -18,13 +18,14 @@ import java.util.*;
 public class
 SelectZhuangJiaEvent extends Event {
 
-    public SelectZhuangJiaEvent(String roomId) {
+    public SelectZhuangJiaEvent(String roomId ,String runingNum) {
         super.roomId = roomId;
+        super.runingNum = runingNum;
     }
 
     @Override
     protected void executeEvent() {
-        Map<String, String> qiangZhuangMap = redisService.getMap(RedisConstant.QIANGZHAUNG + roomId);
+        Map<String, String> qiangZhuangMap = redisService.getMap(RedisConstant.getQiangZhuang(roomId ,runingNum));
 
         String zhuangJiaUserId;
         List<String> qiangZhuangZhuanQuanList = Lists.newArrayList();
@@ -61,7 +62,7 @@ SelectZhuangJiaEvent extends Event {
             }
         }
         //设置庄家
-        redisService.setValue(RedisConstant.ZHUANGJIA + roomId ,zhuangJiaUserId);
+        redisService.setValue(RedisConstant.getZhuangJia(roomId ,runingNum) ,zhuangJiaUserId);
         //改变状态
         redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS , GameStatusEnum.QIANG_ZHUANG_ZHUAN_QUAN.getCode());
         SocketResult socketResult = new SocketResult(1006 ,zhuangJiaUserId);

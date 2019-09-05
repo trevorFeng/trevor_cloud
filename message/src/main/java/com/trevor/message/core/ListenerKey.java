@@ -23,9 +23,21 @@ public class ListenerKey {
      */
     public static String SETTLE = "settle";
 
-    public static String getListenerKey(String key ,String roomId ,String time){
-        return key + SPLIT + roomId + SPLIT + time;
+    /**
+     *
+     * @param key
+     * @param roomId
+     * @param runingNum
+     * @param time
+     * @return
+     */
+    public static String getListenerKey(String key ,String roomId , String runingNum ,Integer time){
+        return key + SPLIT + roomId + SPLIT + runingNum + SPLIT + time;
     }
+
+    public static String getReadyKey(String roomId , String runingNum ,Integer time){return READY + SPLIT + roomId + SPLIT + runingNum + SPLIT + time;}
+
+    public static String getQiangZhaungKey(String roomId , String runingNum ,Integer time){return QIANG_ZHAUNG + SPLIT + roomId + SPLIT + runingNum + SPLIT + time;}
 
 
 }

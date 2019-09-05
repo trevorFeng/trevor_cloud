@@ -14,6 +14,8 @@ public abstract class Event implements Runnable{
 
     protected String roomId;
 
+    protected String runingNum;
+
     public static Actuator actuator;
 
     public static ScheduleDispatch scheduleDispatch;

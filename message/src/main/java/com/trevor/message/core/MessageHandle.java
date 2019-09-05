@@ -25,15 +25,6 @@ public class MessageHandle {
     }
 
     /**
-     * 改变房间状态
-     * @param roomId
-     * @param gameStatus
-     */
-    public void changeGameStatus(String roomId ,String gameStatus){
-        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS , gameStatus);
-    }
-
-    /**
      * 广播消息
      * @param socketResult
      * @param roomIdStr

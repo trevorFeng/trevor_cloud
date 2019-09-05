@@ -84,19 +84,12 @@ public class PlayService {
             if (Objects.equals(readyPlayerSize ,realPlayerSize)) {
                 scheduleDispatch.removeListener(ListenerKey.READY + roomId);
                 actuator.addEvent(new FaPai4Event(roomId));
-            }else if (realPlayerSize != 1 && readyPlayerSize != 1){
-                //注册准备倒计时监听器
-                scheduleDispatch.addListener(new CountDownListener(ListenerKey.READY + roomId));
             }
 
             //判断房间里真正玩家的人数，如果只有两人，直接开始游戏，否则开始倒计时
-            if (readyPlayerSize == 2) {
-                if (realPlayerSize == 2) {
-                    //执行发牌事件
-                    actuator.addEvent(new FaPai4Event(roomId));
-                }else if (realPlayerSize > 2) {
-
-                }
+            if (readyPlayerSize == 2 && realPlayerSize > 2) {
+                //注册准备倒计时监听器
+                scheduleDispatch.addListener(new CountDownListener(ListenerKey.getReadyKey(roomId ,runingNum ,5)+ roomId));
             }
         }
     }

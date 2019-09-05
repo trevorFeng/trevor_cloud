@@ -21,8 +21,9 @@ import java.util.Set;
 public class FaPai4Event extends Event {
 
 
-    public FaPai4Event(String roomId) {
+    public FaPai4Event(String roomId ,String runingNum) {
         super.roomId = roomId;
+        super.runingNum = runingNum;
     }
 
     @Override
@@ -30,19 +31,19 @@ public class FaPai4Event extends Event {
         //生成牌
         List<List<String>> pokesList = getPokesList();
         //设置每个人的牌
-        setPlayersPoke(pokesList);
+        Map<String, String> pokesMap = Maps.newHashMap();
+        setPlayersPoke(pokesList ,pokesMap);
         //改变房间状态
-        redisService.put(RedisConstant.BASE_ROOM_INFO, RedisConstant.GAME_STATUS, GameStatusEnum.FA_FOUR_PAI.getCode());
+        redisService.setValue(RedisConstant.getGameStatus(roomId ,runingNum) ,GameStatusEnum.FA_FOUR_PAI.getCode());
         //发牌并发送房间状态
-        faPai();
+        faPai(pokesMap);
         //注册抢庄倒计时
-        scheduleDispatch.addListener(new CountDownListener(ListenerKey.QIANG_ZHAUNG));
+        scheduleDispatch.addListener(new CountDownListener(ListenerKey.getQiangZhaungKey(roomId ,runingNum ,5)));
     }
 
-    private void faPai(){
-        Set<String> roomPlayer = redisService.getSetMembers(RedisConstant.ROOM_PLAYER + roomId);
-        Set<String> readyPlayerUserIds = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
-        Map<String, String> pokesMap = redisService.getMap(RedisConstant.POKES + roomId);
+    private void faPai(Map<String, String> pokesMap){
+        Set<String> roomPlayer = redisService.getSetMembers(RedisConstant.getRoomPlayer(roomId));
+        Set<String> readyPlayerUserIds = redisService.getSetMembers(RedisConstant.getReadyPlayer(roomId ,runingNum));
         //给每个人发牌
         for (String playerId : roomPlayer) {
             if (readyPlayerUserIds.contains(playerId)) {
@@ -58,8 +59,8 @@ public class FaPai4Event extends Event {
         }
     }
 
-    private void setPlayersPoke(List<List<String>> pokesList) {
-        Set<String> readyPlayerUserIds = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
+    private void setPlayersPoke(List<List<String>> pokesList ,Map<String, String> map) {
+        Set<String> readyPlayerUserIds = redisService.getSetMembers(RedisConstant.getReadyPlayer(roomId ,runingNum));
         int num = 0;
         Map<String, String> pokeMap = Maps.newHashMap();
         for (String playerId : readyPlayerUserIds) {
@@ -67,12 +68,13 @@ public class FaPai4Event extends Event {
             pokeMap.put(playerId, JsonUtil.toJsonString(pokes));
             num++;
         }
-        redisService.putAll(RedisConstant.POKES + roomId, pokeMap);
+        map = pokeMap;
+        redisService.putAll(RedisConstant.getPokes(roomId ,runingNum), pokeMap);
     }
 
     private List<List<String>> getPokesList() {
         List<Integer> paiXing = JsonUtil.parseJavaList(
-                redisService.getHashValue(RedisConstant.BASE_ROOM_INFO + roomId, RedisConstant.PAIXING), Integer.class);
+                redisService.getHashValue(RedisConstant.getBaseRoomInfo(roomId), RedisConstant.PAIXING), Integer.class);
         List<String> rootPokes = PokeUtil.generatePoke5();
         //生成牌在rootPokes的索引
         List<List<Integer>> lists;
@@ -82,7 +84,7 @@ public class FaPai4Event extends Event {
         Boolean twoWuXiaoNiu = true;
         while (twoWuXiaoNiu) {
             lists = RandomUtils.getSplitListByMax(rootPokes.size(),
-                    redisService.getSetSize(RedisConstant.READY_PLAYER + roomId) * 5);
+                    redisService.getSetSize(RedisConstant.getReadyPlayer(roomId ,runingNum)) * 5);
             //生成牌
             pokesList = Lists.newArrayList();
             for (List<Integer> integers : lists) {
