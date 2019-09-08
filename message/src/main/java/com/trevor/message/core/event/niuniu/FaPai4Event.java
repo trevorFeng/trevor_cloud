@@ -28,13 +28,13 @@ public class FaPai4Event extends Event {
 
     @Override
     protected void executeEvent() {
+        redisService.setValue(RedisConstant.getGameStatus(roomId ,runingNum) ,GameStatusEnum.FA_FOUR_PAI.getCode());
         //生成牌
         List<List<String>> pokesList = getPokesList();
         //设置每个人的牌
         Map<String, String> pokesMap = Maps.newHashMap();
         setPlayersPoke(pokesList ,pokesMap);
         //改变房间状态
-        redisService.setValue(RedisConstant.getGameStatus(roomId ,runingNum) ,GameStatusEnum.FA_FOUR_PAI.getCode());
         //发牌并发送房间状态
         faPai(pokesMap);
         //注册抢庄倒计时
